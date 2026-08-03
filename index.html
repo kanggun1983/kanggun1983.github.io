@@ -88,24 +88,24 @@
     .profile-name {
       font-size: 22px;
       font-weight: 800;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       color: #ffffff;
     }
 
-    /* 인사말 박스 */
+    /* 정돈된 인사말 박스 */
     .intro-box {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(5px);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 12.5px;
-      line-height: 1.55;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 13px;
+      line-height: 1.6;
       color: #ffffff;
       text-align: center;
       word-break: keep-all;
     }
 
-    /* 탭 메뉴 */
+    /* 4개 탭 메뉴 스타일 */
     .tab-menu {
       display: flex;
       border-bottom: 1px solid #e2e8f0;
@@ -114,10 +114,10 @@
 
     .tab-btn {
       flex: 1;
-      padding: 15px 0;
+      padding: 14px 2px;
       border: none;
       background: none;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 700;
       color: #64748b;
       cursor: pointer;
@@ -182,7 +182,7 @@
       word-break: keep-all;
     }
 
-    /* 명함저장 버튼 */
+    /* 명함저장 & 예약 버튼 */
     .btn-vcard {
       width: 100%;
       padding: 16px;
@@ -199,6 +199,7 @@
       gap: 8px;
       box-shadow: 0 4px 14px rgba(230, 0, 126, 0.35);
       margin-bottom: 16px;
+      text-decoration: none;
     }
 
     /* 4대 퀵 액션 버튼 */
@@ -337,15 +338,18 @@
         <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)" onload="syncAppIcon(this.src)">
       </div>
       <div class="profile-name">강태훈 과장</div>
+      
+      <!-- 정돈된 인사말 -->
       <div class="intro-box">
-        ​ "정확한 비교 분석과 투명한 정보 제공을 원칙으로 합니다.<br><br>복잡한 약정 속에서 고객에게 진짜 이득이 되는 조건만 선별하여, 최상의 만족을 약속드립니다."
+        "정확한 비교 분석과 투명한 정보 제공을 원칙으로 합니다.<br><br>복잡한 약정 속에서 고객에게 진짜 이득이 되는 조건만 선별하여, 최상의 만족을 약속드립니다."
       </div>
     </div>
 
-    <!-- 탭 메뉴 -->
+    <!-- 4개 탭 메뉴 -->
     <div class="tab-menu">
       <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
       <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
+      <button class="tab-btn" onclick="switchTab(event, 'events')">이벤트/혜택</button>
       <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
     </div>
 
@@ -423,7 +427,20 @@
         </div>
       </div>
 
-      <!-- 탭 3: 오시는 길 -->
+      <!-- 탭 3: 이벤트 / 혜택 (신규 추가) -->
+      <div id="tab-events" class="tab-content">
+        <div style="text-align: center;">
+          <!-- 올리실 행사 포스터 이미지 (깃허브에 event.jpg 파일 필요) -->
+          <img src="event.jpg" alt="특별 사전예약 혜택" style="width: 100%; border-radius: 16px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" onerror="this.src='https://via.placeholder.com/400x500/e6007e/ffffff?text=EVENT+POSTER'">
+          
+          <!-- 네이버 예약 연결 버튼 -->
+          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="btn-vcard" style="margin-bottom: 0;">
+            <i class="fa-solid fa-fire"></i> 지금 사전예약 신청하기
+          </a>
+        </div>
+      </div>
+
+      <!-- 탭 4: 오시는 길 -->
       <div id="tab-location" class="tab-content">
         <div class="info-box">
           <div class="info-item">
@@ -471,7 +488,7 @@
     ];
     let currentImgIndex = 0;
 
-    // 정상적으로 로드된 사진을 아이콘 태그에 동적으로 동기화
+    // 정상 로드된 프로필 사진을 스마트폰 홈 화면 아이콘으로 연동
     function syncAppIcon(imgSrc) {
       document.getElementById('appleIcon').href = imgSrc;
       document.getElementById('faviconIcon').href = imgSrc;
@@ -501,7 +518,7 @@ ORG:LGU+ 진천점
 TITLE:모바일 컨설턴트
 TEL;TYPE=CELL:010-4444-3353
 ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+;;;;
-NOTE:믿음은 생각이 되고 생각은 곧 행동이 됩니다.
+NOTE:정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.
 END:VCARD`;
 
       const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8;' });
