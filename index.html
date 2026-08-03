@@ -45,7 +45,7 @@
       flex-direction: column;
     }
 
-    /* 상단 헤더 영역 (상단만 분홍색 그라데이션) */
+    /* 상단 헤더 영역 */
     .header {
       background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%);
       color: #ffffff;
@@ -77,6 +77,7 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
     .profile-name {
@@ -123,7 +124,7 @@
       border-bottom: 3.5px solid var(--lgu-pink);
     }
 
-    /* 메인 콘텐츠 영역 (흰색 바탕) */
+    /* 메인 콘텐츠 영역 */
     .content-area {
       padding: 20px;
       background-color: #ffffff;
@@ -176,7 +177,7 @@
       word-break: keep-all;
     }
 
-    /* 명함저장 버튼 (고대비 선홍색) */
+    /* 명함저장 버튼 */
     .btn-vcard {
       width: 100%;
       padding: 16px;
@@ -229,7 +230,7 @@
       margin-bottom: 6px;
     }
 
-    /* 주요 서비스 카드 (선명한 바탐 및 선명한 텍스트) */
+    /* 주요 서비스 카드 */
     .service-card {
       background: #ffffff;
       border: 1px solid #cbd5e1;
@@ -273,7 +274,8 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <img src="프로필.png" alt="강태훈 과장 프로필" onerror="this.src='https://via.placeholder.com/150'">
+        <!-- 프로필 사진 자동 감지 기능 적용 -->
+        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)">
       </div>
       <div class="profile-name">강태훈 과장</div>
       <div class="intro-box">
@@ -326,7 +328,7 @@
             <i class="fa-solid fa-comment-dots"></i>
             문자상담
           </a>
-          <button class="action-btn" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호')">
+          <button class="action-btn" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+')">
             <i class="fa-solid fa-copy"></i>
             주소복사
           </button>
@@ -367,10 +369,10 @@
         <div class="info-box">
           <div class="info-item">
             <i class="fa-solid fa-location-dot"></i>
-            <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 (LGU+)</span>
+            <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+</span>
           </div>
         </div>
-        <button class="btn-vcard" style="background: #1e293b;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 (LGU+)')">
+        <button class="btn-vcard" style="background: #1e293b;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+')">
           <i class="fa-solid fa-map-pin"></i> 매장 주소 복사하기
         </button>
       </div>
@@ -379,6 +381,24 @@
   </div>
 
   <script>
+    // 프로필 사진 파일명 자동 감지 알고리즘 (어떤 파일명으로 올려도 감지)
+    const possibleImages = [
+      'profile.png',
+      '프로필.png',
+      'profile.jpg',
+      '프로필.jpg',
+      'profile.jpeg',
+      '1000045320.png'
+    ];
+    let currentImgIndex = 0;
+
+    function handleImageError(img) {
+      currentImgIndex++;
+      if (currentImgIndex < possibleImages.length) {
+        img.src = possibleImages[currentImgIndex];
+      }
+    }
+
     function switchTab(evt, tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -395,6 +415,7 @@ FN:강태훈 과장
 ORG:LGU+ 진천점
 TITLE:모바일 컨설턴트
 TEL;TYPE=CELL:010-4444-3353
+ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+;;;;
 NOTE:믿음은 생각이 되고 생각은 곧 행동이 됩니다.
 END:VCARD`;
 
