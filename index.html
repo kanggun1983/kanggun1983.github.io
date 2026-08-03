@@ -3,17 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- 검색엔진 노출 방지 -->
+  <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
   <!-- FontAwesome 아이콘 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
       --lgu-pink: #e6007e;
-      --lgu-gradient: linear-gradient(135deg, #e6007e 0%, #a8005b 100%);
-      --bg-color: #f4f6f8;
+      --lgu-dark: #a8005b;
+      --bg-color: #f1f5f9;
       --card-bg: #ffffff;
-      --text-main: #222222;
-      --text-sub: #666666;
+      --text-main: #0f172a;
+      --text-sub: #475569;
     }
 
     * {
@@ -29,7 +31,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 16px;
+      padding: 12px;
     }
 
     .mobile-card {
@@ -37,39 +39,38 @@
       max-width: 400px;
       background: var(--card-bg);
       border-radius: 28px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       overflow: hidden;
       display: flex;
       flex-direction: column;
     }
 
-    /* 상단 헤더 */
+    /* 상단 헤더 영역 (상단만 분홍색 그라데이션) */
     .header {
-      background: var(--lgu-gradient);
-      color: #fff;
-      padding: 24px 20px 20px;
+      background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%);
+      color: #ffffff;
+      padding: 28px 20px 24px;
       text-align: center;
-      position: relative;
     }
 
     .brand-title {
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 1px;
-      opacity: 0.9;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      opacity: 0.95;
     }
 
     /* 프로필 이미지 */
     .profile-img-wrap {
-      width: 110px;
-      height: 110px;
+      width: 108px;
+      height: 108px;
       margin: 0 auto 12px;
       border-radius: 50%;
-      border: 3px solid #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 3.5px solid #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       overflow: hidden;
-      background-color: #eee;
+      background-color: #ffffff;
     }
 
     .profile-img-wrap img {
@@ -80,42 +81,52 @@
 
     .profile-name {
       font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 4px;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #ffffff;
     }
 
-    .profile-role {
-      font-size: 13px;
-      opacity: 0.85;
+    /* 인사말 박스 */
+    .intro-box {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(5px);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 12.5px;
+      line-height: 1.55;
+      color: #ffffff;
+      text-align: center;
+      word-break: keep-all;
     }
 
     /* 탭 메뉴 */
     .tab-menu {
       display: flex;
-      border-bottom: 1px solid #eee;
-      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      background: #ffffff;
     }
 
     .tab-btn {
       flex: 1;
-      padding: 14px 0;
+      padding: 15px 0;
       border: none;
       background: none;
       font-size: 14px;
-      font-weight: 600;
-      color: var(--text-sub);
+      font-weight: 700;
+      color: #64748b;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .tab-btn.active {
       color: var(--lgu-pink);
-      border-bottom: 3px solid var(--lgu-pink);
+      border-bottom: 3.5px solid var(--lgu-pink);
     }
 
-    /* 메인 콘텐츠 영역 */
+    /* 메인 콘텐츠 영역 (흰색 바탕) */
     .content-area {
       padding: 20px;
+      background-color: #ffffff;
     }
 
     .tab-content {
@@ -126,9 +137,10 @@
       display: block;
     }
 
-    /* 프로필 탭 상세 */
+    /* 정보 박스 */
     .info-box {
-      background: #f9f9fb;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 16px;
       padding: 16px;
       margin-bottom: 16px;
@@ -154,34 +166,36 @@
     .info-item span.label {
       color: var(--text-sub);
       width: 70px;
+      font-weight: 500;
     }
 
     .info-item span.value {
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
       flex: 1;
+      word-break: keep-all;
     }
 
-    /* 명함저장 메인 버튼 */
+    /* 명함저장 버튼 (고대비 선홍색) */
     .btn-vcard {
       width: 100%;
       padding: 16px;
-      background: var(--lgu-gradient);
-      color: #fff;
+      background: var(--lgu-pink);
+      color: #ffffff;
       border: none;
       border-radius: 14px;
       font-size: 16px;
-      font-weight: 700;
+      font-weight: 800;
       cursor: pointer;
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 4px 12px rgba(230, 0, 126, 0.3);
+      box-shadow: 0 4px 14px rgba(230, 0, 126, 0.35);
       margin-bottom: 16px;
     }
 
-    /* 퀵 버튼 그룹 */
+    /* 4대 퀵 액션 버튼 */
     .quick-actions {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -194,18 +208,19 @@
       align-items: center;
       justify-content: center;
       padding: 12px 4px;
-      background: #fff;
-      border: 1px solid #eef0f2;
-      border-radius: 12px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
       text-decoration: none;
       color: var(--text-main);
       font-size: 12px;
+      font-weight: 700;
       cursor: pointer;
       transition: background 0.2s;
     }
 
     .action-btn:hover {
-      background: #f8f9fa;
+      background: #f1f5f9;
     }
 
     .action-btn i {
@@ -214,34 +229,40 @@
       margin-bottom: 6px;
     }
 
-    /* 서비스/혜택 카드 */
+    /* 주요 서비스 카드 (선명한 바탐 및 선명한 텍스트) */
     .service-card {
-      border: 1px solid #eee;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
     }
 
     .service-card i {
       font-size: 20px;
       color: var(--lgu-pink);
-      background: #fde6f2;
-      padding: 10px;
-      border-radius: 10px;
+      background: #fde8f3;
+      padding: 12px;
+      border-radius: 12px;
+      flex-shrink: 0;
     }
 
     .service-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 2px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-main);
+      margin-bottom: 4px;
     }
 
     .service-desc {
-      font-size: 12px;
+      font-size: 12.5px;
       color: var(--text-sub);
+      font-weight: 500;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -252,18 +273,19 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <!-- 깃허브 레포지토리에 올릴 프로필 이미지 파일명 -->
-        <img src="profile.png" alt="강태훈 과장 프로필" onerror="this.src='https://via.placeholder.com/150'">
+        <img src="프로필.png" alt="강태훈 과장 프로필" onerror="this.src='https://via.placeholder.com/150'">
       </div>
       <div class="profile-name">강태훈 과장</div>
-      <div class="profile-role">믿음은 생각이 되고, 생각은 곧 행동이, 행동은 가치가 됩니다. 고객을 위한 올바른 가치를 가질 수 있도록 항상 최선을 다 하는 강태훈 과장입니다. 언제나 고객의 입장에서 최상의 서비스를 제공하도록 노력하겠습니다!
+      <div class="intro-box">
+        믿음은 생각이 되고, 생각은 곧 행동이, 행동은 가치가 됩니다. 고객을 위한 올바른 가치를 가질 수 있도록 항상 최선을 다 하는 강태훈 과장입니다.
+      </div>
     </div>
 
     <!-- 탭 메뉴 -->
     <div class="tab-menu">
-      <button class="tab-btn active" onclick="switchTab('profile')">프로필</button>
-      <button class="tab-btn" onclick="switchTab('services')">주요 서비스</button>
-      <button class="tab-btn" onclick="switchTab('location')">오시는 길</button>
+      <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
+      <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
+      <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
     </div>
 
     <!-- 콘텐츠 영역 -->
@@ -289,7 +311,7 @@
           </div>
         </div>
 
-        <!-- 명함저장 (vCard 다운로드) 버튼 -->
+        <!-- 명함저장 버튼 -->
         <button class="btn-vcard" onclick="downloadVCard()">
           <i class="fa-solid fa-address-card"></i> 명함저장
         </button>
@@ -304,7 +326,7 @@
             <i class="fa-solid fa-comment-dots"></i>
             문자상담
           </a>
-          <button class="action-btn" onclick="copyAddress('충북 진천군 진천읍 중앙북로 00 LGU+ 진천점')">
+          <button class="action-btn" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호')">
             <i class="fa-solid fa-copy"></i>
             주소복사
           </button>
@@ -348,7 +370,7 @@
             <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 (LGU+)</span>
           </div>
         </div>
-        <button class="btn-vcard" style="background: #333;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호LGU+)">
+        <button class="btn-vcard" style="background: #1e293b;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 (LGU+)')">
           <i class="fa-solid fa-map-pin"></i> 매장 주소 복사하기
         </button>
       </div>
@@ -357,16 +379,14 @@
   </div>
 
   <script>
-    // 탭 전환 기능
-    function switchTab(tabName) {
+    function switchTab(evt, tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-      event.currentTarget.classList.add('active');
+      evt.currentTarget.classList.add('active');
       document.getElementById('tab-' + tabName).classList.add('active');
     }
 
-    // 명함저장 (vCard 연락처 파일 생성 및 다운로드)
     function downloadVCard() {
       const vcardData = 
 `BEGIN:VCARD
@@ -375,7 +395,7 @@ FN:강태훈 과장
 ORG:LGU+ 진천점
 TITLE:모바일 컨설턴트
 TEL;TYPE=CELL:010-4444-3353
-NOTE:정직하고 투명한 맞춤형 모바일 컨설팅
+NOTE:믿음은 생각이 되고 생각은 곧 행동이 됩니다.
 END:VCARD`;
 
       const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8;' });
@@ -388,14 +408,12 @@ END:VCARD`;
       document.body.removeChild(link);
     }
 
-    // 주소 복사 기능
     function copyAddress(address) {
       navigator.clipboard.writeText(address).then(() => {
         alert('주소가 클립보드에 복사되었습니다!');
       });
     }
 
-    // 공유하기 기능
     function shareCard() {
       if (navigator.share) {
         navigator.share({
