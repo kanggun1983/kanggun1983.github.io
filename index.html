@@ -7,9 +7,9 @@
   <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
 
-  <!-- 📱 스마트폰 홈 화면 추가 아이콘 설정 (프로필 사진 연동) -->
-  <link rel="apple-touch-icon" href="profile.png">
-  <link rel="icon" type="image/png" href="profile.png">
+  <!-- 📱 스마트폰 홈 화면 아이콘 태그 (자바스크립트로 자동 연동) -->
+  <link id="appleIcon" rel="apple-touch-icon" href="profile.png">
+  <link id="faviconIcon" rel="icon" type="image/png" href="profile.png">
 
   <!-- FontAwesome 아이콘 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -334,7 +334,7 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)">
+        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)" onload="syncAppIcon(this.src)">
       </div>
       <div class="profile-name">강태훈 과장</div>
       <div class="intro-box">
@@ -461,7 +461,6 @@
   </div>
 
   <script>
-    // 프로필 사진 파일명 자동 감지
     const possibleImages = [
       'profile.png',
       '프로필.png',
@@ -471,6 +470,12 @@
       '1000045320.png'
     ];
     let currentImgIndex = 0;
+
+    // 정상적으로 로드된 사진을 아이콘 태그에 동적으로 동기화
+    function syncAppIcon(imgSrc) {
+      document.getElementById('appleIcon').href = imgSrc;
+      document.getElementById('faviconIcon').href = imgSrc;
+    }
 
     function handleImageError(img) {
       currentImgIndex++;
