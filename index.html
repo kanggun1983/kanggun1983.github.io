@@ -265,6 +265,61 @@
       font-weight: 500;
       line-height: 1.4;
     }
+
+    /* 공유 선택 팝업 (모달) 스타일 */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: #ffffff;
+      width: 100%;
+      max-width: 320px;
+      border-radius: 20px;
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: var(--text-main);
+    }
+
+    .modal-btn {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: #f8fafc;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .modal-btn.kakao { background: #FEE500; color: #000000; border: none; }
+    .modal-btn.sms { background: #007AFF; color: #ffffff; border: none; }
+    .modal-btn.close { background: #e2e8f0; color: #475569; border: none; margin-bottom: 0; margin-top: 6px; }
   </style>
 </head>
 <body>
@@ -274,7 +329,6 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <!-- 프로필 사진 자동 감지 기능 적용 -->
         <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)">
       </div>
       <div class="profile-name">강태훈 과장</div>
@@ -380,8 +434,29 @@
     </div>
   </div>
 
+  <!-- 공유 선택 팝업창 -->
+  <div id="shareModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-title">명함 공유하기</div>
+      
+      <button class="modal-btn kakao" onclick="shareNative()">
+        <i class="fa-solid fa-comment"></i> 카카오톡 / 다른 앱 공유
+      </button>
+      
+      <button class="modal-btn sms" onclick="shareSMS()">
+        <i class="fa-solid fa-envelope"></i> 문자(SMS)로 공유
+      </button>
+
+      <button class="modal-btn" onclick="copyCardUrl()">
+        <i class="fa-solid fa-link"></i> 링크주소 복사
+      </button>
+
+      <button class="modal-btn close" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+
   <script>
-    // 프로필 사진 파일명 자동 감지 알고리즘 (어떤 파일명으로 올려도 감지)
+    // 프로필 사진 파일명 자동 감지
     const possibleImages = [
       'profile.png',
       '프로필.png',
@@ -435,15 +510,39 @@ END:VCARD`;
       });
     }
 
+    /* 공유 팝업 관련 함수 */
     function shareCard() {
+      document.getElementById('shareModal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('shareModal').classList.remove('active');
+    }
+
+    function shareNative() {
+      closeModal();
       if (navigator.share) {
         navigator.share({
           title: 'LGU+ 진천점 강태훈 과장 명함',
+          text: '안녕하세요! LGU+ 진천점 강태훈 과장 디지털 명함입니다.',
           url: window.location.href
         });
       } else {
-        copyAddress(window.location.href);
+        copyCardUrl();
       }
+    }
+
+    function shareSMS() {
+      closeModal();
+      const text = `안녕하세요! LGU+ 진천점 강태훈 과장 명함입니다.\n${window.location.href}`;
+      window.location.href = `sms:?body=${encodeURIComponent(text)}`;
+    }
+
+    function copyCardUrl() {
+      closeModal();
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('명함 링크 주소가 복사되었습니다!');
+      });
     }
   </script>
 </body>
