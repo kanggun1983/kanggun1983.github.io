@@ -7,6 +7,13 @@
   <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
 
+  <!-- 📩 카카오톡 / 문자 미리보기 카드 설정 (Open Graph) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LGU+ 진천점 - 강태훈 과장">
+  <meta property="og:description" content="정확한 비교 분석과 투명한 정보 제공! 강태훈 과장 디지털 명함">
+  <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png">
+  <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
+
   <!-- 스마트폰 홈 화면 아이콘 연동 -->
   <link id="appleIcon" rel="apple-touch-icon" href="profile.png">
   <link id="faviconIcon" rel="icon" type="image/png" href="profile.png">
@@ -338,7 +345,7 @@
           <i class="fa-solid fa-address-card"></i> 명함저장
         </button>
 
-        <!-- 4대 퀵 액션 버튼 (카카오채널 연동) -->
+        <!-- 4대 퀵 액션 버튼 -->
         <div class="quick-actions">
           <a href="tel:010-4444-3353" class="action-btn">
             <i class="fa-solid fa-phone"></i>
@@ -384,13 +391,11 @@
         </div>
       </div>
 
-      <!-- 탭 3: 이벤트 / 혜택 (event ~ event10 다중 포스터 자동 로드) -->
+      <!-- 탭 3: 이벤트 / 혜택 -->
       <div id="tab-events" class="tab-content">
         <div style="text-align: center;">
-          <!-- 자바스크립트가 event ~ event10 이미지를 자동으로 검색해서 연속으로 불러옵니다 -->
           <div id="eventPostersContainer"></div>
 
-          <!-- 네이버 예약 연결 버튼 -->
           <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="btn-vcard" style="margin-bottom: 0;">
             <i class="fa-solid fa-fire"></i> 지금 사전예약 신청하기
           </a>
@@ -432,12 +437,11 @@
       }
     }
 
-    /* event ~ event10 포스터 자동 감지 및 로드 함수 */
+    /* event ~ event10 포스터 자동 감지 및 로드 */
     function loadEventPosters() {
       const container = document.getElementById('eventPostersContainer');
       container.innerHTML = '';
 
-      // 감지할 파일명 목록: event, event1, event2 ... event10 및 기존 파일명 지원
       const baseNames = ['event'];
       for (let i = 1; i <= 10; i++) {
         baseNames.push(`event${i}`);
@@ -459,7 +463,6 @@
           if (extIdx < exts.length) {
             this.src = name + exts[extIdx];
           } else {
-            // 모든 확장자 탐색 실패 시 요소 삭제
             this.remove();
           }
         };
@@ -508,7 +511,6 @@ END:VCARD`;
       });
     }
 
-    // 페이지 로드 시 포스터 불러오기 실행
     document.addEventListener('DOMContentLoaded', loadEventPosters);
   </script>
 </body>
