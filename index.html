@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
 
-  <!-- 홈 화면 아이콘 강제 업데이트를 위한 캐시 무시 파라미터(?v=1.1) 추가 -->
+  <!-- 홈 화면 아이콘 및 캐시 무시 설정 -->
   <link rel="icon" type="image/png" href="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
   <link rel="apple-touch-icon" href="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
   <link rel="apple-touch-icon-precomposed" href="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
@@ -40,29 +40,33 @@
       });
     });
 
-    /* 모바일 알림 권한 직접 요청 */
-    function requestNotificationPermission() {
+    /* 알림 권한 요청 안정성 강화 함수 */
+    async function requestNotificationPermission() {
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('kakao') || ua.includes('naver') || ua.includes('line')) {
-        alert('카카오톡/네이버 앱 내부에서는 알림 설정이 제한됩니다.\n\n우측 상단 메뉴 [⋮]를 눌러 [Chrome으로 열기]를 선택해 주세요!');
+        alert('카카오톡/네이버 앱 내부에서는 알림 설정이 제한됩니다.\n\n우측 상단 메뉴 [⋮] 또는 공유 버튼을 눌러 [Chrome으로 열기]를 선택해 주세요!');
         return;
       }
 
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      window.OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          if (OneSignal.Notifications && typeof OneSignal.Notifications.requestPermission === 'function') {
-            await OneSignal.Notifications.requestPermission();
-          } else if (OneSignal.Slidedown && typeof OneSignal.Slidedown.promptPush === 'function') {
-            await OneSignal.Slidedown.promptPush();
-          } else {
-            alert('알림 시스템을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.');
-          }
-        } catch (e) {
-          console.error('Notification Error:', e);
-          alert('알림 권한 요청 중 오류가 발생했거나 이미 권한이 설정되어 있습니다.');
+      try {
+        if (window.OneSignal && window.OneSignal.Slidedown) {
+          await window.OneSignal.Slidedown.promptPush();
+        } else if (window.OneSignal && window.OneSignal.Notifications) {
+          await window.OneSignal.Notifications.requestPermission();
+        } else {
+          window.OneSignalDeferred = window.OneSignalDeferred || [];
+          window.OneSignalDeferred.push(async function(OneSignal) {
+            if (OneSignal.Slidedown) {
+              await OneSignal.Slidedown.promptPush();
+            } else if (OneSignal.Notifications) {
+              await OneSignal.Notifications.requestPermission();
+            }
+          });
         }
-      });
+      } catch (e) {
+        console.error('Notification Error:', e);
+        alert('알림 권한 요청 중 문제가 발생했습니다. 브라우저 설정에서 알림을 허용해 주세요.');
+      }
     }
   </script>
 
