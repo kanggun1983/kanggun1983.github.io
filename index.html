@@ -14,6 +14,17 @@
   <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png">
   <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
 
+  <!-- OneSignal SDK 연동 -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function() {
+      OneSignal.init({
+        appId: "141afa8c-c61f-4f38-98b8-bb9fb799caf8",
+      });
+    });
+  </script>
+
   <!-- 스마트폰 홈 화면 아이콘 연동 -->
   <link id="appleIcon" rel="apple-touch-icon" href="profile.png">
   <link id="faviconIcon" rel="icon" type="image/png" href="profile.png">
@@ -395,6 +406,11 @@
       <div id="tab-events" class="tab-content">
         <div style="text-align: center;">
           <div id="eventPostersContainer"></div>
+
+          <!-- OneSignal 알림 구독 버튼 -->
+          <button onclick="OneSignal.push(function() { OneSignal.showNativePrompt(); })" class="btn-vcard" style="background: #334155; margin-bottom: 12px;">
+            <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
+          </button>
 
           <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="btn-vcard" style="margin-bottom: 0;">
             <i class="fa-solid fa-fire"></i> 지금 사전예약 신청하기
