@@ -20,18 +20,6 @@
 
   <!-- FontAwesome 아이콘 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- OneSignal 웹 푸시 스크립트 -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "141afa8c-c61f-4f38-98b8-bb9fb799caf8",
-      });
-    });
-  </script>
-
   <style>
     :root {
       --lgu-pink: #e6007e;
@@ -201,26 +189,6 @@
       word-break: keep-all;
     }
 
-    /* 특가 알림 받기 버튼 */
-    .btn-push {
-      width: 100%;
-      padding: 16px;
-      background: linear-gradient(135deg, #ff7b00 0%, #e65c00 100%);
-      color: #ffffff;
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 14px rgba(255, 123, 0, 0.35);
-      margin-bottom: 12px;
-      text-decoration: none;
-    }
-
     /* 명함저장 & 예약 버튼 */
     .btn-vcard {
       width: 100%;
@@ -371,11 +339,6 @@
             <span class="value">10:00 - 20:00 (연중무휴)</span>
           </div>
         </div>
-
-        <!-- 특가 알림 받기 버튼 -->
-        <button class="btn-push" onclick="OneSignal.Slidedown.promptPush()">
-          🔔 특가 할인 &amp; 혜택 알림받기
-        </button>
 
         <!-- 명함저장 버튼 -->
         <button class="btn-vcard" onclick="downloadVCard()">
