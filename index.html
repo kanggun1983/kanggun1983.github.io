@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LGU+ 진천점 - 강태훈 과장 명함</title>
     
-    <!-- 크롬 및 모바일 브라우저 홈 화면 아이콘 설정 (얼굴 사진 즉시 반영) -->
+    <!-- 크롬 및 모바일 브라우저 홈 화면 얼굴 사진 아이콘 설정 -->
     <link rel="icon" type="image/png" href="profile.png">
     <link rel="apple-touch-icon" href="profile.png">
     <link rel="shortcut icon" href="profile.png">
 
-    <!-- 원스그널(OneSignal) 웹 푸시 스크립트 -->
+    <!-- OneSignal 웹 푸시 스크립트 -->
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
         await OneSignal.init({
-          appId: "원스그널-앱ID를-여기에-넣으세요", // 본인의 OneSignal App ID로 입력되어 있는지 확인해주세요
+          appId: "141afa8c-c61f-4f38-98b8-bb9fb799caf8",
         });
       });
     </script>
@@ -42,30 +42,32 @@
             min-height: 100vh;
             box-shadow: 0 0 15px rgba(0,0,0,0.1);
             position: relative;
-            padding-bottom: 40px;
+            padding-bottom: 30px;
         }
+        /* LG U+ 원본 시그니처 핑크 색상 */
         .header-bg {
-            background: linear-gradient(135deg, #e60012 0%, #99000b 100%);
-            padding: 30px 20px 70px 20px;
+            background: linear-gradient(135deg, #d5006d 0%, #a00050 100%);
+            padding: 30px 20px 40px 20px;
             text-align: center;
             color: #ffffff;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
+            border-bottom-left-radius: 25px;
+            border-bottom-right-radius: 25px;
         }
         .shop-title {
-            font-size: 18px;
-            font-weight: bold;
+            font-size: 16px;
+            font-weight: 600;
             margin-bottom: 15px;
-            opacity: 0.9;
+            opacity: 0.95;
+            letter-spacing: -0.5px;
         }
         .profile-img-box {
-            width: 100px;
-            height: 100px;
+            width: 105px;
+            height: 105px;
             margin: 0 auto 15px auto;
             border-radius: 50%;
             overflow: hidden;
             border: 3px solid #ffffff;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
             background-color: #fff;
         }
         .profile-img-box img {
@@ -76,131 +78,188 @@
         .name {
             font-size: 22px;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
         }
         .intro-box {
-            background-color: rgba(255, 255, 255, 0.15);
-            padding: 15px;
-            border-radius: 10px;
-            font-size: 14px;
-            line-height: 1.5;
+            background-color: rgba(0, 0, 0, 0.12);
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            line-height: 1.55;
+            word-break: keep-all;
+            color: #ffffff;
         }
         .content-body {
-            padding: 20px;
-            margin-top: -30px;
+            padding: 0 20px 20px 20px;
         }
+
+        /* 탭 메뉴 */
+        .tab-menu {
+            display: flex;
+            justify-content: space-around;
+            border-bottom: 2px solid #eeeeee;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+        .tab-item {
+            padding: 15px 5px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666666;
+            text-decoration: none;
+            position: relative;
+        }
+        .tab-item.active {
+            color: #d5006d;
+        }
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #d5006d;
+        }
+
+        /* 상세 정보 카드 */
         .info-card {
-            background: #ffffff;
+            background: #f9f9f9;
             border-radius: 15px;
             padding: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .info-item {
             display: flex;
             align-items: center;
             margin-bottom: 12px;
-            font-size: 15px;
-            color: #333;
+            font-size: 14px;
+            color: #333333;
         }
         .info-item:last-child {
             margin-bottom: 0;
         }
-        .info-item span {
-            font-weight: bold;
-            color: #555;
-            width: 90px;
+        .info-label {
+            width: 80px;
+            font-weight: 600;
+            color: #d5006d;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-        /* 푸시 알림 구독 버튼 스타일 */
+
+        /* 알림 수신 버튼 */
         .push-btn {
             width: 100%;
-            background: linear-gradient(135deg, #ff8000 0%, #ff5500 100%);
-            color: white;
+            background: linear-gradient(135deg, #ff7b00 0%, #e65c00 100%);
+            color: #ffffff;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(255, 123, 0, 0.25);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        /* 명함저장 버튼 */
+        .save-btn {
+            width: 100%;
+            background-color: #d5006d;
+            color: #ffffff;
             border: none;
             padding: 15px;
             border-radius: 12px;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 128, 0, 0.3);
-            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(213, 0, 109, 0.25);
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
         }
-        .push-btn:active {
-            transform: scale(0.98);
-        }
-        .save-btn {
-            width: 100%;
-            background-color: #e60012;
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(230, 0, 18, 0.3);
-            margin-bottom: 20px;
-        }
+
+        /* 하단 빠른 실행 메뉴 */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            text-align: center;
+            gap: 8px;
         }
         .menu-item {
-            background: #f9f9f9;
-            padding: 12px 5px;
-            border-radius: 10px;
+            background: #f8f9fa;
+            padding: 12px 0;
+            border-radius: 12px;
             text-decoration: none;
-            color: #333;
-            font-size: 13px;
-            font-weight: 500;
-            border: 1px solid #eee;
+            color: #495057;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #e9ecef;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
         }
-        .menu-item div {
-            font-size: 18px;
-            margin-bottom: 5px;
+        .menu-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
 
     <div class="card-container">
-        <!-- 상단 프로필 영역 -->
+        <!-- 상단 헤더 프로필 영역 -->
         <div class="header-bg">
             <div class="shop-title">LG U+ 진천점</div>
             <div class="profile-img-box">
-                <!-- 얼굴 사진 파일명 profile.png 연동 -->
-                <img src="profile.png" alt="강태훈 과장 프로필 사진">
+                <img src="profile.png" alt="강태훈 과장">
             </div>
             <div class="name">강태훈 과장</div>
             <div class="intro-box">
-                "정확한 비교 분석과 투명한 정보 제공을 원칙으로 합니다.<br>
+                "정확한 비교 분석과 투명한 정보 제공을 원칙으로 합니다.<br><br>
                 고객에게 진짜 이득이 되는 조건만 선별하여 최상의 만족을 약속드립니다."
             </div>
         </div>
 
-        <!-- 본문 정보 영역 -->
+        <!-- 탭 메뉴 영역 -->
+        <div class="tab-menu">
+            <a href="#" class="tab-item active">프로필</a>
+            <a href="#" class="tab-item">주요 서비스</a>
+            <a href="#" class="tab-item">이벤트/혜택</a>
+            <a href="#" class="tab-item">오시는 길</a>
+        </div>
+
+        <!-- 메인 콘텐츠 영역 -->
         <div class="content-body">
             
-            <!-- 정보 카드 -->
+            <!-- 상세 정보 카드 -->
             <div class="info-card">
                 <div class="info-item">
-                    <span>직통전화</span> 010-4444-3353
+                    <span class="info-label">📞 직통전화</span> 
+                    <span>010-4444-3353</span>
                 </div>
                 <div class="info-item">
-                    <span>소속매장</span> LGU+ 진천점
+                    <span class="info-label">🏪 소속매장</span> 
+                    <span>LGU+ 진천점</span>
                 </div>
                 <div class="info-item">
-                    <span>영업시간</span> 10:00 - 20:00 (연중무휴)
+                    <span class="info-label">⏰ 영업시간</span> 
+                    <span>10:00 - 20:00 (연중무휴)</span>
                 </div>
             </div>
 
-            <!-- ★ 추가된 푸시 알림 구독 버튼 (누르면 언제든 알림 권한 팝업이 뜸) -->
+            <!-- 특가 알림 받기 버튼 -->
             <button class="push-btn" onclick="OneSignal.Slidedown.promptPush()">
                 🔔 특가 할인 & 혜택 알림받기
             </button>
@@ -210,19 +269,23 @@
                 📇 명함저장
             </button>
 
-            <!-- 하단 빠른 메뉴 -->
+            <!-- 하단 4개 전용 버튼 -->
             <div class="menu-grid">
                 <a href="tel:010-4444-3353" class="menu-item">
-                    <div>📞</div>전화걸기
+                    <div class="menu-icon">📞</div>
+                    <span>전화걸기</span>
                 </a>
                 <a href="sms:010-4444-3353" class="menu-item">
-                    <div>💬</div>문자상담
+                    <div class="menu-icon">💬</div>
+                    <span>문자상담</span>
                 </a>
                 <a href="https://m.booking.naver.com" target="_blank" class="menu-item">
-                    <div>📅</div>네이버예약
+                    <div class="menu-icon" style="background: #03cf5d; color: white; border-radius: 4px; font-weight: 900; font-size: 13px; width: 20px; height: 20px; line-height: 20px;">N</div>
+                    <span>네이버예약</span>
                 </a>
                 <a href="https://pf.kakao.com" target="_blank" class="menu-item">
-                    <div>💭</div>카카오채널
+                    <div class="menu-icon" style="background: #fee500; color: #3c1e1e; border-radius: 50%; font-size: 12px; width: 22px; height: 22px; line-height: 22px; font-weight: bold;">💬</div>
+                    <span>카카오채널</span>
                 </a>
             </div>
 
