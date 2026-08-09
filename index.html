@@ -335,7 +335,8 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)">
+        <!-- 절대 경로를 사용하여 사진이 무조건 출력되도록 수정 -->
+        <img id="profileImg" src="https://kanggun1983.github.io/phoneplace1/profile.png" alt="강태훈 과장 프로필">
       </div>
       <div class="profile-name">강태훈 과장</div>
       
@@ -460,27 +461,15 @@
   </div>
 
   <script>
-    const possibleImages = [
-      'profile.png', '프로필.png', 'profile.jpg', '프로필.jpg', 'profile.jpeg', '1000045320.png'
-    ];
-    let currentImgIndex = 0;
-
-    function handleImageError(img) {
-      currentImgIndex++;
-      if (currentImgIndex < possibleImages.length) {
-        img.src = possibleImages[currentImgIndex];
-      }
-    }
-
     function loadEventPosters() {
       const container = document.getElementById('eventPostersContainer');
       container.innerHTML = '';
 
-      const baseNames = ['event'];
+      const baseNames = ['https://kanggun1983.github.io/phoneplace1/event'];
       for (let i = 1; i <= 10; i++) {
-        baseNames.push(`event${i}`);
+        baseNames.push(`https://kanggun1983.github.io/phoneplace1/event${i}`);
       }
-      baseNames.push('1785770353642', '1000045372', '이벤트');
+      baseNames.push('https://kanggun1983.github.io/phoneplace1/1785770353642', 'https://kanggun1983.github.io/phoneplace1/1000045372', 'https://kanggun1983.github.io/phoneplace1/이벤트');
 
       const exts = ['.jpg', '.png', '.jpeg', '.webp', '.JPG', '.PNG'];
 
