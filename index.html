@@ -13,9 +13,12 @@
   <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png">
   <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
 
-  <!-- 홈 화면 아이콘 및 파비콘 (전체 URL 적용으로 사진 표시 해결) -->
-  <link id="appleIcon" rel="apple-touch-icon" href="https://kanggun1983.github.io/phoneplace1/profile.png">
-  <link id="faviconIcon" rel="icon" type="image/png" href="https://kanggun1983.github.io/phoneplace1/profile.png">
+  <!-- 홈 화면 아이콘 및 파비콘 규격 호환 적용 -->
+  <link rel="icon" type="image/png" sizes="192x192" href="https://kanggun1983.github.io/phoneplace1/profile.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://kanggun1983.github.io/phoneplace1/profile.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="https://kanggun1983.github.io/phoneplace1/profile.png">
+  <link rel="apple-touch-icon-precomposed" href="https://kanggun1983.github.io/phoneplace1/profile.png">
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- OneSignal SDK v16 연동 -->
@@ -38,7 +41,7 @@
       });
     });
 
-    /* 모바일 알림 권한 직접 요청 (v16 호환 최신 로직) */
+    /* 모바일 알림 권한 직접 요청 */
     function requestNotificationPermission() {
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('kakao') || ua.includes('naver') || ua.includes('line')) {
@@ -329,7 +332,7 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)" onload="syncAppIcon(this.src)">
+        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)">
       </div>
       <div class="profile-name">강태훈 과장</div>
       
@@ -458,13 +461,6 @@
       'profile.png', '프로필.png', 'profile.jpg', '프로필.jpg', 'profile.jpeg', '1000045320.png'
     ];
     let currentImgIndex = 0;
-
-    function syncAppIcon(imgSrc) {
-      if (imgSrc) {
-        document.getElementById('appleIcon').href = imgSrc;
-        document.getElementById('faviconIcon').href = imgSrc;
-      }
-    }
 
     function handleImageError(img) {
       currentImgIndex++;
