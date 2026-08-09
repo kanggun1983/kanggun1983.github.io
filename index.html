@@ -15,17 +15,23 @@
 
   <!-- OneSignal SDK 연동 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "b3cea177-9bd6-4595-9473-e3ead9a63dd0",
-      serviceWorkerPath: "OneSignalSDKWorker.js",
-      serviceWorkerParam: { scope: "/phoneplace1/" }
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "b3cea177-9bd6-4595-9473-e3ead9a63dd0",
+        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/phoneplace1/" },
+        slidedown: {
+          prompts: [
+            {
+              type: "push",
+              autoPrompt: true
+            }
+          ]
+        }
+      });
     });
-  });
-</script>
-
 
     /* 모바일 알림 권한 직접 요청 */
     function requestNotificationPermission() {
