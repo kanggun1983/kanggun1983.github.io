@@ -1,529 +1,233 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 검색엔진 노출 방지 -->
-  <meta name="robots" content="noindex, nofollow">
-  <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LGU+ 진천점 - 강태훈 과장 명함</title>
+    
+    <!-- 크롬 및 모바일 브라우저 홈 화면 아이콘 설정 (얼굴 사진 즉시 반영) -->
+    <link rel="icon" type="image/png" href="profile.png">
+    <link rel="apple-touch-icon" href="profile.png">
+    <link rel="shortcut icon" href="profile.png">
 
-  <!-- 📩 카카오톡 / 문자 미리보기 카드 설정 (Open Graph) -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="LGU+ 진천점 - 강태훈 과장">
-  <meta property="og:description" content="정확한 비교 분석과 투명한 정보 제공! 강태훈 과장 디지털 명함">
-  <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png">
-  <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
-
-  <!-- 스마트폰 홈 화면 아이콘 연동 -->
-  <link id="appleIcon" rel="apple-touch-icon" href="profile.png">
-  <link id="faviconIcon" rel="icon" type="image/png" href="profile.png">
-
-  <!-- FontAwesome 아이콘 CDN -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- 🔔 OneSignal 웹 푸시 스크립트 추가 -->
-  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-        appId: "141afa8c-c61f-4f38-98b8-bb9fb799caf8",
+    <!-- 원스그널(OneSignal) 웹 푸시 스크립트 -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "원스그널-앱ID를-여기에-넣으세요", // 본인의 OneSignal App ID로 입력되어 있는지 확인해주세요
+        });
       });
-    });
-  </script>
+    </script>
 
-  <style>
-    :root {
-      --lgu-pink: #e6007e;
-      --lgu-dark: #a8005b;
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-sub: #475569;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
-    body {
-      background-color: var(--bg-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      padding: 12px;
-    }
-
-    .mobile-card {
-      width: 100%;
-      max-width: 400px;
-      background: var(--card-bg);
-      border-radius: 28px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* 상단 헤더 영역 */
-    .header {
-      background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%);
-      color: #ffffff;
-      padding: 28px 20px 24px;
-      text-align: center;
-    }
-
-    .brand-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      margin-bottom: 14px;
-      opacity: 0.95;
-    }
-
-    /* 프로필 이미지 */
-    .profile-img-wrap {
-      width: 108px;
-      height: 108px;
-      margin: 0 auto 12px;
-      border-radius: 50%;
-      border: 3.5px solid #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      background-color: #ffffff;
-    }
-
-    .profile-img-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .profile-name {
-      font-size: 22px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      color: #ffffff;
-    }
-
-    /* 완벽하게 정돈된 인사말 박스 */
-    .intro-box {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(5px);
-      border-radius: 14px;
-      padding: 14px 16px;
-      font-size: 13px;
-      line-height: 1.65;
-      color: #ffffff;
-      text-align: center;
-      word-break: keep-all;
-    }
-
-    /* 4개 탭 메뉴 스타일 */
-    .tab-menu {
-      display: flex;
-      border-bottom: 1px solid #e2e8f0;
-      background: #ffffff;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 14px 2px;
-      border: none;
-      background: none;
-      font-size: 13px;
-      font-weight: 700;
-      color: #64748b;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      color: var(--lgu-pink);
-      border-bottom: 3.5px solid var(--lgu-pink);
-    }
-
-    /* 메인 콘텐츠 영역 */
-    .content-area {
-      padding: 20px;
-      background-color: #ffffff;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* 정보 박스 */
-    .info-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .info-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 14px;
-    }
-
-    .info-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .info-item i {
-      width: 28px;
-      color: var(--lgu-pink);
-      font-size: 16px;
-    }
-
-    .info-item span.label {
-      color: var(--text-sub);
-      width: 70px;
-      font-weight: 500;
-    }
-
-    .info-item span.value {
-      font-weight: 700;
-      color: var(--text-main);
-      flex: 1;
-      word-break: keep-all;
-    }
-
-    /* 명함저장 & 예약 버튼 */
-    .btn-vcard {
-      width: 100%;
-      padding: 16px;
-      background: var(--lgu-pink);
-      color: #ffffff;
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 14px rgba(230, 0, 126, 0.35);
-      margin-bottom: 16px;
-      text-decoration: none;
-    }
-
-    /* 4대 퀵 액션 버튼 */
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-    }
-
-    .action-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 4px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
-      text-decoration: none;
-      color: var(--text-main);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .action-btn:hover {
-      background: #f1f5f9;
-    }
-
-    .action-btn i {
-      font-size: 18px;
-      color: var(--lgu-pink);
-      margin-bottom: 6px;
-    }
-
-    /* 주요 서비스 카드 */
-    .service-card {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-    }
-
-    .service-card i {
-      font-size: 20px;
-      color: var(--lgu-pink);
-      background: #fde8f3;
-      padding: 12px;
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-
-    .service-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-
-    .service-desc {
-      font-size: 12.5px;
-      color: var(--text-sub);
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    /* 이벤트 포스터 전용 스타일 */
-    .event-poster-img {
-      width: 100%;
-      border-radius: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: none;
-    }
-  </style>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        }
+        body {
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: #ffffff;
+            min-height: 100vh;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            position: relative;
+            padding-bottom: 40px;
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #e60012 0%, #99000b 100%);
+            padding: 30px 20px 70px 20px;
+            text-align: center;
+            color: #ffffff;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+        .shop-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            opacity: 0.9;
+        }
+        .profile-img-box {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px auto;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            background-color: #fff;
+        }
+        .profile-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .name {
+            font-size: 22px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .intro-box {
+            background-color: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .content-body {
+            padding: 20px;
+            margin-top: -30px;
+        }
+        .info-card {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #333;
+        }
+        .info-item:last-child {
+            margin-bottom: 0;
+        }
+        .info-item span {
+            font-weight: bold;
+            color: #555;
+            width: 90px;
+        }
+        /* 푸시 알림 구독 버튼 스타일 */
+        .push-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff8000 0%, #ff5500 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 128, 0, 0.3);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .push-btn:active {
+            transform: scale(0.98);
+        }
+        .save-btn {
+            width: 100%;
+            background-color: #e60012;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(230, 0, 18, 0.3);
+            margin-bottom: 20px;
+        }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+        .menu-item {
+            background: #f9f9f9;
+            padding: 12px 5px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            font-weight: 500;
+            border: 1px solid #eee;
+        }
+        .menu-item div {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+    </style>
 </head>
 <body>
 
-  <div class="mobile-card">
-    <!-- 헤더 영역 -->
-    <div class="header">
-      <div class="brand-title">LG U+ 진천점</div>
-      <div class="profile-img-wrap">
-        <img id="profileImg" src="profile.png" alt="강태훈 과장 프로필" onerror="handleImageError(this)" onload="syncAppIcon(this.src)">
-      </div>
-      <div class="profile-name">강태훈 과장</div>
-      
-      <!-- 완벽히 균형 잡힌 인사말 -->
-      <div class="intro-box">
-        "정확한 비교 분석과<br>
-        투명한 정보 제공을 원칙으로 합니다.<br><br>
-        고객에게 진짜 이득이 되는 조건만 선별하여<br>
-        최상의 만족을 약속드립니다."
-      </div>
+    <div class="card-container">
+        <!-- 상단 프로필 영역 -->
+        <div class="header-bg">
+            <div class="shop-title">LG U+ 진천점</div>
+            <div class="profile-img-box">
+                <!-- 얼굴 사진 파일명 profile.png 연동 -->
+                <img src="profile.png" alt="강태훈 과장 프로필 사진">
+            </div>
+            <div class="name">강태훈 과장</div>
+            <div class="intro-box">
+                "정확한 비교 분석과 투명한 정보 제공을 원칙으로 합니다.<br>
+                고객에게 진짜 이득이 되는 조건만 선별하여 최상의 만족을 약속드립니다."
+            </div>
+        </div>
+
+        <!-- 본문 정보 영역 -->
+        <div class="content-body">
+            
+            <!-- 정보 카드 -->
+            <div class="info-card">
+                <div class="info-item">
+                    <span>직통전화</span> 010-4444-3353
+                </div>
+                <div class="info-item">
+                    <span>소속매장</span> LGU+ 진천점
+                </div>
+                <div class="info-item">
+                    <span>영업시간</span> 10:00 - 20:00 (연중무휴)
+                </div>
+            </div>
+
+            <!-- ★ 추가된 푸시 알림 구독 버튼 (누르면 언제든 알림 권한 팝업이 뜸) -->
+            <button class="push-btn" onclick="OneSignal.Slidedown.promptPush()">
+                🔔 특가 할인 & 혜택 알림받기
+            </button>
+
+            <!-- 명함 저장 버튼 -->
+            <button class="save-btn" onclick="alert('연락처 저장 기능입니다.')">
+                📇 명함저장
+            </button>
+
+            <!-- 하단 빠른 메뉴 -->
+            <div class="menu-grid">
+                <a href="tel:010-4444-3353" class="menu-item">
+                    <div>📞</div>전화걸기
+                </a>
+                <a href="sms:010-4444-3353" class="menu-item">
+                    <div>💬</div>문자상담
+                </a>
+                <a href="https://m.booking.naver.com" target="_blank" class="menu-item">
+                    <div>📅</div>네이버예약
+                </a>
+                <a href="https://pf.kakao.com" target="_blank" class="menu-item">
+                    <div>💭</div>카카오채널
+                </a>
+            </div>
+
+        </div>
     </div>
 
-    <!-- 4개 탭 메뉴 -->
-    <div class="tab-menu">
-      <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
-      <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
-      <button class="tab-btn" onclick="switchTab(event, 'events')">이벤트/혜택</button>
-      <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
-    </div>
-
-    <!-- 콘텐츠 영역 -->
-    <div class="content-area">
-      
-      <!-- 탭 1: 프로필 -->
-      <div id="tab-profile" class="tab-content active">
-        <div class="info-box">
-          <div class="info-item">
-            <i class="fa-solid fa-phone"></i>
-            <span class="label">직통전화</span>
-            <span class="value">010-4444-3353</span>
-          </div>
-          <div class="info-item">
-            <i class="fa-solid fa-store"></i>
-            <span class="label">소속매장</span>
-            <span class="value">LGU+ 진천점</span>
-          </div>
-          <div class="info-item">
-            <i class="fa-solid fa-clock"></i>
-            <span class="label">영업시간</span>
-            <span class="value">10:00 - 20:00 (연중무휴)</span>
-          </div>
-        </div>
-
-        <!-- 명함저장 버튼 -->
-        <button class="btn-vcard" onclick="downloadVCard()">
-          <i class="fa-solid fa-address-card"></i> 명함저장
-        </button>
-
-        <!-- 4대 퀵 액션 버튼 -->
-        <div class="quick-actions">
-          <a href="tel:010-4444-3353" class="action-btn">
-            <i class="fa-solid fa-phone"></i>
-            전화걸기
-          </a>
-          <a href="sms:010-4444-3353" class="action-btn">
-            <i class="fa-solid fa-comment-dots"></i>
-            문자상담
-          </a>
-          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="action-btn">
-            <i class="fa-solid fa-calendar-check"></i>
-            네이버예약
-          </a>
-          <a href="http://pf.kakao.com/_hxkKzX" target="_blank" class="action-btn">
-            <i class="fa-solid fa-comments"></i>
-            카카오채널
-          </a>
-        </div>
-      </div>
-
-      <!-- 탭 2: 주요 서비스 -->
-      <div id="tab-services" class="tab-content">
-        <div class="service-card">
-          <i class="fa-solid fa-mobile-screen-button"></i>
-          <div>
-            <div class="service-title">최신 스마트폰 맞춤 상담</div>
-            <div class="service-desc">iPhone, 갤럭시 최신 기종 최대 할인 안내</div>
-          </div>
-        </div>
-        <div class="service-card">
-          <i class="fa-solid fa-handshake"></i>
-          <div>
-            <div class="service-title">통신사 결합 & 요금제 설계</div>
-            <div class="service-desc">가족 결합, 인터넷+TV 맞춤형 요금 절감</div>
-          </div>
-        </div>
-        <div class="service-card">
-          <i class="fa-solid fa-rotate"></i>
-          <div>
-            <div class="service-title">중고폰 최고가 보상 매입</div>
-            <div class="service-desc">기존 쓰시던 기기 안전하고 정직하게 매입</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 탭 3: 이벤트 / 혜택 -->
-      <div id="tab-events" class="tab-content">
-        <div style="text-align: center;">
-          <div id="eventPostersContainer"></div>
-
-          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="btn-vcard" style="margin-bottom: 0;">
-            <i class="fa-solid fa-fire"></i> 지금 사전예약 신청하기
-          </a>
-        </div>
-      </div>
-
-      <!-- 탭 4: 오시는 길 -->
-      <div id="tab-location" class="tab-content">
-        <div class="info-box">
-          <div class="info-item">
-            <i class="fa-solid fa-location-dot"></i>
-            <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+</span>
-          </div>
-        </div>
-        <button class="btn-vcard" style="background: #1e293b;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+')">
-          <i class="fa-solid fa-map-pin"></i> 매장 주소 복사하기
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <script>
-    /* 프로필 이미지 자동 탐색 */
-    const possibleImages = [
-      'profile.png', '프로필.png', 'profile.jpg', '프로필.jpg', 'profile.jpeg', '1000045320.png'
-    ];
-    let currentImgIndex = 0;
-
-    function syncAppIcon(imgSrc) {
-      document.getElementById('appleIcon').href = imgSrc;
-      document.getElementById('faviconIcon').href = imgSrc;
-    }
-
-    function handleImageError(img) {
-      currentImgIndex++;
-      if (currentImgIndex < possibleImages.length) {
-        img.src = possibleImages[currentImgIndex];
-      }
-    }
-
-    /* event ~ event10 포스터 자동 감지 및 로드 */
-    function loadEventPosters() {
-      const container = document.getElementById('eventPostersContainer');
-      container.innerHTML = '';
-
-      const baseNames = ['event'];
-      for (let i = 1; i <= 10; i++) {
-        baseNames.push(`event${i}`);
-      }
-      baseNames.push('1785770353642', '1000045372', '이벤트');
-
-      const exts = ['.jpg', '.png', '.jpeg', '.webp', '.JPG', '.PNG'];
-
-      baseNames.forEach((name) => {
-        const img = document.createElement('img');
-        img.className = 'event-poster-img';
-        img.alt = '이벤트 포스터';
-
-        let extIdx = 0;
-        img.src = name + exts[0];
-
-        img.onerror = function() {
-          extIdx++;
-          if (extIdx < exts.length) {
-            this.src = name + exts[extIdx];
-          } else {
-            this.remove();
-          }
-        };
-
-        img.onload = function() {
-          this.style.display = 'block';
-        };
-
-        container.appendChild(img);
-      });
-    }
-
-    function switchTab(evt, tabName) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-      evt.currentTarget.classList.add('active');
-      document.getElementById('tab-' + tabName).classList.add('active');
-    }
-
-    function downloadVCard() {
-      const vcardData = 
-`BEGIN:VCARD
-VERSION:3.0
-FN:강태훈 과장
-ORG:LGU+ 진천점
-TITLE:모바일 컨설턴트
-TEL;TYPE=CELL:010-4444-3353
-ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+;;;;
-NOTE:정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.
-END:VCARD`;
-
-      const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', '강태훈_과장_LGU플러스.vcf');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function copyAddress(address) {
-      navigator.clipboard.writeText(address).then(() => {
-        alert('주소가 클립보드에 복사되었습니다!');
-      });
-    }
-
-    document.addEventListener('DOMContentLoaded', loadEventPosters);
-  </script>
 </body>
 </html>
