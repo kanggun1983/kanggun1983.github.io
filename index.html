@@ -7,15 +7,36 @@
   <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
 
-  <!-- OneSignal SDK 연동 -->
+  <!-- 📩 카카오톡 / 문자 미리보기 카드 설정 (Open Graph) -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="LGU+ 진천점 - 강태훈 과장">
+  <meta property="og:description" content="정확한 비교 분석과 투명한 정보 제공! 강태훈 과장 디지털 명함">
+  <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png">
+  <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
+
+  <!-- OneSignal SDK 연동 (자동 팝업 및 기능 활성화) -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-    window.OneSignal = window.OneSignal || [];
-    OneSignal.push(function() {
-      OneSignal.init({
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
         appId: "141afa8c-c61f-4f38-98b8-bb9fb799caf8",
+        slidedown: {
+          prompts: [
+            {
+              type: "push",
+              autoPrompt: true
+            }
+          ]
+        }
       });
     });
+
+    function requestNotificationPermission() {
+      OneSignalDeferred.push(function(OneSignal) {
+        OneSignal.Notifications.requestPermission();
+      });
+    }
   </script>
 
   <!-- 스마트폰 홈 화면 아이콘 연동 -->
@@ -349,6 +370,11 @@
           <i class="fa-solid fa-address-card"></i> 명함저장
         </button>
 
+        <!-- 이벤트 혜택 알림받기 버튼 (첫 화면 노출) -->
+        <button class="btn-vcard" style="background: #334155;" onclick="requestNotificationPermission()">
+          <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
+        </button>
+
         <!-- 4대 퀵 액션 버튼 -->
         <div class="quick-actions">
           <a href="tel:010-4444-3353" class="action-btn">
@@ -400,8 +426,8 @@
         <div style="text-align: center;">
           <div id="eventPostersContainer"></div>
 
-          <!-- OneSignal 알림 구독 버튼 -->
-          <button onclick="OneSignal.Notifications.requestPermission()" class="btn-vcard" style="background: #334155; margin-bottom: 12px;">
+          <!-- 이벤트 혜택 알림받기 버튼 -->
+          <button onclick="requestNotificationPermission()" class="btn-vcard" style="background: #334155; margin-bottom: 12px;">
             <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
           </button>
 
