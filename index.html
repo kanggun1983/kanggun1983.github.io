@@ -32,9 +32,36 @@
       });
     });
 
+    /* 알림 신청 상태별 맞춤 안내 함수 */
     function requestNotificationPermission() {
-      OneSignalDeferred.push(function(OneSignal) {
-        OneSignal.Notifications.requestPermission();
+      const ua = navigator.userAgent.toLowerCase();
+      // 카카오톡, 네이버 인앱 브라우저 예외 처리
+      if (ua.includes('kakao') || ua.includes('naver') || ua.includes('line')) {
+        alert('카카오톡/네이버 앱 내부에서는 알림 설정이 제한됩니다.\n\n우측 상단/하단 메뉴 [⋮]를 눌러 [Chrome으로 열기] 또는 [다른 브라우저로 열기]를 눌러주세요!');
+        return;
+      }
+
+      if (!('Notification' in window)) {
+        alert('현재 브라우저는 알림 기능을 지원하지 않습니다. Chrome 브라우저를 이용해 주세요.');
+        return;
+      }
+
+      if (Notification.permission === 'granted') {
+        alert('이미 알림 구독이 완료되어 있습니다! 감사합니다.');
+        return;
+      }
+
+      if (Notification.permission === 'denied') {
+        alert('현재 알림 권한이 차단되어 있습니다.\n\n주소창 좌측의 [자물쇠] 또는 [설정] 아이콘을 누른 후 [알림] 권한을 [허용]으로 바꿔주세요.');
+        return;
+      }
+
+      OneSignalDeferred.push(async function(OneSignal) {
+        try {
+          await OneSignal.Notifications.requestPermission();
+        } catch (err) {
+          console.error(err);
+        }
       });
     }
   </script>
