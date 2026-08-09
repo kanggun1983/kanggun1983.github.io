@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- 검색엔진 노출 방지 -->
   <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
 
-  <!-- 📩 카카오톡 / 문자 미리보기 카드 설정 (Open Graph) -->
+  <!-- 미리보기 카드 설정 -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="LGU+ 진천점 - 강태훈 과장">
   <meta property="og:description" content="정확한 비교 분석과 투명한 정보 제공! 강태훈 과장 디지털 명함">
   <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png">
   <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
 
-  <!-- OneSignal SDK 연동 (깃허브 phoneplace1 하위폴더 경로 지정) -->
+  <!-- OneSignal SDK 연동 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
         appId: "141afa8c-c61f-4f38-98b8-bb9fb799caf8",
-        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerPath: "/phoneplace1/OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: "/phoneplace1/" },
         slidedown: {
           prompts: [
@@ -34,7 +33,7 @@
       });
     });
 
-    /* 알림 신청 상태별 맞춤 안내 */
+    /* 모바일 알림 권한 직접 요청 */
     function requestNotificationPermission() {
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('kakao') || ua.includes('naver') || ua.includes('line')) {
@@ -42,24 +41,20 @@
         return;
       }
 
-      OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          await OneSignal.Notifications.requestPermission();
-          alert('알림 신청 절차가 완료되었습니다!');
-        } catch (err) {
-          console.error(err);
-          alert('알림 신청 중 오류가 발생했습니다.');
-        }
-      });
+      if (window.OneSignal && OneSignal.Notifications) {
+        OneSignal.Notifications.requestPermission();
+      } else {
+        OneSignalDeferred.push(function(OneSignal) {
+          OneSignal.Notifications.requestPermission();
+        });
+      }
     }
   </script>
 
-  <!-- 스마트폰 홈 화면 아이콘 연동 -->
   <link id="appleIcon" rel="apple-touch-icon" href="profile.png">
   <link id="faviconIcon" rel="icon" type="image/png" href="profile.png">
-
-  <!-- FontAwesome 아이콘 CDN -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
     :root {
       --lgu-pink: #e6007e;
@@ -97,7 +92,6 @@
       flex-direction: column;
     }
 
-    /* 상단 헤더 영역 */
     .header {
       background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%);
       color: #ffffff;
@@ -113,7 +107,6 @@
       opacity: 0.95;
     }
 
-    /* 프로필 이미지 */
     .profile-img-wrap {
       width: 108px;
       height: 108px;
@@ -139,7 +132,6 @@
       color: #ffffff;
     }
 
-    /* 인사말 박스 */
     .intro-box {
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(5px);
@@ -152,7 +144,6 @@
       word-break: keep-all;
     }
 
-    /* 4개 탭 메뉴 스타일 */
     .tab-menu {
       display: flex;
       border-bottom: 1px solid #e2e8f0;
@@ -176,7 +167,6 @@
       border-bottom: 3.5px solid var(--lgu-pink);
     }
 
-    /* 메인 콘텐츠 영역 */
     .content-area {
       padding: 20px;
       background-color: #ffffff;
@@ -190,7 +180,6 @@
       display: block;
     }
 
-    /* 정보 박스 */
     .info-box {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
@@ -229,7 +218,6 @@
       word-break: keep-all;
     }
 
-    /* 명함저장 & 알림 버튼 */
     .btn-vcard {
       width: 100%;
       padding: 16px;
@@ -249,7 +237,6 @@
       text-decoration: none;
     }
 
-    /* 4대 퀵 액션 버튼 */
     .quick-actions {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -283,7 +270,6 @@
       margin-bottom: 6px;
     }
 
-    /* 주요 서비스 카드 */
     .service-card {
       background: #ffffff;
       border: 1px solid #cbd5e1;
@@ -319,7 +305,6 @@
       line-height: 1.4;
     }
 
-    /* 이벤트 포스터 이미지 스타일 */
     .event-poster-img {
       width: 100%;
       border-radius: 16px;
@@ -332,7 +317,6 @@
 <body>
 
   <div class="mobile-card">
-    <!-- 헤더 영역 -->
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
@@ -348,7 +332,6 @@
       </div>
     </div>
 
-    <!-- 4개 탭 메뉴 -->
     <div class="tab-menu">
       <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
       <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
@@ -356,9 +339,7 @@
       <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
     </div>
 
-    <!-- 콘텐츠 영역 -->
     <div class="content-area">
-      
       <!-- 탭 1: 프로필 -->
       <div id="tab-profile" class="tab-content active">
         <div class="info-box">
@@ -379,17 +360,14 @@
           </div>
         </div>
 
-        <!-- 명함저장 버튼 -->
         <button class="btn-vcard" onclick="downloadVCard()">
           <i class="fa-solid fa-address-card"></i> 명함저장
         </button>
 
-        <!-- 이벤트 혜택 알림받기 버튼 -->
         <button class="btn-vcard" style="background: #334155;" onclick="requestNotificationPermission()">
           <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
         </button>
 
-        <!-- 4대 퀵 액션 버튼 -->
         <div class="quick-actions">
           <a href="tel:010-4444-3353" class="action-btn">
             <i class="fa-solid fa-phone"></i>
@@ -467,7 +445,6 @@
   </div>
 
   <script>
-    /* 프로필 이미지 자동 탐색 */
     const possibleImages = [
       'profile.png', '프로필.png', 'profile.jpg', '프로필.jpg', 'profile.jpeg', '1000045320.png'
     ];
@@ -485,7 +462,6 @@
       }
     }
 
-    /* event ~ event10 포스터 자동 감지 및 로드 */
     function loadEventPosters() {
       const container = document.getElementById('eventPostersContainer');
       container.innerHTML = '';
