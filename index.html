@@ -6,17 +6,17 @@
   <meta name="robots" content="noindex, nofollow">
   <title>LGU+ 진천점 - 강태훈 과장 디지털 명함</title>
 
-  <!-- 홈 화면 아이콘 및 캐시 무시 설정 -->
-  <link rel="icon" type="image/png" href="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
-  <link rel="apple-touch-icon" href="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
-  <link rel="apple-touch-icon-precomposed" href="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
+  <!-- 홈 화면 아이콘 및 캐시 무시 설정 (경로 수정 완료) -->
+  <link rel="icon" type="image/png" href="https://kanggun1983.github.io/profile.png?v=1.1">
+  <link rel="apple-touch-icon" href="https://kanggun1983.github.io/profile.png?v=1.1">
+  <link rel="apple-touch-icon-precomposed" href="https://kanggun1983.github.io/profile.png?v=1.1">
 
-  <!-- 미리보기 카드 설정 -->
+  <!-- 미리보기 카드 설정 (경로 수정 완료) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="LGU+ 진천점 - 강태훈 과장">
   <meta property="og:description" content="정확한 비교 분석과 투명한 정보 제공! 강태훈 과장 디지털 명함">
-  <meta property="og:image" content="https://kanggun1983.github.io/phoneplace1/profile.png?v=1.1">
-  <meta property="og:url" content="https://kanggun1983.github.io/phoneplace1/">
+  <meta property="og:image" content="https://kanggun1983.github.io/profile.png?v=1.1">
+  <meta property="og:url" content="https://kanggun1983.github.io/">
 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -28,7 +28,7 @@
       await OneSignal.init({
         appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
         serviceWorkerPath: "OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "/phoneplace1/" },
+        serviceWorkerParam: { scope: "/" }, // 중요: 루트 도메인이므로 / 로 수정
         slidedown: {
           prompts: [
             {
@@ -335,8 +335,7 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <!-- 절대 경로를 사용하여 사진이 무조건 출력되도록 수정 -->
-        <img id="profileImg" src="https://kanggun1983.github.io/phoneplace1/profile.png" alt="강태훈 과장 프로필">
+        <img id="profileImg" src="https://kanggun1983.github.io/profile.png" alt="강태훈 과장 프로필">
       </div>
       <div class="profile-name">강태훈 과장</div>
       
@@ -465,11 +464,12 @@
       const container = document.getElementById('eventPostersContainer');
       container.innerHTML = '';
 
-      const baseNames = ['https://kanggun1983.github.io/phoneplace1/event'];
+      // 경로에서 /phoneplace1/ 제거
+      const baseNames = ['https://kanggun1983.github.io/event'];
       for (let i = 1; i <= 10; i++) {
-        baseNames.push(`https://kanggun1983.github.io/phoneplace1/event${i}`);
+        baseNames.push(`https://kanggun1983.github.io/event${i}`);
       }
-      baseNames.push('https://kanggun1983.github.io/phoneplace1/1785770353642', 'https://kanggun1983.github.io/phoneplace1/1000045372', 'https://kanggun1983.github.io/phoneplace1/이벤트');
+      baseNames.push('https://kanggun1983.github.io/1785770353642', 'https://kanggun1983.github.io/1000045372', 'https://kanggun1983.github.io/이벤트');
 
       const exts = ['.jpg', '.png', '.jpeg', '.webp', '.JPG', '.PNG'];
 
