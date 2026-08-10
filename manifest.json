@@ -1,0 +1,15 @@
+{
+  "name": "LGU+ 진천점 - 강태훈 과장",
+  "short_name": "강태훈 과장 명함",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e6007e",
+  "icons": [
+    {
+      "src": "/profile.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}
