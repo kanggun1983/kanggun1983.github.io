@@ -334,11 +334,13 @@
       display: none !important;
     }
 
-    /* AI 상담원 팝업(말풍선) 반투명 및 블러 처리 */
+    /* AI 상담원 환영 팝업(말풍선) 반투명 및 블러 처리 + 페이드아웃 효과 */
     #chatbase-bubble-window {
       background: rgba(255, 255, 255, 0.75) !important;
-      backdrop-filter: blur(8px) !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
       border: 1px solid rgba(255, 255, 255, 0.4) !important;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
       transition: opacity 0.5s ease !important;
     }
   </style>
@@ -553,19 +555,21 @@ END:VCARD`;
 
     document.addEventListener('DOMContentLoaded', loadEventPosters);
 
-    // 4초 후 AI 상담원 팝업(말풍선) 자동 숨김 처리
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        const bubbleWindow = document.getElementById('chatbase-bubble-window');
-        if (bubbleWindow) {
-          bubbleWindow.style.opacity = '0';
+    // AI 상담원 팝업창 나타났을 때 4초 후 자동 숨김 처리 (안전 체크)
+    const hideChatBubble = setInterval(function() {
+      const bubble = document.getElementById('chatbase-bubble-window');
+      if (bubble) {
+        clearInterval(hideChatBubble);
+        setTimeout(function() {
+          bubble.style.opacity = '0';
           setTimeout(function() {
-            bubbleWindow.style.display = 'none';
-          }, 500); // 페이드아웃 애니메이션 시간 맞춤
-        }
-      }, 4000); // 4초(4000ms) 후 실행
-    });
+            bubble.style.display = 'none';
+          }, 500); // 페이드아웃 애니메이션 시간
+        }, 4000); // 4초 뒤 실행
+      }
+    }, 500);
   </script>
+
   <script>
   (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
   </script>
