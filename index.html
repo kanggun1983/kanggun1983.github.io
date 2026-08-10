@@ -329,19 +329,9 @@
       display: none;
     }
 
-    /* 우측 하단 플로팅 아이콘 숨기기 */
+    /* 우측 하단 기본 플로팅 버튼 아이콘 숨기기 (원하시는 대로 유지) */
     #chatbase-bubble-button {
       display: none !important;
-    }
-
-    /* AI 상담원 환영 팝업(말풍선) 반투명 및 블러 처리 + 페이드아웃 효과 */
-    #chatbase-bubble-window {
-      background: rgba(255, 255, 255, 0.75) !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      border: 1px solid rgba(255, 255, 255, 0.4) !important;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
-      transition: opacity 0.5s ease !important;
     }
   </style>
 </head>
@@ -555,19 +545,34 @@ END:VCARD`;
 
     document.addEventListener('DOMContentLoaded', loadEventPosters);
 
-    // AI 상담원 팝업창 나타났을 때 4초 후 자동 숨김 처리 (안전 체크)
-    const hideChatBubble = setInterval(function() {
-      const bubble = document.getElementById('chatbase-bubble-window');
-      if (bubble) {
-        clearInterval(hideChatBubble);
-        setTimeout(function() {
-          bubble.style.opacity = '0';
-          setTimeout(function() {
-            bubble.style.display = 'none';
-          }, 500); // 페이드아웃 애니메이션 시간
-        }, 4000); // 4초 뒤 실행
-      }
-    }, 500);
+    // [인사말풍선 전용] 생성되었을 때 배경을 반투명(글래스모피즘)으로 바꾸고 4초 후 부드럽게 사라지게 처리
+    const handleGreetingBubble = setInterval(function() {
+      const allDivs = document.querySelectorAll('div');
+      allDivs.forEach(el => {
+        // 환영 인사말 문구가 포함된 팝업 요소 감지
+        if (el.innerText && el.innerText.includes('안녕하세요! LGU+ 진천점입니다') && el.style.position) {
+          // 반투명 및 블러 배경 스타일 적용
+          el.style.background = 'rgba(255, 255, 255, 0.75)';
+          el.style.backdropFilter = 'blur(10px)';
+          el.style.webkitBackdropFilter = 'blur(10px)';
+          el.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+          el.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+          el.style.transition = 'opacity 0.5s ease';
+
+          // 중복 실행 방지 후 4초 뒤 페이드아웃 및 숨김 처리
+          if (!el.dataset.fadeStarted) {
+            el.dataset.fadeStarted = 'true';
+            setTimeout(function() {
+              el.style.opacity = '0';
+              setTimeout(function() {
+                el.style.display = 'none';
+              }, 500); // 0.5초 동안 서서히 사라진 후 완전히 숨김
+            }, 4000); // 4초 유지
+            clearInterval(handleGreetingBubble);
+          }
+        }
+      });
+    }, 300);
   </script>
 
   <script>
