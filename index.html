@@ -10,6 +10,7 @@
   <link rel="icon" type="image/png" href="https://kanggun1983.github.io/profile.png?v=1.1">
   <link rel="apple-touch-icon" href="https://kanggun1983.github.io/profile.png?v=1.1">
   <link rel="apple-touch-icon-precomposed" href="https://kanggun1983.github.io/profile.png?v=1.1">
+  <link rel="manifest" href="/manifest.json">
 
   <!-- 미리보기 카드 설정 (경로 수정 완료) -->
   <meta property="og:type" content="website">
@@ -464,7 +465,6 @@
       const container = document.getElementById('eventPostersContainer');
       container.innerHTML = '';
 
-      // 경로에서 /phoneplace1/ 제거
       const baseNames = ['https://kanggun1983.github.io/event'];
       for (let i = 1; i <= 10; i++) {
         baseNames.push(`https://kanggun1983.github.io/event${i}`);
