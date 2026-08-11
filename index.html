@@ -23,7 +23,6 @@
 
   <!-- OneSignal SDK v16 연동 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
@@ -256,8 +255,8 @@
 
     .quick-actions {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
     }
 
     .action-btn {
@@ -265,13 +264,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 10px 2px;
+      padding: 12px 4px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 14px;
       text-decoration: none;
       color: var(--text-main);
-      font-size: 11px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s;
@@ -282,9 +281,9 @@
     }
 
     .action-btn i {
-      font-size: 16px;
+      font-size: 18px;
       color: var(--lgu-pink);
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     .service-card {
@@ -394,10 +393,6 @@
             <i class="fa-solid fa-comment-dots"></i>
             문자상담
           </a>
-          <a href="#" class="action-btn" onclick="openAIChat(event)">
-            <i class="fa-solid fa-robot"></i>
-            AI상담
-          </a>
           <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="action-btn">
             <i class="fa-solid fa-calendar-check"></i>
             네이버예약
@@ -472,11 +467,6 @@
     </div>
   </div>
 
-  <!-- 챗베이스(Chatbase) 스크립트 연동 (사용자 제공 스크립트 그대로 적용) -->
-  <script>
-    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
-  </script>
-
   <script>
     function loadEventPosters() {
       const container = document.getElementById('eventPostersContainer');
@@ -521,19 +511,6 @@
 
       evt.currentTarget.classList.add('active');
       document.getElementById('tab-' + tabName).classList.add('active');
-    }
-
-    function openAIChat(evt) {
-      if (evt) evt.preventDefault();
-      try {
-        if (window.chatbase) {
-          window.chatbase('open');
-        } else {
-          alert('AI 상담 챗봇 로딩 중입니다. 잠시 후 다시 시도해 주세요.');
-        }
-      } catch (e) {
-        console.error(e);
-      }
     }
 
     function downloadVCard() {
