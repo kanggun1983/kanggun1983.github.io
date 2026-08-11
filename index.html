@@ -29,44 +29,31 @@
       await OneSignal.init({
         appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
         serviceWorkerPath: "OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "/" },
-        slidedown: {
-          prompts: [
-            {
-              type: "push",
-              autoPrompt: true
-            }
-          ]
-        }
+        serviceWorkerParam: { scope: "/" }
       });
     });
 
-    /* 알림 권한 요청 안정성 강화 함수 */
+    /* 알림 권한 요청 안정성 강화 함수 (직접 브라우저 팝업 호출) */
     async function requestNotificationPermission() {
       const ua = navigator.userAgent.toLowerCase();
       if (ua.includes('kakao') || ua.includes('naver') || ua.includes('line')) {
-        alert('카카오톡/네이버 앱 내부에서는 알림 설정이 제한됩니다.\n\n우측 상단 메뉴 [⋮] 또는 공유 버튼을 눌러 [Chrome으로 열기]를 선택해 주세요!');
+        alert('카카오톡/네이버 앱 내부에서는 알림 설정이 제한됩니다.\n\n우측 상단 메뉴 [⋮] 또는 공유 버튼을 눌러 [Chrome/사파리으로 열기]를 선택해 주세요!');
         return;
       }
 
       try {
-        if (window.OneSignal && window.OneSignal.Slidedown) {
-          await window.OneSignal.Slidedown.promptPush();
-        } else if (window.OneSignal && window.OneSignal.Notifications) {
-          await window.OneSignal.Notifications.requestPermission();
-        } else {
-          window.OneSignalDeferred = window.OneSignalDeferred || [];
-          window.OneSignalDeferred.push(async function(OneSignal) {
-            if (OneSignal.Slidedown) {
-              await OneSignal.Slidedown.promptPush();
-            } else if (OneSignal.Notifications) {
-              await OneSignal.Notifications.requestPermission();
-            }
-          });
-        }
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        window.OneSignalDeferred.push(async function(OneSignal) {
+          const permission = await OneSignal.Notifications.requestPermission();
+          if (permission) {
+            alert('🎉 이벤트 혜택 알림 신청이 완료되었습니다!');
+          } else {
+            alert('알림 권한이 거부되었습니다. 브라우저 설정에서 알림을 허용으로 변경해 주세요.');
+          }
+        });
       } catch (e) {
         console.error('Notification Error:', e);
-        alert('알림 권한 요청 중 문제가 발생했습니다. 브라우저 설정에서 알림을 허용해 주세요.');
+        alert('알림 권한 요청 중 문제가 발생했습니다. 브라우저 설정을 확인해 주세요.');
       }
     }
   </script>
@@ -329,7 +316,6 @@
       display: none;
     }
 
-    /* 우측 하단 기본 플로팅 버튼 아이콘 숨기기 (원하시는 대로 유지) */
     #chatbase-bubble-button {
       display: none !important;
     }
@@ -552,13 +538,10 @@ END:VCARD`;
 
     document.addEventListener('DOMContentLoaded', loadEventPosters);
 
-    // [인사말풍선 전용] 생성되었을 때 배경을 반투명(글래스모피즘)으로 바꾸고 4초 후 부드럽게 사라지게 처리
     const handleGreetingBubble = setInterval(function() {
       const allDivs = document.querySelectorAll('div');
       allDivs.forEach(el => {
-        // 환영 인사말 문구가 포함된 팝업 요소 감지
         if (el.innerText && el.innerText.includes('안녕하세요! LGU+ 진천점입니다') && el.style.position) {
-          // 반투명 및 블러 배경 스타일 적용
           el.style.background = 'rgba(255, 255, 255, 0.75)';
           el.style.backdropFilter = 'blur(10px)';
           el.style.webkitBackdropFilter = 'blur(10px)';
@@ -566,15 +549,14 @@ END:VCARD`;
           el.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
           el.style.transition = 'opacity 0.5s ease';
 
-          // 중복 실행 방지 후 4초 뒤 페이드아웃 및 숨김 처리
           if (!el.dataset.fadeStarted) {
             el.dataset.fadeStarted = 'true';
             setTimeout(function() {
               el.style.opacity = '0';
               setTimeout(function() {
                 el.style.display = 'none';
-              }, 500); // 0.5초 동안 서서히 사라진 후 완전히 숨김
-            }, 4000); // 4초 유지
+              }, 500);
+            }, 4000);
             clearInterval(handleGreetingBubble);
           }
         }
