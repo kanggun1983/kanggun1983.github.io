@@ -255,8 +255,8 @@
 
     .quick-actions {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
     }
 
     .action-btn {
@@ -264,13 +264,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 12px 4px;
+      padding: 10px 2px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 14px;
       text-decoration: none;
       color: var(--text-main);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s;
@@ -281,9 +281,9 @@
     }
 
     .action-btn i {
-      font-size: 18px;
+      font-size: 16px;
       color: var(--lgu-pink);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .service-card {
@@ -392,6 +392,10 @@
           <a href="sms:010-4444-3353" class="action-btn">
             <i class="fa-solid fa-comment-dots"></i>
             문자상담
+          </a>
+          <a href="#" class="action-btn" onclick="openAIChat(event)">
+            <i class="fa-solid fa-robot"></i>
+            AI상담
           </a>
           <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="action-btn">
             <i class="fa-solid fa-calendar-check"></i>
@@ -511,6 +515,13 @@
 
       evt.currentTarget.classList.add('active');
       document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    function openAIChat(evt) {
+      evt.preventDefault();
+      // AI 상담 연결 링크나 챗봇 연동 주소가 있다면 아래 주소를 변경해 주세요.
+      // 현재는 카카오 채널이나 네이버 예약 등으로 연결하거나 안내 팝업을 띄울 수 있습니다.
+      alert('AI 상담 연결 준비 중입니다. 빠른 상담은 카카오 채널이나 전화/문자를 이용해 주세요!');
     }
 
     function downloadVCard() {
