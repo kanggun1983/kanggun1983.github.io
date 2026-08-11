@@ -24,25 +24,6 @@
   <!-- OneSignal SDK v16 연동 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   
-  <!-- 챗베이스(Chatbase) 스크립트 연동 -->
-  <script>
-    (function(){
-      if(!window.chatbase || window.chatbase("getState") !== "initialized"){
-        window.chatbase = (...arguments) => {
-          if(!window.chatbase.q) { window.chatbase.q = []; }
-          window.chatbase.q.push(arguments);
-        };
-        window.chatbase.t = new Date();
-        var el = document.createElement("script");
-        el.async = true;
-        el.type = "text/javascript";
-        el.src = "https://www.chatbase.co/embed.min.js";
-        // 본인의 챗봇 ID가 있다면 아래에 설정됩니다.
-        window.document.head.appendChild(el);
-      }
-    })();
-  </script>
-
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
@@ -490,6 +471,11 @@
 
     </div>
   </div>
+
+  <!-- 챗베이스(Chatbase) 스크립트 연동 (사용자 제공 스크립트 그대로 적용) -->
+  <script>
+    (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
 
   <script>
     function loadEventPosters() {
