@@ -313,7 +313,7 @@
       border-radius: 16px;
       margin-bottom: 14px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: none;
+      display: block;
     }
 
     #chatbase-bubble-button {
@@ -434,7 +434,8 @@
       <!-- 탭 3: 이벤트 / 혜택 -->
       <div id="tab-events" class="tab-content">
         <div style="text-align: center;">
-          <div id="eventPostersContainer"></div>
+          <!-- event.png 이미지를 직접 출력합니다 -->
+          <img src="https://kanggun1983.github.io/event.png" alt="이벤트 포스터" class="event-poster-img" onerror="this.onerror=null; this.src='https://kanggun1983.github.io/event.jpg';">
 
           <button onclick="requestNotificationPermission()" class="btn-vcard" style="background: #334155; margin-bottom: 12px;">
             <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
@@ -463,43 +464,6 @@
   </div>
 
   <script>
-    function loadEventPosters() {
-      const container = document.getElementById('eventPostersContainer');
-      container.innerHTML = '';
-
-      const baseNames = ['https://kanggun1983.github.io/event'];
-      for (let i = 1; i <= 10; i++) {
-        baseNames.push(`https://kanggun1983.github.io/event${i}`);
-      }
-      baseNames.push('https://kanggun1983.github.io/1785770353642', 'https://kanggun1983.github.io/1000045372', 'https://kanggun1983.github.io/이벤트');
-
-      const exts = ['.jpg', '.png', '.jpeg', '.webp', '.JPG', '.PNG'];
-
-      baseNames.forEach((name) => {
-        const img = document.createElement('img');
-        img.className = 'event-poster-img';
-        img.alt = '이벤트 포스터';
-
-        let extIdx = 0;
-        img.src = name + exts[0];
-
-        img.onerror = function() {
-          extIdx++;
-          if (extIdx < exts.length) {
-            this.src = name + exts[extIdx];
-          } else {
-            this.remove();
-          }
-        };
-
-        img.onload = function() {
-          this.style.display = 'block';
-        };
-
-        container.appendChild(img);
-      });
-    }
-
     function switchTab(evt, tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -535,8 +499,6 @@ END:VCARD`;
         alert('주소가 클립보드에 복사되었습니다!');
       });
     }
-
-    document.addEventListener('DOMContentLoaded', loadEventPosters);
 
     const handleGreetingBubble = setInterval(function() {
       const allDivs = document.querySelectorAll('div');
