@@ -255,8 +255,8 @@
 
     .quick-actions {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
     }
 
     .action-btn {
@@ -264,13 +264,13 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 12px 4px;
+      padding: 10px 2px;
       background: #ffffff;
       border: 1px solid #cbd5e1;
       border-radius: 14px;
       text-decoration: none;
       color: var(--text-main);
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s;
@@ -281,7 +281,7 @@
     }
 
     .action-btn i {
-      font-size: 18px;
+      font-size: 16px;
       color: var(--lgu-pink);
       margin-bottom: 6px;
     }
@@ -327,6 +327,11 @@
       margin-bottom: 14px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       display: none;
+    }
+
+    /* 우측 하단 기본 플로팅 버튼 아이콘 숨기기 (원하시는 대로 유지) */
+    #chatbase-bubble-button {
+      display: none !important;
     }
   </style>
 </head>
@@ -393,6 +398,10 @@
             <i class="fa-solid fa-comment-dots"></i>
             문자상담
           </a>
+          <a href="#" class="action-btn" onclick="if(window.chatbase) { window.chatbase('open'); } return false;">
+            <i class="fa-solid fa-robot"></i>
+            AI상담원
+          </a>
           <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="action-btn">
             <i class="fa-solid fa-calendar-check"></i>
             네이버예약
@@ -406,13 +415,6 @@
 
       <!-- 탭 2: 주요 서비스 -->
       <div id="tab-services" class="tab-content">
-        <div class="service-card">
-          <i class="fa-solid fa-sim-card"></i>
-          <div>
-            <div class="service-title">SK, KT, LG, 알뜰유심 전 통신사 가능</div>
-            <div class="service-desc">모든 통신사 신규가입, 번호이동, 기기변경 지원</div>
-          </div>
-        </div>
         <div class="service-card">
           <i class="fa-solid fa-mobile-screen-button"></i>
           <div>
@@ -542,6 +544,39 @@ END:VCARD`;
     }
 
     document.addEventListener('DOMContentLoaded', loadEventPosters);
+
+    // [인사말풍선 전용] 생성되었을 때 배경을 반투명(글래스모피즘)으로 바꾸고 4초 후 부드럽게 사라지게 처리
+    const handleGreetingBubble = setInterval(function() {
+      const allDivs = document.querySelectorAll('div');
+      allDivs.forEach(el => {
+        // 환영 인사말 문구가 포함된 팝업 요소 감지
+        if (el.innerText && el.innerText.includes('안녕하세요! LGU+ 진천점입니다') && el.style.position) {
+          // 반투명 및 블러 배경 스타일 적용
+          el.style.background = 'rgba(255, 255, 255, 0.75)';
+          el.style.backdropFilter = 'blur(10px)';
+          el.style.webkitBackdropFilter = 'blur(10px)';
+          el.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+          el.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+          el.style.transition = 'opacity 0.5s ease';
+
+          // 중복 실행 방지 후 4초 뒤 페이드아웃 및 숨김 처리
+          if (!el.dataset.fadeStarted) {
+            el.dataset.fadeStarted = 'true';
+            setTimeout(function() {
+              el.style.opacity = '0';
+              setTimeout(function() {
+                el.style.display = 'none';
+              }, 500); // 0.5초 동안 서서히 사라진 후 완전히 숨김
+            }, 4000); // 4초 유지
+            clearInterval(handleGreetingBubble);
+          }
+        }
+      });
+    }, 300);
+  </script>
+
+  <script>
+  (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
   </script>
 </body>
 </html>
