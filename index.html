@@ -23,6 +23,26 @@
 
   <!-- OneSignal SDK v16 연동 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  
+  <!-- 챗베이스(Chatbase) 스크립트 연동 -->
+  <script>
+    (function(){
+      if(!window.chatbase || window.chatbase("getState") !== "initialized"){
+        window.chatbase = (...arguments) => {
+          if(!window.chatbase.q) { window.chatbase.q = []; }
+          window.chatbase.q.push(arguments);
+        };
+        window.chatbase.t = new Date();
+        var el = document.createElement("script");
+        el.async = true;
+        el.type = "text/javascript";
+        el.src = "https://www.chatbase.co/embed.min.js";
+        // 본인의 챗봇 ID가 있다면 아래에 설정됩니다.
+        window.document.head.appendChild(el);
+      }
+    })();
+  </script>
+
   <script>
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function(OneSignal) {
@@ -518,10 +538,16 @@
     }
 
     function openAIChat(evt) {
-      evt.preventDefault();
-      // AI 상담 연결 링크나 챗봇 연동 주소가 있다면 아래 주소를 변경해 주세요.
-      // 현재는 카카오 채널이나 네이버 예약 등으로 연결하거나 안내 팝업을 띄울 수 있습니다.
-      alert('AI 상담 연결 준비 중입니다. 빠른 상담은 카카오 채널이나 전화/문자를 이용해 주세요!');
+      if (evt) evt.preventDefault();
+      try {
+        if (window.chatbase) {
+          window.chatbase('open');
+        } else {
+          alert('AI 상담 챗봇 로딩 중입니다. 잠시 후 다시 시도해 주세요.');
+        }
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     function downloadVCard() {
