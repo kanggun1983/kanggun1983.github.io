@@ -2,59 +2,133 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#e6007e">
   <title>LGU+진천점</title>
 
-  <!-- 홈 화면 아이콘 및 캐시 무시 설정 -->
+  <!-- 홈 화면 아이콘 -->
   <link rel="icon" type="image/png" href="https://kanggun1983.github.io/profile.png?v=1.1">
   <link rel="apple-touch-icon" href="https://kanggun1983.github.io/profile.png?v=1.1">
-  <link rel="apple-touch-icon-precomposed" href="https://kanggun1983.github.io/profile.png?v=1.1">
   <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LGU+진천점">
 
-  <!-- 미리보기 카드 설정 -->
+  <!-- 미리보기 카드 -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="LGU+진천점">
   <meta property="og:description" content="정확한 비교 분석과 투명한 정보 제공! 강태훈 과장 디지털 명함">
   <meta property="og:image" content="https://kanggun1983.github.io/profile.png?v=1.1">
   <meta property="og:url" content="https://kanggun1983.github.io/">
 
+  <!-- [수정] Pretendard 폰트가 실제로 로드되도록 추가 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- OneSignal SDK v16 연동 -->
+  <!-- OneSignal SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
+    /* ===== 강CRM 연동: 개인 링크(?c=고객ID)로 들어온 고객 식별 ===== */
+    (function () {
+      try {
+        const params = new URLSearchParams(location.search);
+        const cid = params.get('c');
+        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) {
+          localStorage.setItem('kcrm_cid', cid);
+          // 주소창에서 고객ID 지우기 (명함을 다른 사람에게 공유해도 ID가 안 따라가게)
+          params.delete('c');
+          const q = params.toString();
+          history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+        }
+      } catch (e) {}
+    })();
+
+    function getCrmId() {
+      try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
+    }
+
     window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
+    OneSignalDeferred.push(async function (OneSignal) {
       await OneSignal.init({
         appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
         serviceWorkerPath: "OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: "/" }
       });
+
+      // 강CRM 고객ID를 OneSignal external_id로 연결 → CRM에서 이 고객에게만 푸시 가능
+      const cid = getCrmId();
+      if (cid) {
+        try {
+          await OneSignal.login(cid);
+          OneSignal.User.addTags({ source: 'namecard', crm: 'linked' });
+        } catch (e) { console.error('CRM link error:', e); }
+      } else {
+        OneSignal.User.addTag('source', 'namecard');
+      }
     });
 
-    /* 알림 권한 요청 안정성 강화 함수 (직접 브라우저 팝업 호출) */
-    async function requestNotificationPermission() {
+    /* ===== 인앱브라우저 판별 ===== */
+    function getInAppType() {
       const ua = navigator.userAgent.toLowerCase();
-      if (ua.includes('kakao') || ua.includes('naver') || ua.includes('line')) {
-        alert('카카오톡/네이버 앱 내부에서는 알림 설정이 제한됩니다.\n\n우측 상단 메뉴 [⋮] 또는 공유 버튼을 눌러 [Chrome/사파리으로 열기]를 선택해 주세요!');
+      if (ua.includes('kakaotalk')) return 'kakao';
+      if (ua.includes('naver(inapp') || ua.includes('naver')) return 'naver';
+      if (ua.includes(' line/')) return 'line';
+      if (ua.includes('instagram')) return 'instagram';
+      if (ua.includes('fban') || ua.includes('fbav')) return 'facebook';
+      return null;
+    }
+
+    function isIOS() {
+      return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    /* ===== [수정] 알림 권한 요청 ===== */
+    function requestNotificationPermission() {
+      const inApp = getInAppType();
+      if (inApp === 'kakao') {
+        // 카카오톡은 외부 브라우저로 자동 전환 가능
+        location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+        return;
+      }
+      if (inApp) {
+        alert('앱 내부 브라우저에서는 알림 설정이 제한됩니다.\n\n우측 상단 메뉴 [⋮] 또는 공유 버튼을 눌러 [Chrome/Safari로 열기]를 선택해 주세요!');
+        return;
+      }
+      // 아이폰은 '홈 화면에 추가'한 뒤에만 웹 푸시가 됩니다 (iOS 16.4 이상)
+      if (isIOS() && !isStandalone()) {
+        alert('아이폰은 알림을 받으려면 먼저 홈 화면에 추가해야 합니다.\n\n① 하단 공유 버튼 [⬆︎] 누르기\n② [홈 화면에 추가] 선택\n③ 홈 화면의 명함 아이콘으로 열어서 다시 [알림받기]를 눌러 주세요.');
         return;
       }
 
-      try {
-        window.OneSignalDeferred = window.OneSignalDeferred || [];
-        window.OneSignalDeferred.push(async function(OneSignal) {
-          const permission = await OneSignal.Notifications.requestPermission();
-          if (permission) {
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function (OneSignal) {
+        try {
+          if (!OneSignal.Notifications.isPushSupported()) {
+            alert('이 브라우저는 알림을 지원하지 않습니다. Chrome 또는 Safari에서 열어 주세요.');
+            return;
+          }
+          if (OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn) {
+            alert('이미 이벤트 혜택 알림을 받고 계십니다. 😊');
+            return;
+          }
+          await OneSignal.Notifications.requestPermission();
+          // v16의 requestPermission()은 결과값을 돌려주지 않으므로 permission 속성으로 확인
+          if (OneSignal.Notifications.permission) {
+            await OneSignal.User.PushSubscription.optIn();
             alert('🎉 이벤트 혜택 알림 신청이 완료되었습니다!');
           } else {
-            alert('알림 권한이 거부되었습니다. 브라우저 설정에서 알림을 허용으로 변경해 주세요.');
+            alert('알림이 차단되어 있습니다.\n브라우저 주소창 옆 [🔒/설정] → 알림 → 허용으로 바꿔 주세요.');
           }
-        });
-      } catch (e) {
-        console.error('Notification Error:', e);
-        alert('알림 권한 요청 중 문제가 발생했습니다. 브라우저 설정을 확인해 주세요.');
-      }
+        } catch (e) {
+          console.error('Notification Error:', e);
+          alert('알림 권한 요청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+      });
     }
   </script>
 
@@ -67,258 +141,50 @@
       --text-main: #0f172a;
       --text-sub: #475569;
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body {
       background-color: var(--bg-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; min-height: 100dvh;
       padding: 12px;
+      padding-top: calc(12px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
     }
-
-    .mobile-card {
-      width: 100%;
-      max-width: 400px;
-      background: var(--card-bg);
-      border-radius: 28px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .header {
-      background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%);
-      color: #ffffff;
-      padding: 28px 20px 24px;
-      text-align: center;
-    }
-
-    .brand-title {
-      font-size: 14px;
-      font-weight: 700;
-      letter-spacing: 1px;
-      margin-bottom: 14px;
-      opacity: 0.95;
-    }
-
-    .profile-img-wrap {
-      width: 108px;
-      height: 108px;
-      margin: 0 auto 12px;
-      border-radius: 50%;
-      border: 3.5px solid #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      background-color: #ffffff;
-    }
-
-    .profile-img-wrap img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .profile-name {
-      font-size: 22px;
-      font-weight: 800;
-      margin-bottom: 12px;
-      color: #ffffff;
-    }
-
-    .intro-box {
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(5px);
-      border-radius: 14px;
-      padding: 14px 16px;
-      font-size: 13px;
-      line-height: 1.65;
-      color: #ffffff;
-      text-align: center;
-      word-break: keep-all;
-    }
-
-    .tab-menu {
-      display: flex;
-      border-bottom: 1px solid #e2e8f0;
-      background: #ffffff;
-    }
-
-    .tab-btn {
-      flex: 1;
-      padding: 14px 2px;
-      border: none;
-      background: none;
-      font-size: 13px;
-      font-weight: 700;
-      color: #64748b;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .tab-btn.active {
-      color: var(--lgu-pink);
-      border-bottom: 3.5px solid var(--lgu-pink);
-    }
-
-    .content-area {
-      padding: 20px;
-      background-color: #ffffff;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .info-box {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-
-    .info-item {
-      display: flex;
-      align-items: center;
-      margin-bottom: 12px;
-      font-size: 14px;
-    }
-
-    .info-item:last-child {
-      margin-bottom: 0;
-    }
-
-    .info-item i {
-      width: 28px;
-      color: var(--lgu-pink);
-      font-size: 16px;
-    }
-
-    .info-item span.label {
-      color: var(--text-sub);
-      width: 70px;
-      font-weight: 500;
-    }
-
-    .info-item span.value {
-      font-weight: 700;
-      color: var(--text-main);
-      flex: 1;
-      word-break: keep-all;
-    }
-
-    .btn-vcard {
-      width: 100%;
-      padding: 16px;
-      background: var(--lgu-pink);
-      color: #ffffff;
-      border: none;
-      border-radius: 14px;
-      font-size: 16px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 14px rgba(230, 0, 126, 0.35);
-      margin-bottom: 16px;
-      text-decoration: none;
-    }
-
-    .quick-actions {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-    }
-
-    .action-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 10px 2px;
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
-      text-decoration: none;
-      color: var(--text-main);
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .action-btn:hover {
-      background: #f1f5f9;
-    }
-
-    .action-btn i {
-      font-size: 16px;
-      color: var(--lgu-pink);
-      margin-bottom: 6px;
-    }
-
-    .service-card {
-      background: #ffffff;
-      border: 1px solid #cbd5e1;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-    }
-
-    .service-card i {
-      font-size: 20px;
-      color: var(--lgu-pink);
-      background: #fde8f3;
-      padding: 12px;
-      border-radius: 12px;
-      flex-shrink: 0;
-    }
-
-    .service-title {
-      font-size: 15px;
-      font-weight: 800;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
-
-    .service-desc {
-      font-size: 12.5px;
-      color: var(--text-sub);
-      font-weight: 500;
-      line-height: 1.4;
-    }
-
-    .event-poster-img {
-      width: 100%;
-      border-radius: 16px;
-      margin-bottom: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      display: none;
-    }
-
-    #chatbase-bubble-button {
-      display: none !important;
-    }
+    .mobile-card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+    .header { background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%); color: #fff; padding: 28px 20px 24px; text-align: center; }
+    .brand-title { font-size: 14px; font-weight: 700; letter-spacing: 1px; margin-bottom: 14px; opacity: 0.95; }
+    .profile-img-wrap { width: 108px; height: 108px; margin: 0 auto 12px; border-radius: 50%; border: 3.5px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2); overflow: hidden; background-color: #fff; }
+    .profile-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .profile-name { font-size: 22px; font-weight: 800; margin-bottom: 12px; color: #fff; }
+    .intro-box { background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 14px; padding: 14px 16px; font-size: 13px; line-height: 1.65; color: #fff; text-align: center; word-break: keep-all; }
+    .tab-menu { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
+    .tab-btn { flex: 1; padding: 14px 2px; border: none; border-bottom: 3.5px solid transparent; background: none; font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { color: var(--lgu-pink); border-bottom-color: var(--lgu-pink); }
+    .content-area { padding: 20px; background-color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .info-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; }
+    .info-item:last-child { margin-bottom: 0; }
+    .info-item i { width: 28px; color: var(--lgu-pink); font-size: 16px; }
+    .info-item span.label { color: var(--text-sub); width: 70px; font-weight: 500; }
+    .info-item span.value { font-weight: 700; color: var(--text-main); flex: 1; word-break: keep-all; }
+    .btn-vcard { width: 100%; padding: 16px; background: var(--lgu-pink); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(230,0,126,0.35); margin-bottom: 16px; text-decoration: none; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .btn-row .btn-vcard { margin-bottom: 0; font-size: 14px; padding: 14px 8px; box-shadow: none; }
+    .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 2px; background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; text-decoration: none; color: var(--text-main); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .action-btn:hover { background: #f1f5f9; }
+    .action-btn i { font-size: 16px; color: var(--lgu-pink); margin-bottom: 6px; }
+    .service-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+    .service-card i { font-size: 20px; color: var(--lgu-pink); background: #fde8f3; padding: 12px; border-radius: 12px; flex-shrink: 0; }
+    .service-title { font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+    .service-desc { font-size: 12.5px; color: var(--text-sub); font-weight: 500; line-height: 1.4; }
+    .event-poster-img { width: 100%; border-radius: 16px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
+    .event-empty { font-size: 13px; color: var(--text-sub); padding: 20px 0; }
+    .welcome-back { background: #fde8f3; color: var(--lgu-dark); font-size: 13px; font-weight: 700; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; text-align: center; display: none; }
+    button:focus-visible, a:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+    #chatbase-bubble-button { display: none !important; }
   </style>
 </head>
 <body>
@@ -327,10 +193,9 @@
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
-        <img id="profileImg" src="https://kanggun1983.github.io/profile.png" alt="강태훈 과장 프로필">
+        <img id="profileImg" src="https://kanggun1983.github.io/profile.png?v=1.1" alt="강태훈 과장 프로필">
       </div>
       <div class="profile-name">강태훈 과장</div>
-      
       <div class="intro-box">
         "정확한 비교 분석과<br>
         투명한 정보 제공을 원칙으로 합니다.<br><br>
@@ -349,6 +214,9 @@
     <div class="content-area">
       <!-- 탭 1: 프로필 -->
       <div id="tab-profile" class="tab-content active">
+        <!-- 강CRM 개인 링크로 들어온 기존 고객에게만 표시 -->
+        <div id="welcomeBack" class="welcome-back">다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂</div>
+
         <div class="info-box">
           <div class="info-item">
             <i class="fa-solid fa-phone"></i>
@@ -376,25 +244,20 @@
         </button>
 
         <div class="quick-actions">
-          <a href="tel:010-4444-3353" class="action-btn">
-            <i class="fa-solid fa-phone"></i>
-            전화걸기
+          <a href="tel:01044443353" class="action-btn">
+            <i class="fa-solid fa-phone"></i>전화걸기
           </a>
-          <a href="sms:010-4444-3353" class="action-btn">
-            <i class="fa-solid fa-comment-dots"></i>
-            문자상담
+          <a href="#" class="action-btn" onclick="openSms(); return false;">
+            <i class="fa-solid fa-comment-dots"></i>문자상담
           </a>
-          <a href="#" class="action-btn" onclick="if(window.chatbase) { window.chatbase('open'); } return false;">
-            <i class="fa-solid fa-robot"></i>
-            AI상담원
+          <a href="#" class="action-btn" onclick="openChatbot(); return false;">
+            <i class="fa-solid fa-robot"></i>AI상담원
           </a>
-          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="action-btn">
-            <i class="fa-solid fa-calendar-check"></i>
-            네이버예약
+          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" rel="noopener" class="action-btn">
+            <i class="fa-solid fa-calendar-check"></i>방문예약
           </a>
-          <a href="http://pf.kakao.com/_hxkKzX" target="_blank" class="action-btn">
-            <i class="fa-solid fa-comments"></i>
-            카카오채널
+          <a href="https://pf.kakao.com/_hxkKzX" target="_blank" rel="noopener" class="action-btn">
+            <i class="fa-solid fa-comments"></i>카카오채널
           </a>
         </div>
       </div>
@@ -440,7 +303,7 @@
             <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
           </button>
 
-          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" class="btn-vcard" style="margin-bottom: 0;">
+          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" rel="noopener" class="btn-vcard" style="margin-bottom: 0;">
             <i class="fa-solid fa-fire"></i> 지금 사전예약 신청하기
           </a>
         </div>
@@ -454,93 +317,167 @@
             <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+</span>
           </div>
         </div>
+        <!-- [추가] 지도 앱 바로 열기 -->
+        <div class="btn-row">
+          <a class="btn-vcard" style="background:#03c75a;" target="_blank" rel="noopener"
+             href="https://map.naver.com/p/search/%EB%8C%80%EA%B5%AC%20%EB%8B%AC%EC%84%9C%EA%B5%AC%20%EC%9B%94%EB%B0%B0%EB%A1%9C%2080">
+            <i class="fa-solid fa-map"></i> 네이버지도
+          </a>
+          <a class="btn-vcard" style="background:#fee500; color:#191919;" target="_blank" rel="noopener"
+             href="https://map.kakao.com/link/search/%EB%8C%80%EA%B5%AC%20%EB%8B%AC%EC%84%9C%EA%B5%AC%20%EC%9B%94%EB%B0%B0%EB%A1%9C%2080">
+            <i class="fa-solid fa-map-location-dot"></i> 카카오맵
+          </a>
+        </div>
         <button class="btn-vcard" style="background: #1e293b;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+')">
           <i class="fa-solid fa-map-pin"></i> 매장 주소 복사하기
         </button>
       </div>
-
     </div>
   </div>
 
   <script>
-    function loadEventPosters() {
+    const PHONE = '01044443353';
+
+    /* ===== 이벤트 포스터 =====
+       [개선] 저장소에 events.json 파일이 있으면 그 목록만 불러옴 (404 요청 수십 개 방지)
+       예: ["event1.jpg", "event2.png"]
+       파일이 없으면 기존 방식(이름 추측)으로 동작 */
+    async function loadEventPosters() {
       const container = document.getElementById('eventPostersContainer');
       container.innerHTML = '';
 
-      const baseNames = ['https://kanggun1983.github.io/event'];
-      for (let i = 1; i <= 10; i++) {
-        baseNames.push(`https://kanggun1983.github.io/event${i}`);
-      }
-      baseNames.push('https://kanggun1983.github.io/1785770353642', 'https://kanggun1983.github.io/1000045372', 'https://kanggun1983.github.io/이벤트');
+      try {
+        const res = await fetch('/events.json?t=' + Date.now(), { cache: 'no-store' });
+        if (res.ok) {
+          const list = await res.json();
+          if (Array.isArray(list) && list.length) {
+            list.forEach(file => {
+              const img = document.createElement('img');
+              img.className = 'event-poster-img';
+              img.alt = '이벤트 포스터';
+              img.onload = function () { this.style.display = 'block'; };
+              img.onerror = function () { this.remove(); checkEmpty(); };
+              img.src = '/' + String(file).replace(/^\/+/, '');
+              container.appendChild(img);
+            });
+            return;
+          }
+        }
+      } catch (e) {}
 
+      // 기존 방식 (events.json 없을 때)
+      const baseNames = ['https://kanggun1983.github.io/event'];
+      for (let i = 1; i <= 10; i++) baseNames.push(`https://kanggun1983.github.io/event${i}`);
+      baseNames.push('https://kanggun1983.github.io/1785770353642', 'https://kanggun1983.github.io/1000045372', 'https://kanggun1983.github.io/이벤트');
       const exts = ['.jpg', '.png', '.jpeg', '.webp', '.JPG', '.PNG'];
 
       baseNames.forEach((name) => {
         const img = document.createElement('img');
         img.className = 'event-poster-img';
         img.alt = '이벤트 포스터';
-
         let extIdx = 0;
-        img.src = name + exts[0];
-
-        img.onerror = function() {
+        img.onerror = function () {
           extIdx++;
-          if (extIdx < exts.length) {
-            this.src = name + exts[extIdx];
-          } else {
-            this.remove();
-          }
+          if (extIdx < exts.length) this.src = name + exts[extIdx];
+          else { this.remove(); checkEmpty(); }
         };
-
-        img.onload = function() {
-          this.style.display = 'block';
-        };
-
+        img.onload = function () { this.style.display = 'block'; };
+        img.src = name + exts[0];
         container.appendChild(img);
       });
     }
 
+    // [추가] 포스터가 하나도 없을 때 빈 화면 대신 안내 문구
+    function checkEmpty() {
+      const container = document.getElementById('eventPostersContainer');
+      if (!container.querySelector('img') && !container.querySelector('.event-empty')) {
+        container.innerHTML = '<p class="event-empty">진행 중인 이벤트는 알림으로 가장 먼저 알려드려요.</p>';
+      }
+    }
+
     function switchTab(evt, tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       evt.currentTarget.classList.add('active');
       document.getElementById('tab-' + tabName).classList.add('active');
     }
 
+    /* ===== [수정] vCard: N 필드 추가, 주소 쉼표 이스케이프, 홈페이지 URL 추가 ===== */
     function downloadVCard() {
-      const vcardData = 
-`BEGIN:VCARD
-VERSION:3.0
-FN:강태훈 과장
-ORG:LGU+ 진천점
-TITLE:모바일 컨설턴트
-TEL;TYPE=CELL:010-4444-3353
-ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+;;;;
-NOTE:정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.
-END:VCARD`;
+      const vcardData = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        'N:강;태훈;;;과장',
+        'FN:강태훈 과장',
+        'ORG:LGU+ 진천점',
+        'TITLE:모바일 컨설턴트',
+        'TEL;TYPE=CELL:010-4444-3353',
+        'ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호\\,114호;;;;대한민국',
+        'URL:https://kanggun1983.github.io/',
+        'NOTE:정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.',
+        'END:VCARD'
+      ].join('\r\n');
 
-      const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8;' });
+      const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', '강태훈_과장_LGU플러스.vcf');
+      link.download = '강태훈_과장_LGU플러스.vcf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
+    /* ===== [수정] 주소 복사: 인앱브라우저 등 clipboard 미지원 대비 ===== */
     function copyAddress(address) {
-      navigator.clipboard.writeText(address).then(() => {
-        alert('주소가 클립보드에 복사되었습니다!');
-      });
+      const done = () => alert('주소가 복사되었습니다!');
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(address).then(done).catch(() => fallbackCopy(address, done));
+      } else {
+        fallbackCopy(address, done);
+      }
+    }
+    function fallbackCopy(text, done) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (ok) done(); else prompt('아래 주소를 길게 눌러 복사해 주세요.', text);
     }
 
-    document.addEventListener('DOMContentLoaded', loadEventPosters);
+    /* ===== [추가] 문자상담: 내용 미리 채우기 (CRM 고객이면 고객번호 포함) ===== */
+    function openSms() {
+      const cid = getCrmId();
+      const body = cid ? `[명함상담/${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ';
+      const sep = isIOS() ? '&' : '?';
+      location.href = `sms:${PHONE}${sep}body=${encodeURIComponent(body)}`;
+    }
 
-    const handleGreetingBubble = setInterval(function() {
-      const allDivs = document.querySelectorAll('div');
-      allDivs.forEach(el => {
+    /* ===== [수정] AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
+    function openChatbot() {
+      if (window.chatbase) {
+        try { window.chatbase('open'); return; } catch (e) {}
+      }
+      if (confirm('AI상담원을 불러오는 중입니다. 문자로 상담하시겠어요?')) openSms();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      loadEventPosters();
+      if (getCrmId()) document.getElementById('welcomeBack').style.display = 'block';
+    });
+
+    /* ===== [수정] 챗봇 인사말 말풍선: 최대 20초만 감시 (무한 반복 → 배터리 소모 방지) ===== */
+    let greetTries = 0;
+    const handleGreetingBubble = setInterval(function () {
+      if (++greetTries > 66) { clearInterval(handleGreetingBubble); return; }
+      document.querySelectorAll('div').forEach(el => {
         if (el.innerText && el.innerText.includes('안녕하세요! LGU+ 진천점입니다') && el.style.position) {
           el.style.background = 'rgba(255, 255, 255, 0.75)';
           el.style.backdropFilter = 'blur(10px)';
@@ -548,14 +485,11 @@ END:VCARD`;
           el.style.border = '1px solid rgba(255, 255, 255, 0.4)';
           el.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
           el.style.transition = 'opacity 0.5s ease';
-
           if (!el.dataset.fadeStarted) {
             el.dataset.fadeStarted = 'true';
-            setTimeout(function() {
+            setTimeout(function () {
               el.style.opacity = '0';
-              setTimeout(function() {
-                el.style.display = 'none';
-              }, 500);
+              setTimeout(function () { el.style.display = 'none'; }, 500);
             }, 4000);
             clearInterval(handleGreetingBubble);
           }
