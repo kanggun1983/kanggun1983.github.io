@@ -21,52 +21,12 @@
   <meta property="og:image" content="https://kanggun1983.github.io/profile.png?v=1.1">
   <meta property="og:url" content="https://kanggun1983.github.io/">
 
-  <!-- [수정] Pretendard 폰트가 실제로 로드되도록 추가 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- OneSignal SDK v16 -->
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
   <script>
-    /* ===== 강CRM 연동: 개인 링크(?c=고객ID)로 들어온 고객 식별 ===== */
-    (function () {
-      try {
-        const params = new URLSearchParams(location.search);
-        const cid = params.get('c');
-        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) {
-          localStorage.setItem('kcrm_cid', cid);
-          // 주소창에서 고객ID 지우기 (명함을 다른 사람에게 공유해도 ID가 안 따라가게)
-          params.delete('c');
-          const q = params.toString();
-          history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
-        }
-      } catch (e) {}
-    })();
-
-    function getCrmId() {
-      try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
-    }
-
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function (OneSignal) {
-      await OneSignal.init({
-        appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
-        serviceWorkerPath: "OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "/" }
-      });
-
-      // 강CRM 고객ID를 OneSignal external_id로 연결 → CRM에서 이 고객에게만 푸시 가능
-      const cid = getCrmId();
-      if (cid) {
-        try {
-          await OneSignal.login(cid);
-          OneSignal.User.addTags({ source: 'namecard', crm: 'linked' });
-        } catch (e) { console.error('CRM link error:', e); }
-      } else {
-        OneSignal.User.addTag('source', 'namecard');
-      }
-    });
-
     /* ===== 인앱브라우저 판별 ===== */
     function getInAppType() {
       const ua = navigator.userAgent.toLowerCase();
@@ -78,6 +38,50 @@
       return null;
     }
 
+    /* ===== 강CRM 연동: 개인 링크(?c=명함번호)로 들어온 고객 식별 ===== */
+    (function () {
+      try {
+        const params = new URLSearchParams(location.search);
+        const cid = params.get('c');
+        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) {
+          localStorage.setItem('kcrm_cid', cid);
+          // [수정] 카톡·네이버 같은 앱 안 브라우저에서는 주소에 명함번호를 남겨둠
+          //   → 고객이 '크롬으로 열기'로 옮겨도 번호가 따라가서 알림이 그 고객에게 연결됨
+          //   (예전: 앱 안에서 번호를 지워버려서, 크롬에서 알림을 켜면 누군지 몰라 강CRM에 '알림은 아직'으로 남았음)
+          if (!getInAppType()) {
+            params.delete('c');
+            const q = params.toString();
+            history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+          }
+        }
+      } catch (e) {}
+    })();
+
+    function getCrmId() {
+      try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
+    }
+
+    // 강CRM 명함번호를 OneSignal external_id로 연결 (같은 고객의 여러 알림을 한 사람으로 묶음)
+    async function linkCrmUser(OneSignal) {
+      const cid = getCrmId();
+      if (!cid) return;
+      try {
+        await OneSignal.login(cid);
+        OneSignal.User.addTags({ source: 'namecard', crm: 'linked' });
+      } catch (e) { console.error('CRM link error:', e); }
+    }
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      await OneSignal.init({
+        appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
+        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/" }
+      });
+      if (getCrmId()) await linkCrmUser(OneSignal);
+      else OneSignal.User.addTag('source', 'namecard');
+    });
+
     function isIOS() {
       return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -87,12 +91,18 @@
       return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     }
 
-    /* ===== [수정] 알림 권한 요청 ===== */
+    // [수정] 다른 브라우저로 옮길 때 쓸 주소 (명함번호 포함)
+    function externalUrl() {
+      const cid = getCrmId();
+      return location.origin + location.pathname + (cid ? '?c=' + encodeURIComponent(cid) : '');
+    }
+
+    /* ===== 알림 권한 요청 ===== */
     function requestNotificationPermission() {
       const inApp = getInAppType();
       if (inApp === 'kakao') {
-        // 카카오톡은 외부 브라우저로 자동 전환 가능
-        location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+        // 카카오톡은 외부 브라우저로 자동 전환 (명함번호도 같이 넘김)
+        location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(externalUrl());
         return;
       }
       if (inApp) {
@@ -113,6 +123,7 @@
             return;
           }
           if (OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn) {
+            await linkCrmUser(OneSignal);   // [추가] 이미 알림을 받는 폰도 강CRM 고객번호로 다시 연결
             alert('이미 이벤트 혜택 알림을 받고 계십니다. 😊');
             return;
           }
@@ -120,6 +131,7 @@
           // v16의 requestPermission()은 결과값을 돌려주지 않으므로 permission 속성으로 확인
           if (OneSignal.Notifications.permission) {
             await OneSignal.User.PushSubscription.optIn();
+            await linkCrmUser(OneSignal);   // [추가] 알림을 켠 뒤 한 번 더 연결 (강CRM에 '알림 받음'으로 바로 뜨게)
             alert('🎉 이벤트 혜택 알림 신청이 완료되었습니다!');
           } else {
             alert('알림이 차단되어 있습니다.\n브라우저 주소창 옆 [🔒/설정] → 알림 → 허용으로 바꿔 주세요.');
@@ -317,7 +329,6 @@
             <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+</span>
           </div>
         </div>
-        <!-- [추가] 지도 앱 바로 열기 -->
         <div class="btn-row">
           <a class="btn-vcard" style="background:#03c75a;" target="_blank" rel="noopener"
              href="https://map.naver.com/p/search/%EB%8C%80%EA%B5%AC%20%EB%8B%AC%EC%84%9C%EA%B5%AC%20%EC%9B%94%EB%B0%B0%EB%A1%9C%2080">
@@ -339,7 +350,7 @@
     const PHONE = '01044443353';
 
     /* ===== 이벤트 포스터 =====
-       [개선] 저장소에 events.json 파일이 있으면 그 목록만 불러옴 (404 요청 수십 개 방지)
+       저장소에 events.json 파일이 있으면 그 목록만 불러옴 (404 요청 수십 개 방지)
        예: ["event1.jpg", "event2.png"]
        파일이 없으면 기존 방식(이름 추측)으로 동작 */
     async function loadEventPosters() {
@@ -387,7 +398,7 @@
       });
     }
 
-    // [추가] 포스터가 하나도 없을 때 빈 화면 대신 안내 문구
+    // 포스터가 하나도 없을 때 빈 화면 대신 안내 문구
     function checkEmpty() {
       const container = document.getElementById('eventPostersContainer');
       if (!container.querySelector('img') && !container.querySelector('.event-empty')) {
@@ -402,7 +413,7 @@
       document.getElementById('tab-' + tabName).classList.add('active');
     }
 
-    /* ===== [수정] vCard: N 필드 추가, 주소 쉼표 이스케이프, 홈페이지 URL 추가 ===== */
+    /* ===== vCard ===== */
     function downloadVCard() {
       const vcardData = [
         'BEGIN:VCARD',
@@ -429,7 +440,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
-    /* ===== [수정] 주소 복사: 인앱브라우저 등 clipboard 미지원 대비 ===== */
+    /* ===== 주소 복사: 인앱브라우저 등 clipboard 미지원 대비 ===== */
     function copyAddress(address) {
       const done = () => alert('주소가 복사되었습니다!');
       if (navigator.clipboard && window.isSecureContext) {
@@ -452,7 +463,7 @@
       if (ok) done(); else prompt('아래 주소를 길게 눌러 복사해 주세요.', text);
     }
 
-    /* ===== [추가] 문자상담: 내용 미리 채우기 (CRM 고객이면 고객번호 포함) ===== */
+    /* ===== 문자상담: 내용 미리 채우기 (CRM 고객이면 명함번호 포함) ===== */
     function openSms() {
       const cid = getCrmId();
       const body = cid ? `[명함상담/${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ';
@@ -460,7 +471,7 @@
       location.href = `sms:${PHONE}${sep}body=${encodeURIComponent(body)}`;
     }
 
-    /* ===== [수정] AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
+    /* ===== AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
     function openChatbot() {
       if (window.chatbase) {
         try { window.chatbase('open'); return; } catch (e) {}
@@ -473,7 +484,7 @@
       if (getCrmId()) document.getElementById('welcomeBack').style.display = 'block';
     });
 
-    /* ===== [수정] 챗봇 인사말 말풍선: 최대 20초만 감시 (무한 반복 → 배터리 소모 방지) ===== */
+    /* ===== 챗봇 인사말 말풍선: 최대 20초만 감시 ===== */
     let greetTries = 0;
     const handleGreetingBubble = setInterval(function () {
       if (++greetTries > 66) { clearInterval(handleGreetingBubble); return; }
