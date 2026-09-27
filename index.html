@@ -45,14 +45,11 @@
         const cid = params.get('c');
         if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) {
           localStorage.setItem('kcrm_cid', cid);
-          // [수정] 카톡·네이버 같은 앱 안 브라우저에서는 주소에 명함번호를 남겨둠
-          //   → 고객이 '크롬으로 열기'로 옮겨도 번호가 따라가서 알림이 그 고객에게 연결됨
-          //   (예전: 앱 안에서 번호를 지워버려서, 크롬에서 알림을 켜면 누군지 몰라 강CRM에 '알림은 아직'으로 남았음)
-          if (!getInAppType()) {
-            params.delete('c');
-            const q = params.toString();
-            history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
-          }
+          // 주소창에서 명함번호 지우기 (고객이 명함을 '공유'해도 번호가 남에게 넘어가 알림이 섞이지 않게)
+          //   카톡 → 크롬으로 옮길 때는 [알림받기]가 번호를 직접 넘겨줌 (externalUrl)
+          params.delete('c');
+          const q = params.toString();
+          history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
         }
       } catch (e) {}
     })();
