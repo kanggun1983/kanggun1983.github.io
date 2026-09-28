@@ -1,15 +1,31 @@
 {
   "name": "LGU+진천점",
   "short_name": "LGU+진천점",
+  "lang": "ko",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#e6007e",
   "icons": [
     {
-      "src": "/app-icon.jpg",
-      "sizes": "192x192 512x512",
-      "type": "image/jpeg"
+      "src": "/card-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/card-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/card-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
