@@ -7,6 +7,39 @@
   <meta name="theme-color" content="#e6007e">
   <title>LGU+진천점</title>
 
+  <script>
+    /* ===== [추가] 명함 링크를 열면 크롬으로 자동으로 열기 =====
+       · 카톡 안 브라우저 → 카톡 전용 '외부 브라우저로 열기' (아이폰은 사파리로)
+       · 안드로이드의 네이버·인스타·페북·밴드·다음 앱 안 브라우저, 삼성 인터넷 등 → 크롬으로
+       · 아이폰은 알림이 '사파리 → 홈 화면에 추가'에서만 돼서 크롬으로 옮기지 않음
+       · 명함번호(?c=)도 그대로 넘김 · 크롬이 없거나 안 열리면 지금 브라우저에서 그대로 보여줌 (무한 반복 방지) */
+    (function () {
+      try {
+        var ua = navigator.userAgent || '';
+        var params = new URLSearchParams(location.search);
+        if (params.get('stay') === '1') return;                                   // 크롬이 없어서 되돌아온 경우
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;   // 설치한 명함 앱으로 연 경우
+        if (Date.now() - Number(sessionStorage.getItem('kcrm_chrome_try') || 0) < 15000) return;   // 방금 옮기려다 실패했으면 그만
+        var isAndroid = /Android/i.test(ua);
+        var isKakao = /KAKAOTALK/i.test(ua);
+        var inApp = /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps|BAND\/|everytimeapp|; wv\)/i.test(ua);
+        var isChrome = /Chrome\/\d/.test(ua) && !/SamsungBrowser|Whale|EdgA|OPR\/|Firefox|YaBrowser|DuckDuckGo/i.test(ua) && !inApp;
+        var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) : '');
+        if (isKakao) {
+          sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
+          location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(target));
+          return;
+        }
+        if (isAndroid && !isChrome) {
+          sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
+          var fallback = target + (target.indexOf('?') >= 0 ? '&' : '?') + 'stay=1';
+          location.replace('intent://' + target.replace(/^https:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(fallback) + ';end');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <!-- 홈 화면 아이콘 -->
   <link rel="icon" type="image/png" href="https://kanggun1983.github.io/profile.png?v=1.1">
   <link rel="apple-touch-icon" href="https://kanggun1983.github.io/profile.png?v=1.1">
@@ -45,6 +78,11 @@
     (function () {
       try {
         const params = new URLSearchParams(location.search);
+        if (params.has('stay')) {   // 크롬으로 못 옮겨서 돌아온 표시는 주소창에서 지움
+          params.delete('stay');
+          const q0 = params.toString();
+          history.replaceState(null, '', location.pathname + (q0 ? '?' + q0 : '') + location.hash);
+        }
         const cid = params.get('c');
         if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) {
           localStorage.setItem('kcrm_cid', cid);
