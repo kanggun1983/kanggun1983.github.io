@@ -97,6 +97,43 @@
       } catch (e) {}
     })();
 
+    /* ===== [추가] 명함 앱으로 설치하기 =====
+       크롬이 '설치할 수 있음(아직 앱으로 설치 안 됨)'이라고 알려줄 때만 버튼을 보여줌
+       → 예전에 '바로가기'로 깔린 고객도 한 번 누르면 새 아이콘의 진짜 앱이 설치됨 */
+    let deferredInstall = null;
+    function showInstallButton(on) {
+      const b = document.getElementById('installAppBtn');
+      if (b) b.style.display = on ? 'flex' : 'none';
+    }
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();          // 크롬 기본 안내 대신 명함 안 버튼으로
+      if (window.KCRM_LEAVING) return;
+      deferredInstall = e;
+      showInstallButton(true);
+    });
+    window.addEventListener('appinstalled', function () {
+      deferredInstall = null;
+      showInstallButton(false);
+    });
+    async function installCardApp() {
+      if (!deferredInstall) {
+        alert('크롬 오른쪽 위 메뉴 [⋮] → [앱 설치]를 눌러 설치해 주세요.');
+        return;
+      }
+      const ev = deferredInstall;
+      deferredInstall = null;      // 설치 창은 한 번만 띄울 수 있음
+      try {
+        ev.prompt();
+        const choice = await ev.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          showInstallButton(false);
+          alert('설치했어요! 🎉\n홈 화면에 예전 명함 아이콘이 있으면 길게 눌러 삭제해 주세요.');
+        }
+      } catch (err) {
+        alert('크롬 오른쪽 위 메뉴 [⋮] → [앱 설치]를 눌러 설치해 주세요.');
+      }
+    }
+
     function getCrmId() {
       try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
     }
@@ -323,6 +360,11 @@
 
         <button class="btn-vcard" style="background: #334155;" onclick="requestNotificationPermission()">
           <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
+        </button>
+
+        <!-- [추가] 아직 앱으로 설치 안 된 폰(안드로이드 크롬 등)에만 보이는 버튼 -->
+        <button id="installAppBtn" class="btn-vcard" style="display: none; background: #0f766e; box-shadow: 0 4px 14px rgba(15,118,110,0.3);" onclick="installCardApp()">
+          <i class="fa-solid fa-mobile-screen-button"></i> 명함 앱으로 설치하기
         </button>
 
         <div class="quick-actions">
@@ -552,6 +594,7 @@
     document.addEventListener('DOMContentLoaded', function () {
       loadEventPosters();
       if (getCrmId()) document.getElementById('welcomeBack').style.display = 'block';
+      if (deferredInstall && !isStandalone()) showInstallButton(true);
     });
 
     /* ===== 챗봇 인사말 말풍선: 최대 20초만 감시 ===== */
