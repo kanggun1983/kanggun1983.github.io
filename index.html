@@ -28,11 +28,13 @@
         var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
+          window.KCRM_LEAVING = true;
           location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(target));
           return;
         }
         if (isAndroid && !isChrome) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
+          window.KCRM_LEAVING = true;   // 크롬으로 옮겨가는 중 → 이 창에서는 알림(OneSignal)을 켜지 않음
           var fallback = target + (target.indexOf('?') >= 0 ? '&' : '?') + 'stay=1';
           location.replace('intent://' + target.replace(/^https:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(fallback) + ';end');
         }
@@ -111,6 +113,8 @@
 
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     OneSignalDeferred.push(async function (OneSignal) {
+      // [추가] 크롬으로 옮겨가는 창에서는 켜지 않음 → OneSignal에 같은 사람이 여러 줄로 쌓이는 것 줄이기
+      if (window.KCRM_LEAVING) return;
       await OneSignal.init({
         appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
         serviceWorkerPath: "OneSignalSDKWorker.js",
