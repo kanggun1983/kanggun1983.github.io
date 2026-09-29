@@ -29,7 +29,9 @@
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
           window.KCRM_LEAVING = true;
-          location.replace('kakaotalk://web/openExternal?url=' + encodeURIComponent(target));
+          location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(target);
+          // [수정] 넘긴 뒤 카톡 안 브라우저는 스스로 닫기 → 카톡으로 돌아오면 흰 빈 화면 없이 바로 채팅방
+          setTimeout(function () { location.href = 'kakaotalk://inappbrowser/close'; }, 1200);
           return;
         }
         if (isAndroid && !isChrome) {
@@ -220,8 +222,9 @@
     function requestNotificationPermission() {
       const inApp = getInAppType();
       if (inApp === 'kakao') {
-        // 카카오톡은 외부 브라우저로 자동 전환 (명함번호도 같이 넘김)
+        // 카카오톡은 외부 브라우저로 자동 전환 (명함번호도 같이 넘김) → 넘긴 뒤 카톡 안 브라우저는 닫기
         location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(externalUrl());
+        setTimeout(function () { location.href = 'kakaotalk://inappbrowser/close'; }, 1200);
         return;
       }
       if (inApp) {
