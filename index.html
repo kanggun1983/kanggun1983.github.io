@@ -732,7 +732,7 @@
         b.className = 'pc-opt' + (PC.st[key] === val ? ' on' : '');
         if (items.length % 2 === 1 && i === items.length - 1) b.style.gridColumn = 'span 2';
         b.textContent = label;
-        b.onclick = () => { PC.st[key] = val; PC.touched = true; if (after) after(); pcRender(); };
+        b.onclick = () => { PC.st[key] = val; PC.touched = true; pcScheduleLog(); if (after) after(); pcRender(); };
         el.appendChild(b);
       });
     }
@@ -765,7 +765,7 @@
       pcEl('pcChg').onchange = e => { PC.st.c = +e.target.value; pcRender(); };
       pcEl('pcDist').onchange = pcRender;
       pcEl('pcDate').onchange = pcRender;
-      ['pcCar', 'pcModel', 'pcPlan', 'pcChg', 'pcDist'].forEach(id => pcEl(id).addEventListener('change', () => { PC.touched = true; }));
+      ['pcCar', 'pcModel', 'pcPlan', 'pcChg', 'pcDist', 'pcDate'].forEach(id => pcEl(id).addEventListener('change', () => { PC.touched = true; pcScheduleLog(); }));
       const known = !!getCrmId();
       pcEl('pcKnown').style.display = known ? 'block' : 'none';
       pcEl('pcNewContact').style.display = known ? 'none' : 'block';
@@ -814,7 +814,7 @@
         btn.textContent = b;
         btn.className = S.brand === b ? 'on' : '';
         btn.setAttribute('aria-pressed', S.brand === b ? 'true' : 'false');
-        btn.onclick = () => { if (S.brand === b) return; S.brand = b; S.m = C.models.findIndex(m => brandOf(m.name) === b); S.c = null; S.d = ''; PC.touched = true; pcRender(); };
+        btn.onclick = () => { if (S.brand === b) return; S.brand = b; S.m = C.models.findIndex(m => brandOf(m.name) === b); S.c = null; S.d = ''; PC.touched = true; pcScheduleLog(); pcRender(); };
         bEl.appendChild(btn);
       });
       const mIdx = C.models.map((m, i) => i).filter(i => brands.length < 2 || brandOf(C.models[i].name) === S.brand);
@@ -926,7 +926,7 @@
         pcEl('pcDetail').innerHTML = h;
       }
       pcEl('pcRes').querySelectorAll('.pc-card').forEach(el => {
-        el.onclick = () => { S.d = el.dataset.k; pcRender(); };
+        el.onclick = () => { S.d = el.dataset.k; PC.touched = true; pcScheduleLog(); pcRender(); };
         el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); S.d = el.dataset.k; pcRender(); } };
       });
 
@@ -1012,7 +1012,7 @@
       if (!A || !A.url) return;
       const who = (extra && extra.name) || (getCrmId() ? '등록 고객' : '새 고객');
       try {
-        fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+        fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ who: who.slice(0, 20), summary: pcSummary().slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
       } catch (e) {}
     }
@@ -1048,14 +1048,21 @@
       }
     }
     /* 명함 링크로 들어온 고객이 계산만 해보고 나갈 때 → 강CRM에 '계산만 해봄'으로 남김 (한 번 열 때 최대 3번) */
-    function pcLogCalc() {
+    //   · 계산을 바꾸고 20초 동안 그대로 두면 한 번 기록 (나가는 순간에만 보내면 폰에 따라 안 가는 경우가 있어서)
+    let pcLogTimer = null;
+    function pcLogCalc(leaving) {
+      clearTimeout(pcLogTimer);
       if (!getCrmId() || !PC.touched || PC.asked || PC.logs >= 3 || !PC.data) return;
       PC.touched = false;
       PC.logs++;
-      pcSend('calc', null, true);
+      pcSend('calc', null, !!leaving);
     }
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pcLogCalc(); });
-    window.addEventListener('pagehide', pcLogCalc);
+    function pcScheduleLog() {
+      clearTimeout(pcLogTimer);
+      if (getCrmId() && !PC.asked) pcLogTimer = setTimeout(() => pcLogCalc(false), 20000);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pcLogCalc(false); });
+    window.addEventListener('pagehide', () => pcLogCalc(true));
 
     document.addEventListener('DOMContentLoaded', function () {
       pcLoad();
