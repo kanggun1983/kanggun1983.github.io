@@ -314,11 +314,42 @@
     .service-card i { font-size: 20px; color: var(--lgu-pink); background: #fde8f3; padding: 12px; border-radius: 12px; flex-shrink: 0; }
     .service-title { font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
     .service-desc { font-size: 12.5px; color: var(--text-sub); font-weight: 500; line-height: 1.4; }
-    .event-poster-img { width: 100%; border-radius: 16px; margin-bottom: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: none; }
-    .event-empty { font-size: 13px; color: var(--text-sub); padding: 20px 0; }
     .welcome-back { background: #fde8f3; color: var(--lgu-dark); font-size: 13px; font-weight: 700; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; text-align: center; display: none; }
-    button:focus-visible, a:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+    button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
     #chatbase-bubble-button { display: none !important; }
+
+    /* ===== 폰값계산 탭 ===== */
+    .pc-intro { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 4px; word-break: keep-all; }
+    .pc-lb { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .pc-lb b { width: 20px; height: 20px; border-radius: 50%; background: var(--lgu-pink); color: #fff; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pc-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pc-opt { padding: 12px 6px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; }
+    .pc-opt.on { border-color: var(--lgu-pink); background: #fde8f3; color: var(--lgu-dark); font-weight: 800; }
+    .pc-sel, .pc-in { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 14px; background: #fff; color: var(--text-main); }
+    .pc-sub { font-size: 12px; font-weight: 600; color: var(--text-sub); margin: 12px 0 5px; }
+    .pc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pc-route { font-size: 13px; font-weight: 800; color: var(--lgu-pink); margin-top: 8px; }
+    .pc-card { border: 1px solid #cbd5e1; border-radius: 14px; padding: 12px; cursor: pointer; background: #fff; text-align: left; color: var(--text-main); }
+    .pc-card.on { border: 2px solid var(--lgu-pink); padding: 11px; }
+    .pc-card .t { font-size: 14px; font-weight: 800; }
+    .pc-card .s { font-size: 11.5px; color: var(--text-sub); margin-top: 2px; }
+    .pc-card .big { font-size: 21px; font-weight: 800; margin: 6px 0 4px; letter-spacing: -0.3px; }
+    .pc-badge { font-size: 11px; font-weight: 800; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 6px; margin-left: 4px; }
+    .pc-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0; color: var(--text-main); }
+    .pc-row > span:first-child { color: var(--text-sub); }
+    .pc-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px 14px; margin-top: 12px; }
+    .pc-info input[type=checkbox] { accent-color: var(--lgu-pink); width: 16px; height: 16px; vertical-align: -3px; margin-right: 4px; }
+    .pc-info input[type=date] { padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #fff; color: var(--text-main); }
+    .pc-ask { color: #b91c1c; font-weight: 700; }
+    .pc-note { font-size: 11px; color: #94a3b8; text-align: right; line-height: 1.5; margin-top: 4px; }
+    .pc-warn { font-size: 12px; font-weight: 600; color: #b91c1c; margin-top: 6px; line-height: 1.5; }
+    .pc-keep { margin-top: 12px; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.7; word-break: keep-all; }
+    .pc-keep.ok { background: #fdf2f8; color: #831843; }
+    .pc-keep.warn { background: #fef3c7; color: #92400e; }
+    .pc-keep.danger { background: #fee2e2; color: #991b1b; }
+    .pc-keep strong { font-weight: 800; }
+    .pc-empty { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-top: 12px; line-height: 1.6; word-break: keep-all; }
+    #pcAsk { margin: 18px 0 0; }
   </style>
 </head>
 <body>
@@ -341,7 +372,7 @@
     <div class="tab-menu">
       <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
       <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
-      <button class="tab-btn" onclick="switchTab(event, 'events')">이벤트/혜택</button>
+      <button class="tab-btn" onclick="switchTab(event, 'calc')">폰값계산</button>
       <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
     </div>
 
@@ -433,18 +464,68 @@
         </div>
       </div>
 
-      <!-- 탭 3: 이벤트 / 혜택 -->
-      <div id="tab-events" class="tab-content">
-        <div style="text-align: center;">
-          <div id="eventPostersContainer"></div>
+      <!-- 탭 3: 폰값계산 -->
+      <div id="tab-calc" class="tab-content">
+        <p class="pc-intro">몇 번만 눌러 보시면 매달 내실 금액을 바로 확인할 수 있어요.</p>
+        <div id="pcBody">
+          <div class="pc-lb"><b>1</b>지금 쓰는 통신사</div>
+          <div class="pc-seg" id="pcNow"></div>
 
-          <button onclick="requestNotificationPermission()" class="btn-vcard" style="background: #334155; margin-bottom: 12px;">
-            <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
+          <div class="pc-lb"><b>2</b>무엇을 하실 건가요</div>
+          <div class="pc-seg" id="pcWhat"></div>
+
+          <!-- 휴대폰 구입 -->
+          <div id="pcPhone">
+            <div class="pc-lb"><b>3</b>개통할 통신사</div>
+            <select class="pc-sel" id="pcCar" aria-label="개통할 통신사"></select>
+            <div class="pc-route" id="pcRoute"></div>
+            <div class="pc-two">
+              <div><div class="pc-sub">지금 쓰는 요금제</div><input class="pc-in" id="pcCurPlan" placeholder="예) 5G 레귤러"></div>
+              <div><div class="pc-sub">지금 쓰는 휴대폰</div><input class="pc-in" id="pcCurPhone" placeholder="예) 갤럭시 S22"></div>
+            </div>
+
+            <div id="pcNotReady" class="pc-empty" style="display:none;"></div>
+
+            <div id="pcReady">
+              <div class="pc-lb"><b>4</b>휴대폰 기종</div>
+              <select class="pc-sel" id="pcModel" aria-label="휴대폰 기종"></select>
+
+              <div class="pc-lb"><b>5</b>요금제</div>
+              <select class="pc-sel" id="pcPlan" aria-label="요금제"></select>
+              <div class="pc-sub">유지 기간 후 바꿀 요금제</div>
+              <select class="pc-sel" id="pcChg" aria-label="유지 기간 후 바꿀 요금제"></select>
+              <div class="pc-warn" id="pcChgWarn"></div>
+
+              <div class="pc-lb"><b>6</b>기기값 결제</div>
+              <div class="pc-seg" id="pcIns"></div>
+
+              <div class="pc-lb"><b>7</b>할인 방식</div>
+              <div class="pc-seg" id="pcRes"></div>
+
+              <div class="pc-info">
+                <div class="pc-row"><span>출고가</span><span id="pcPrice"></span></div>
+                <label class="pc-row" style="cursor:pointer;"><span><input type="checkbox" id="pcDist" checked>유통망지원금 받기</span><span class="pc-ask">담당자 문의</span></label>
+                <div class="pc-row"><span>개통 예정일</span><input type="date" id="pcDate" aria-label="개통 예정일"></div>
+                <div class="pc-note" id="pcNote"></div>
+              </div>
+              <div class="pc-keep ok" id="pcKeep"></div>
+            </div>
+          </div>
+
+          <!-- 알뜰유심 -->
+          <div id="pcMvno" style="display:none;">
+            <div class="pc-lb"><b>3</b>알뜰유심 통신망</div>
+            <div class="pc-seg" id="pcNet"></div>
+            <div class="pc-lb"><b>4</b>한 달 데이터 사용량</div>
+            <div class="pc-seg" id="pcUse"></div>
+            <div class="pc-sub">지금 쓰는 휴대폰 (그대로 쓰실 폰)</div>
+            <input class="pc-in" id="pcMvnoPhone" placeholder="예) 아이폰 13">
+            <div class="pc-empty">지금 폰은 그대로, 유심만 바꾸면 끝이에요. 사용량에 맞는 가장 저렴한 요금제를 찾아서 알려드릴게요.</div>
+          </div>
+
+          <button class="btn-vcard" id="pcAsk" onclick="pcRequest()">
+            <i class="fa-solid fa-comment-dots"></i> 이 조건으로 상담 받기
           </button>
-
-          <a href="https://place.uplus.co.kr/shop/U8303336" target="_blank" rel="noopener" class="btn-vcard" style="margin-bottom: 0;">
-            <i class="fa-solid fa-fire"></i> 지금 사전예약 신청하기
-          </a>
         </div>
       </div>
 
@@ -475,63 +556,6 @@
 
   <script>
     const PHONE = '01044443353';
-
-    /* ===== 이벤트 포스터 =====
-       저장소에 events.json 파일이 있으면 그 목록만 불러옴 (404 요청 수십 개 방지)
-       예: ["event1.jpg", "event2.png"]
-       파일이 없으면 기존 방식(이름 추측)으로 동작 */
-    async function loadEventPosters() {
-      const container = document.getElementById('eventPostersContainer');
-      container.innerHTML = '';
-
-      try {
-        const res = await fetch('/events.json?t=' + Date.now(), { cache: 'no-store' });
-        if (res.ok) {
-          const list = await res.json();
-          if (Array.isArray(list) && list.length) {
-            list.forEach(file => {
-              const img = document.createElement('img');
-              img.className = 'event-poster-img';
-              img.alt = '이벤트 포스터';
-              img.onload = function () { this.style.display = 'block'; };
-              img.onerror = function () { this.remove(); checkEmpty(); };
-              img.src = '/' + String(file).replace(/^\/+/, '');
-              container.appendChild(img);
-            });
-            return;
-          }
-        }
-      } catch (e) {}
-
-      // 기존 방식 (events.json 없을 때)
-      const baseNames = ['https://kanggun1983.github.io/event'];
-      for (let i = 1; i <= 10; i++) baseNames.push(`https://kanggun1983.github.io/event${i}`);
-      baseNames.push('https://kanggun1983.github.io/1785770353642', 'https://kanggun1983.github.io/1000045372', 'https://kanggun1983.github.io/이벤트');
-      const exts = ['.jpg', '.png', '.jpeg', '.webp', '.JPG', '.PNG'];
-
-      baseNames.forEach((name) => {
-        const img = document.createElement('img');
-        img.className = 'event-poster-img';
-        img.alt = '이벤트 포스터';
-        let extIdx = 0;
-        img.onerror = function () {
-          extIdx++;
-          if (extIdx < exts.length) this.src = name + exts[extIdx];
-          else { this.remove(); checkEmpty(); }
-        };
-        img.onload = function () { this.style.display = 'block'; };
-        img.src = name + exts[0];
-        container.appendChild(img);
-      });
-    }
-
-    // 포스터가 하나도 없을 때 빈 화면 대신 안내 문구
-    function checkEmpty() {
-      const container = document.getElementById('eventPostersContainer');
-      if (!container.querySelector('img') && !container.querySelector('.event-empty')) {
-        container.innerHTML = '<p class="event-empty">진행 중인 이벤트는 알림으로 가장 먼저 알려드려요.</p>';
-      }
-    }
 
     function switchTab(evt, tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -591,11 +615,13 @@
     }
 
     /* ===== 문자상담: 내용 미리 채우기 (CRM 고객이면 명함번호 포함) ===== */
-    function openSms() {
-      const cid = getCrmId();
-      const body = cid ? `[명함상담/${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ';
+    function smsTo(body) {
       const sep = isIOS() ? '&' : '?';
       location.href = `sms:${PHONE}${sep}body=${encodeURIComponent(body)}`;
+    }
+    function openSms() {
+      const cid = getCrmId();
+      smsTo(cid ? `[명함상담/${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ');
     }
 
     /* ===== AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
@@ -606,8 +632,211 @@
       if (confirm('AI상담원을 불러오는 중입니다. 문자로 상담하시겠어요?')) openSms();
     }
 
+    /* =====================================================================
+       폰값계산
+       · 지원금·요금제·유지기간·위약금 기준은 /subsidy.json 에서 불러옴
+         (나중에 강CRM 엑셀 등록이 이 파일을 갱신)
+       · carriers[통신사].ready 가 false면 "준비 중" 안내만 보여줌
+       · 할부수수료 연 5.9% 원리금균등, 선택약정 25%
+       ===================================================================== */
+    const PC = { data: null, last: null,
+      st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외' } };
+    const PC_W = ['일', '월', '화', '수', '목', '금', '토'];
+    const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
+    const pcEsc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const pcEl = id => document.getElementById(id);
+    function pcInst(a, n) { const r = 0.059 / 12; return a <= 0 || !n ? 0 : a * r / (1 - Math.pow(1 + r, -n)); }
+    function pcYmd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    function pcFd(d) { return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${PC_W[d.getDay()]})`; }
+
+    function pcSeg(id, key, items, after) {
+      const el = pcEl(id); el.innerHTML = '';
+      items.forEach(([label, val], i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pc-opt' + (PC.st[key] === val ? ' on' : '');
+        if (items.length % 2 === 1 && i === items.length - 1) b.style.gridColumn = 'span 2';
+        b.textContent = label;
+        b.onclick = () => { PC.st[key] = val; if (after) after(); pcRender(); };
+        el.appendChild(b);
+      });
+    }
+    function pcFill(id, items, val) {
+      const el = pcEl(id); el.innerHTML = '';
+      items.forEach(([t, v]) => el.add(new Option(t, v)));
+      el.value = String(val);
+    }
+    function pcType() {
+      const n = PC.st.now, c = PC.st.car;
+      if (n === 'none') return { key: 'new', label: '신규가입' };
+      if (n === c) return { key: 'chg', label: '기기변경' };
+      return { key: 'mnp', label: `${n} → ${c} 통신사이동` };
+    }
+
+    async function pcLoad() {
+      pcEl('pcDate').value = pcYmd(new Date());
+      try {
+        const r = await fetch('/subsidy.json?t=' + Date.now(), { cache: 'no-store' });
+        if (!r.ok) throw new Error('no data');
+        PC.data = await r.json();
+      } catch (e) {
+        pcEl('pcBody').innerHTML = '<p class="pc-empty">지원금 정보를 불러오지 못했어요. 아래 문자상담으로 원하는 기종을 알려주시면 바로 계산해 드릴게요.</p>' +
+          '<button class="btn-vcard" style="margin:14px 0 0;" onclick="openSms()"><i class="fa-solid fa-comment-dots"></i> 문자로 상담하기</button>';
+        return;
+      }
+      const cars = Object.keys(PC.data.carriers);
+      PC.st.car = cars.find(k => PC.data.carriers[k].ready) || cars[0];
+      pcEl('pcCar').onchange = e => { PC.st.car = e.target.value; PC.st.m = 0; PC.st.p = null; PC.st.c = null; PC.st.d = ''; pcRender(); };
+      pcEl('pcModel').onchange = e => { PC.st.m = +e.target.value; PC.st.c = null; PC.st.d = ''; pcRender(); };
+      pcEl('pcPlan').onchange = e => { PC.st.p = +e.target.value; PC.st.d = ''; pcRender(); };
+      pcEl('pcChg').onchange = e => { PC.st.c = +e.target.value; pcRender(); };
+      pcEl('pcDist').onchange = pcRender;
+      pcEl('pcDate').onchange = pcRender;
+      pcRender();
+    }
+
+    function pcRender() {
+      const S = PC.st, D = PC.data;
+      if (!D) return;
+      pcSeg('pcNow', 'now', [['SKT', 'SKT'], ['KT', 'KT'], ['LG U+', 'LG U+'], ['알뜰폰', '알뜰폰'], ['없음 (새 번호)', 'none']], () => { S.d = ''; });
+      pcSeg('pcWhat', 'what', [['휴대폰 구입', 'phone'], ['알뜰유심 가입', 'mvno']]);
+      const phone = S.what === 'phone';
+      pcEl('pcPhone').style.display = phone ? 'block' : 'none';
+      pcEl('pcMvno').style.display = phone ? 'none' : 'block';
+
+      if (!phone) {
+        pcSeg('pcNet', 'net', [['SK망', 'SK망'], ['KT망', 'KT망'], ['LG망', 'LG망']]);
+        pcSeg('pcUse', 'use', [['7GB 이하', '7GB 이하'], ['15GB 내외', '15GB 내외'], ['무제한', '무제한']]);
+        return;
+      }
+
+      pcFill('pcCar', Object.keys(D.carriers).map(k => [k, k]), S.car);
+      const t = pcType();
+      pcEl('pcRoute').textContent = '가입 유형: ' + t.label;
+      const C = D.carriers[S.car], R = D.rules[S.car];
+      const ready = !!(C && C.ready && C.models && C.models.length);
+      pcEl('pcReady').style.display = ready ? 'block' : 'none';
+      pcEl('pcNotReady').style.display = ready ? 'none' : 'block';
+      if (!ready) {
+        pcEl('pcNotReady').textContent = `${S.car} 지원금은 지금 업데이트 중이에요. 원하시는 기종과 요금제를 상담으로 남겨주시면 바로 계산해 드릴게요.`;
+        PC.last = null;
+        return;
+      }
+
+      if (S.m >= C.models.length) S.m = 0;
+      const md = C.models[S.m];
+      const LIM = (R.lim && (R.lim[md.gen] || R.lim['5G'])) || 0;
+      pcFill('pcModel', C.models.map((m, i) => [m.name, i]), S.m);
+
+      const showIdx = C.plans.map((p, i) => i).filter(i => !C.show || C.show.includes(C.plans[i].name));
+      if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
+      pcFill('pcPlan', showIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee), i]), S.p);
+
+      const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids);
+      if (S.c === null || !chgIdx.includes(S.c)) {
+        const safe = chgIdx.filter(i => C.plans[i].fee >= LIM);
+        S.c = safe.length ? safe[safe.length - 1] : chgIdx[chgIdx.length - 1];
+      }
+      pcFill('pcChg', chgIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee) + (C.plans[i].fee < LIM ? ' (위약금 주의)' : ''), i]), S.c);
+
+      pcSeg('pcIns', 'ins', [['24개월', 24], ['36개월', 36], ['현금개통', 0]], () => { S.d = ''; });
+
+      const fee = C.plans[S.p].fee;
+      const sup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
+      const n = S.ins;
+      const calc = (dev, f) => { const m = pcInst(dev, n); return { m, fee: f, dev, cash: n === 0, mon: n ? m + f : f, tot: n ? m * n + f * 24 : dev + f * 24 }; };
+      const g = calc(md.price - sup, fee), s = calc(md.price, fee * 0.75);
+      const best = g.tot <= s.tot ? '공통지원' : '선택약정';
+      if (!S.d) S.d = best;
+
+      const card = (k, o, sub) =>
+        `<div class="pc-card${S.d === k ? ' on' : ''}" data-k="${k}" role="button" tabindex="0">` +
+          `<div class="t">${k}${best === k ? '<span class="pc-badge">추천</span>' : ''}</div>` +
+          `<div class="s">${sub}</div>` +
+          `<div class="s" style="margin-top:6px;">월 납부</div>` +
+          `<div class="big">${won(o.mon)}</div>` +
+          (o.cash ? `<div class="pc-row"><span>기기 일시불</span><span>${won(o.dev)}</span></div>`
+                  : `<div class="pc-row"><span>기기</span><span>${won(o.m)}</span></div>`) +
+          `<div class="pc-row"><span>요금</span><span>${won(o.fee)}</span></div>` +
+        `</div>`;
+      pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '이 요금제는 공통지원금 없음') + card('선택약정', s, '요금 25% 할인');
+      pcEl('pcRes').querySelectorAll('.pc-card').forEach(el => {
+        el.onclick = () => { S.d = el.dataset.k; pcRender(); };
+        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); S.d = el.dataset.k; pcRender(); } };
+      });
+
+      pcEl('pcPrice').textContent = won(md.price) + ' · ' + md.gen;
+      pcEl('pcNote').textContent = `${S.car} 공통지원금 ${C.date || ''} 기준 · ` +
+        (n ? `할부 ${n}개월, 할부수수료 연 5.9% 포함` : '현금개통 (할부수수료 없음)') + ' · 추천은 2년 총 부담액 기준';
+
+      /* 유지 기간 · 변경 가능일 · 위약금 경고 */
+      const dist = pcEl('pcDist').checked;
+      const od = pcEl('pcDate').value ? new Date(pcEl('pcDate').value + 'T00:00:00') : new Date();
+      const K = R.keep || { type: 'D', v: 186 };
+      let days = null, rule;
+      if (S.d === '공통지원' || dist) { days = 186; rule = '186일'; }
+      else if (K.type === 'M') { rule = `개통월 포함 M+${K.v}`; }
+      else { days = K.v; rule = `${K.v}일`; }
+      let cd;
+      if (days !== null) { cd = new Date(od); cd.setDate(cd.getDate() + days); }
+      else { cd = new Date(od.getFullYear(), od.getMonth() + K.v + 1, 1); }
+      const selWarn = S.d === '선택약정' && dist && !(K.type === 'D' && K.v >= 186);
+      const bound = S.d === '공통지원' || (S.d === '선택약정' && dist);
+      const chgPlan = C.plans[S.c];
+      const pen = bound && chgPlan.fee < LIM;
+      const why = S.d === '공통지원' ? '공통지원금' : '유통망지원금';
+
+      pcEl('pcChgWarn').innerHTML = pen
+        ? `<i class="fa-solid fa-circle-exclamation"></i> ${why}을 받으면 ${pcEsc(S.car)} 기준 ${won(LIM)} 미만 요금제로 낮출 때 위약금이 발생해요`
+        : '';
+
+      const cur = S.d === '공통지원' ? g : s;
+      const afterFee = chgPlan.fee * (S.d === '선택약정' ? 0.75 : 1);
+      const after = (cur.cash ? 0 : cur.m) + afterFee;
+      const box = pcEl('pcKeep');
+      box.className = 'pc-keep ' + (pen ? 'danger' : selWarn ? 'warn' : 'ok');
+      box.innerHTML =
+        (pen ? `<div><strong><i class="fa-solid fa-circle-exclamation"></i> ${won(LIM)} 미만 요금제로 낮추면 위약금 발생</strong></div>` : '') +
+        (selWarn ? `<div><strong><i class="fa-solid fa-triangle-exclamation"></i> 유통망지원금을 받으면 선택약정도 186일 유지해야 해요</strong></div>` : '') +
+        `<div>요금제 유지 기간: ${rule}</div>` +
+        `<div>요금제 변경 가능일: <strong>${pcFd(cd)}</strong>부터</div>` +
+        (bound && LIM ? `<div>변경 후에도 ${won(LIM)} 이상 요금제 유지 (${pcEsc(R.ex || '')})</div>` : '') +
+        `<div>변경 후 월 납부: <strong>${won(after)}</strong> (${pcEsc(chgPlan.name)})</div>`;
+
+      PC.last = {
+        route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
+        ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, dist,
+        date: pcYmd(od), chg: chgPlan.name, cd: pcYmd(cd)
+      };
+    }
+
+    /* 상담 요청: 계산한 조건을 문자에 담아서 보내기 (강CRM 연결 전까지) */
+    function pcRequest() {
+      const S = PC.st, cid = getCrmId();
+      const v = id => (pcEl(id) && pcEl(id).value.trim()) || '';
+      const nowLabel = S.now === 'none' ? '새 번호' : S.now;
+      const lines = [`[폰값계산${cid ? '/' + cid : ''}] 상담 요청드려요`];
+      if (S.what === 'phone') {
+        const cur = [nowLabel, v('pcCurPlan'), v('pcCurPhone')].filter(Boolean).join(' / ');
+        lines.push('지금: ' + cur);
+        if (PC.last) {
+          const L = PC.last;
+          lines.push(`희망: ${L.route} / ${L.model} / ${L.plan}`);
+          lines.push(`${L.disc} · ${L.ins} · 월 ${won(L.mon)}`);
+          lines.push(`유통망지원금 ${L.dist ? '받기' : '안 받음'} · 개통 예정 ${L.date}`);
+          lines.push(`변경 예정: ${L.chg} (${L.cd}부터)`);
+        } else {
+          lines.push(`희망: ${S.car} 개통 (기종·요금제 문의)`);
+        }
+      } else {
+        lines.push('지금: ' + [nowLabel, v('pcMvnoPhone')].filter(Boolean).join(' / '));
+        lines.push(`희망: 알뜰유심 ${S.net} / 데이터 ${S.use}`);
+      }
+      smsTo(lines.join('\n'));
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-      loadEventPosters();
+      pcLoad();
       if (getCrmId()) document.getElementById('welcomeBack').style.display = 'block';
       if (deferredInstall && !isStandalone()) showInstallButton(true);
     });
