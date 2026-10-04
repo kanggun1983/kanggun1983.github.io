@@ -322,6 +322,10 @@
     .pc-intro { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 4px; word-break: keep-all; }
     .pc-lb { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
     .pc-lb b { width: 20px; height: 20px; border-radius: 50%; background: var(--lgu-pink); color: #fff; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pc-brand { margin-left: auto; display: inline-flex; gap: 4px; background: #f1f5f9; border-radius: 10px; padding: 3px; }
+    .pc-brand button { border: none; background: transparent; border-radius: 8px; padding: 6px 12px; min-height: 32px; font-size: 13px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
+    .pc-brand button.on { background: #fff; color: var(--lgu-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .pc-card .flow { font-size: 11px; color: var(--text-sub); margin-top: 4px; line-height: 1.4; }
     .pc-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .pc-opt { padding: 12px 6px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; }
     .pc-opt.on { border-color: var(--lgu-pink); background: #fde8f3; color: var(--lgu-dark); font-weight: 800; }
@@ -494,7 +498,7 @@
             <div id="pcNotReady" class="pc-empty" style="display:none;"></div>
 
             <div id="pcReady">
-              <div class="pc-lb"><b>4</b>휴대폰 기종</div>
+              <div class="pc-lb"><b>4</b>휴대폰 기종<span class="pc-brand" id="pcBrand" role="group" aria-label="제조사"></span></div>
               <select class="pc-sel" id="pcModel" aria-label="휴대폰 기종"></select>
 
               <div class="pc-lb"><b>5</b>요금제</div>
@@ -738,7 +742,7 @@
       const cars = Object.keys(PC.data.carriers);
       PC.st.car = cars.find(k => PC.data.carriers[k].ready) || cars[0];
       pcEl('pcCar').onchange = e => { PC.st.car = e.target.value; PC.st.m = 0; PC.st.p = null; PC.st.c = null; PC.st.d = ''; pcRender(); };
-      pcEl('pcModel').onchange = e => { PC.st.m = +e.target.value; PC.st.c = null; PC.st.d = ''; pcRender(); };
+      pcEl('pcModel').onchange = e => { PC.st.m = +e.target.value; PC.st.c = null; PC.st.d = ''; pcRender(); };   // 제조사는 그대로
       pcEl('pcPlan').onchange = e => { PC.st.p = +e.target.value; PC.st.d = ''; pcRender(); };
       pcEl('pcChg').onchange = e => { PC.st.c = +e.target.value; pcRender(); };
       pcEl('pcDist').onchange = pcRender;
@@ -779,41 +783,87 @@
         return;
       }
 
+      /* 제조사 토글 (삼성 · 애플 · 기타) → 그 회사 기종만 */
+      const brandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
+      const brands = ['삼성', '애플', '기타'].filter(b => C.models.some(m => brandOf(m.name) === b));
       if (S.m >= C.models.length) S.m = 0;
+      if (!brands.includes(S.brand)) S.brand = brandOf(C.models[S.m].name);
+      const bEl = pcEl('pcBrand');
+      bEl.innerHTML = '';
+      if (brands.length > 1) brands.forEach(b => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = b;
+        btn.className = S.brand === b ? 'on' : '';
+        btn.setAttribute('aria-pressed', S.brand === b ? 'true' : 'false');
+        btn.onclick = () => { if (S.brand === b) return; S.brand = b; S.m = C.models.findIndex(m => brandOf(m.name) === b); S.c = null; S.d = ''; PC.touched = true; pcRender(); };
+        bEl.appendChild(btn);
+      });
+      const mIdx = C.models.map((m, i) => i).filter(i => brands.length < 2 || brandOf(C.models[i].name) === S.brand);
+      if (!mIdx.includes(S.m)) S.m = mIdx[0];
       const md = C.models[S.m];
       const LIM = (md.gen === 'LTE' ? R.limLTE : R.lim5G) || 0;
-      pcFill('pcModel', C.models.map((m, i) => [m.name, i]), S.m);
+      pcFill('pcModel', mIdx.map(i => [C.models[i].name, i]), S.m);
 
       const showIdx = C.plans.map((p, i) => i).filter(i => (!C.show || C.show.includes(C.plans[i].name)) && C.plans[i].fee > 0);
       if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
       pcFill('pcPlan', showIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee), i]), S.p);
 
       const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids && C.plans[i].fee > 0);
-      if (S.c === null || !chgIdx.includes(S.c)) {
+      if (S.c === null || (S.c !== -1 && !chgIdx.includes(S.c))) {
         const safe = chgIdx.filter(i => C.plans[i].fee >= LIM);
         S.c = safe.length ? safe[safe.length - 1] : chgIdx[chgIdx.length - 1];
       }
-      pcFill('pcChg', chgIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee) + (C.plans[i].fee < LIM ? ' (위약금 주의)' : ''), i]), S.c);
+      pcFill('pcChg', [['그대로 유지 (안 바꿈)', -1], ...chgIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee) + (C.plans[i].fee < LIM ? ' (위약금 주의)' : ''), i])], S.c);
 
       pcSeg('pcIns', 'ins', [['24개월', 24], ['36개월', 36], ['현금개통', 0]], () => { S.d = ''; });
 
       const fee = C.plans[S.p].fee;
       const sup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
       const n = S.ins;
-      const calc = (dev, f) => { const m = pcInst(dev, n); return { m, fee: f, dev, cash: n === 0, mon: n ? m + f : f, tot: n ? m * n + f * 24 : dev + f * 24 }; };
-      const g = calc(md.price - sup, fee), s = calc(md.price, fee * 0.75);
+
+      /* 유지 기간 (할인 방식마다 다름) → 2년 동안 '처음 요금제 몇 달 + 바꾼 요금제 나머지 달'로 평균 */
+      const dist = pcEl('pcDist').checked;
+      const od = pcEl('pcDate').value ? new Date(pcEl('pcDate').value + 'T00:00:00') : new Date();
+      const KC = String(R.keep || 'D186'), K = { type: KC[0] === 'M' ? 'M' : 'D', v: parseInt(KC.slice(1), 10) || 0 };
+      const DK = D.distKeep || 186;
+      const keepOf = (disc) => {
+        let days = null, rule;
+        if (disc === '공통지원' || dist) { days = DK; rule = `${DK}일`; }
+        else if (K.type === 'M') { rule = `개통월 포함 M+${K.v}`; }
+        else { days = K.v; rule = `${K.v}일`; }
+        let cd;
+        if (days !== null) { cd = new Date(od); cd.setDate(cd.getDate() + days); }
+        else { cd = new Date(od.getFullYear(), od.getMonth() + K.v + 1, 1); }
+        const months = Math.min(24, Math.max(0, (cd - od) / 86400000 / 30.4375));
+        return { rule, cd, months };
+      };
+      const noChg = S.c === -1;
+      const chgPlan = noChg ? C.plans[S.p] : C.plans[S.c];
+      const calc = (disc) => {
+        const rate = disc === '선택약정' ? 0.75 : 1;
+        const keep = keepOf(disc);
+        const f1 = fee * rate, f2 = chgPlan.fee * rate;
+        const avg = noChg ? f1 : (f1 * keep.months + f2 * (24 - keep.months)) / 24;
+        const dev = disc === '공통지원' ? md.price - sup : md.price;
+        const m = pcInst(dev, n);
+        return { m, fee: avg, f1, f2, keep, dev, cash: n === 0, mon: n ? m + avg : avg, tot: n ? m * n + avg * 24 : dev + avg * 24 };
+      };
+      const g = calc('공통지원'), s = calc('선택약정');
       const best = g.tot <= s.tot ? '공통지원' : '선택약정';
       if (!S.d) S.d = best;
+      const avgOn = !noChg && chgPlan.fee !== fee;
 
       const card = (k, o, sub) =>
         `<div class="pc-card${S.d === k ? ' on' : ''}" data-k="${k}" role="button" tabindex="0">` +
           `<div class="t">${k}${best === k ? '<span class="pc-badge">추천</span>' : ''}</div>` +
           `<div class="s">${sub}</div>` +
-          `<div class="s" style="margin-top:6px;">월 납부</div>` +
+          `<div class="s" style="margin-top:6px;">${avgOn ? '2년 평균 월 납부' : '월 납부'}</div>` +
           `<div class="big">${won(o.mon)}</div>` +
           (o.cash ? `<div class="pc-row"><span>기기 일시불</span><span>${won(o.dev)}</span></div>`
                   : `<div class="pc-row"><span>기기</span><span>${won(o.m)}</span></div>`) +
-          `<div class="pc-row"><span>요금</span><span>${won(o.fee)}</span></div>` +
+          `<div class="pc-row"><span>요금${avgOn ? ' 평균' : ''}</span><span>${won(o.fee)}</span></div>` +
+          (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
         `</div>`;
       pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '이 요금제는 공통지원금 없음') + card('선택약정', s, '요금 25% 할인');
       pcEl('pcRes').querySelectorAll('.pc-card').forEach(el => {
@@ -823,33 +873,22 @@
 
       pcEl('pcPrice').textContent = won(md.price) + ' · ' + md.gen;
       pcEl('pcNote').textContent = `${S.car} 공통지원금 ${C.date || ''} 기준 · ` +
-        (n ? `할부 ${n}개월, 할부수수료 연 5.9% 포함` : '현금개통 (할부수수료 없음)') + ' · 추천은 2년 총 부담액 기준';
+        (n ? `할부 ${n}개월, 할부수수료 연 5.9% 포함` : '현금개통 (할부수수료 없음)') +
+        (avgOn ? ' · 월 납부는 유지 기간 뒤 요금제 변경까지 반영한 2년 평균' : '') + ' · 추천은 2년 총 부담액 기준';
 
       /* 유지 기간 · 변경 가능일 · 위약금 경고 */
-      const dist = pcEl('pcDist').checked;
-      const od = pcEl('pcDate').value ? new Date(pcEl('pcDate').value + 'T00:00:00') : new Date();
-      const KC = String(R.keep || 'D186'), K = { type: KC[0] === 'M' ? 'M' : 'D', v: parseInt(KC.slice(1), 10) || 0 };
-      const DK = D.distKeep || 186;
-      let days = null, rule;
-      if (S.d === '공통지원' || dist) { days = DK; rule = `${DK}일`; }
-      else if (K.type === 'M') { rule = `개통월 포함 M+${K.v}`; }
-      else { days = K.v; rule = `${K.v}일`; }
-      let cd;
-      if (days !== null) { cd = new Date(od); cd.setDate(cd.getDate() + days); }
-      else { cd = new Date(od.getFullYear(), od.getMonth() + K.v + 1, 1); }
+      const cur = S.d === '공통지원' ? g : s;
+      const { rule, cd } = cur.keep;
       const selWarn = S.d === '선택약정' && dist && !(K.type === 'D' && K.v >= DK);
       const bound = S.d === '공통지원' || (S.d === '선택약정' && dist);
-      const chgPlan = C.plans[S.c];
-      const pen = bound && chgPlan.fee < LIM;
+      const pen = !noChg && bound && chgPlan.fee < LIM;
       const why = S.d === '공통지원' ? '공통지원금' : '유통망지원금';
 
       pcEl('pcChgWarn').innerHTML = pen
         ? `<i class="fa-solid fa-circle-exclamation"></i> ${why}을 받으면 ${pcEsc(S.car)} 기준 ${won(LIM)} 미만 요금제로 낮출 때 위약금이 발생해요`
         : '';
 
-      const cur = S.d === '공통지원' ? g : s;
-      const afterFee = chgPlan.fee * (S.d === '선택약정' ? 0.75 : 1);
-      const after = (cur.cash ? 0 : cur.m) + afterFee;
+      const after = (cur.cash ? 0 : cur.m) + cur.f2;
       const box = pcEl('pcKeep');
       box.className = 'pc-keep ' + (pen ? 'danger' : selWarn ? 'warn' : 'ok');
       box.innerHTML =
@@ -858,12 +897,13 @@
         `<div>요금제 유지 기간: ${rule}</div>` +
         `<div>요금제 변경 가능일: <strong>${pcFd(cd)}</strong>부터</div>` +
         (bound && LIM ? `<div>변경 후에도 ${won(LIM)} 이상 요금제 유지 (${pcEsc(R.ex || '')})</div>` : '') +
-        `<div>변경 후 월 납부: <strong>${won(after)}</strong> (${pcEsc(chgPlan.name)})</div>`;
+        (noChg ? `<div>요금제를 바꾸지 않으면 2년 내내 월 <strong>${won(cur.mon)}</strong></div>`
+               : `<div>변경 후 월 납부: <strong>${won(after)}</strong> (${pcEsc(chgPlan.name)})</div>`);
 
       PC.last = {
         car: S.car, route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
-        ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, dist,
-        date: pcYmd(od), chg: chgPlan.name, cd: pcYmd(cd)
+        ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, avg: avgOn, dist,
+        date: pcYmd(od), chg: noChg ? '그대로 유지' : chgPlan.name, cd: pcYmd(cd)
       };
     }
 
@@ -878,7 +918,7 @@
         if (PC.last) {
           const L = PC.last;
           lines.push(`희망: ${L.route} / ${L.model} / ${L.plan}`);
-          lines.push(`${L.disc} · ${L.ins} · 월 ${won(L.mon)}`);
+          lines.push(`${L.disc} · ${L.ins} · 월 ${won(L.mon)}${L.avg ? ' (2년 평균)' : ''}`);
           lines.push(`유통망지원금 ${L.dist ? '받기' : '안 받음'} · 개통 예정 ${L.date}`);
           lines.push(`변경 예정: ${L.chg} (${L.cd}부터)`);
         } else {
@@ -894,7 +934,7 @@
       const S = PC.st;
       if (S.what !== 'phone') return `알뜰유심 ${S.net} · ${S.use}`;
       const L = PC.last;
-      return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}` : `${S.car} 개통 문의`;
+      return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}${L.avg ? '(평균)' : ''}` : `${S.car} 개통 문의`;
     }
     async function pcSend(kind, extra, keepalive) {
       const data = { kind, cid: getCrmId() || '', name: '', phone: '', agree: '', summary: pcSummary(), detail: pcLines().join('\n'), at: new Date().toISOString(), ...(extra || {}) };
