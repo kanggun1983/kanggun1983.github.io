@@ -156,6 +156,8 @@
     async function linkCrmUser(OneSignal) {
       const cid = getCrmId();
       if (!cid) return;
+      // 강CRM에서 '이 폰으로 알림 받기'를 켠 직원 폰이면 고객으로 바꾸지 않음 (바뀌면 상담요청 알림이 안 옴)
+      try { if (localStorage.getItem('kcrmStaffAlert') === 'on') return; } catch (e) {}
       try {
         await OneSignal.login(cid);
         OneSignal.User.addTags({ source: 'namecard', crm: 'linked' });
@@ -171,6 +173,9 @@
         serviceWorkerPath: "OneSignalSDKWorker.js",
         serviceWorkerParam: { scope: "/" }
       });
+      var isStaffPhone = false;
+      try { isStaffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+      if (isStaffPhone) return;   // 직원 폰: 직원 등록 그대로 두기
       if (getCrmId()) await linkCrmUser(OneSignal);
       else OneSignal.User.addTag('source', 'namecard');
     });
