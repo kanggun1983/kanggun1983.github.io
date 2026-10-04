@@ -330,6 +330,18 @@
     .pc-brand { margin-left: auto; display: inline-flex; gap: 4px; background: #f1f5f9; border-radius: 10px; padding: 3px; }
     .pc-brand button { border: none; background: transparent; border-radius: 8px; padding: 6px 12px; min-height: 32px; font-size: 13px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
     .pc-brand button.on { background: #fff; color: var(--lgu-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .pc-detail { margin-top: 12px; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+    .pc-detail .hd { background: #fdf2f8; color: var(--lgu-dark); font-size: 13px; font-weight: 800; padding: 9px 14px; }
+    .pc-detail .sec { padding: 8px 14px; border-top: 1px solid #f1f5f9; }
+    .pc-detail .sec:first-of-type { border-top: none; }
+    .pc-detail .st { font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 2px; }
+    .pc-detail .ln { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; padding: 3px 0; color: var(--text-main); }
+    .pc-detail .ln > span:first-child { color: var(--text-sub); }
+    .pc-detail .ln.minus > span:last-child { color: var(--lgu-pink); }
+    .pc-detail .ln.sum { font-weight: 800; border-top: 1px dashed #e2e8f0; margin-top: 3px; padding-top: 6px; }
+    .pc-detail .ln.sum > span:first-child { color: var(--text-main); }
+    .pc-detail .ln.big > span:last-child { font-size: 17px; color: var(--lgu-dark); }
+    .pc-detail .eq { font-size: 11.5px; color: #94a3b8; text-align: right; margin-top: -1px; }
     .pc-card .flow { font-size: 11px; color: var(--text-sub); margin-top: 4px; line-height: 1.4; }
     .pc-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .pc-opt { padding: 12px 6px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; }
@@ -517,10 +529,11 @@
 
               <div class="pc-lb"><b>7</b>할인 방식</div>
               <div class="pc-seg" id="pcRes"></div>
+              <div class="pc-detail" id="pcDetail"></div>
 
               <div class="pc-info">
                 <div class="pc-row"><span>출고가</span><span id="pcPrice"></span></div>
-                <label class="pc-row" style="cursor:pointer;"><span><input type="checkbox" id="pcDist" checked>유통망지원금 받기</span><span class="pc-ask">담당자 문의</span></label>
+                <label class="pc-row" id="pcDistRow" style="cursor:pointer;"><span><input type="checkbox" id="pcDist" checked>유통망지원금 받기</span><span class="pc-ask">담당자 문의</span></label>
                 <div class="pc-row"><span>개통 예정일</span><input type="date" id="pcDate" aria-label="개통 예정일"></div>
                 <div class="pc-note" id="pcNote"></div>
               </div>
@@ -828,7 +841,9 @@
       const n = S.ins;
 
       /* 유지 기간 (할인 방식마다 다름) → 2년 동안 '처음 요금제 몇 달 + 바꾼 요금제 나머지 달'로 평균 */
-      const dist = pcEl('pcDist').checked;
+      const distOn = D.showDist !== false;   // 강CRM에서 끄면 '유통망지원금 받기' 칸 숨김
+      pcEl('pcDistRow').style.display = distOn ? '' : 'none';
+      const dist = distOn && pcEl('pcDist').checked;
       const od = pcEl('pcDate').value ? new Date(pcEl('pcDate').value + 'T00:00:00') : new Date();
       const KC = String(R.keep || 'D186'), K = { type: KC[0] === 'M' ? 'M' : 'D', v: parseInt(KC.slice(1), 10) || 0 };
       const DK = D.distKeep || 186;
@@ -871,6 +886,45 @@
           (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
         `</div>`;
       pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '이 요금제는 공통지원금 없음') + card('선택약정', s, '요금 25% 할인');
+      /* 고른 할인 방식의 계산 상세: 할부원금 → 월 할부금 + 요금 = 월 합계 → 요금제 변경 후 */
+      {
+        const o = S.d === '공통지원' ? g : s, isG = S.d === '공통지원';
+        const pName = C.plans[S.p].name;
+        const interest = n ? Math.max(0, o.m * n - o.dev) : 0;
+        const ln = (a, b, cls) => `<div class="ln${cls ? ' ' + cls : ''}"><span>${a}</span><span>${b}</span></div>`;
+        const firstSum = (o.cash ? 0 : o.m) + o.f1;
+        let h = `<div class="hd">${S.d} 계산 상세</div>`;
+        h += `<div class="sec"><div class="st">① 기기값</div>` +
+          ln('출고가', won(md.price)) +
+          (isG ? ln('공통지원금', '-' + won(sup), 'minus') : '') +
+          ln('유통망지원금', '<span class="pc-ask">담당자 문의</span>') +
+          ln(o.cash ? '현금 납부' : '할부원금', won(o.dev), 'sum') +
+          (o.cash ? '' : ln(`월 할부금 (${n}개월 · 연 5.9%)`, won(o.m)) + ln('총 할부수수료', won(interest))) +
+          `</div>`;
+        h += `<div class="sec"><div class="st">② 요금제 · 처음 ${avgOn ? Math.round(o.keep.months) + '개월' : '2년'}</div>` +
+          ln(`${pcEsc(pName)} 기본요금`, won(fee)) +
+          (isG ? '' : ln('선택약정 25% 할인', '-' + won(fee * 0.25), 'minus')) +
+          ln('월 요금', won(o.f1)) +
+          ln('월 합계', won(firstSum), 'sum big') +
+          (o.cash ? '' : `<div class="eq">월 할부금 ${won(o.m)} + 월 요금 ${won(o.f1)}</div>`) +
+          `</div>`;
+        if (avgOn) {
+          const afterSum = (o.cash ? 0 : o.m) + o.f2;
+          h += `<div class="sec"><div class="st">③ 요금제 변경 후 · ${pcFd(o.keep.cd)}부터</div>` +
+            ln(`${pcEsc(chgPlan.name)} 기본요금`, won(chgPlan.fee)) +
+            (isG ? '' : ln('선택약정 25% 할인', '-' + won(chgPlan.fee * 0.25), 'minus')) +
+            ln('월 요금', won(o.f2)) +
+            ln('월 합계', won(afterSum), 'sum big') +
+            (o.cash ? '' : `<div class="eq">월 할부금 ${won(o.m)} + 월 요금 ${won(o.f2)}</div>`) +
+            `</div>`;
+        }
+        h += `<div class="sec">` +
+          ln(avgOn ? '2년 평균 월 납부' : '월 납부', won(o.mon), 'sum') +
+          ln('2년 총 부담액', won(o.tot)) +
+          (n === 36 ? `<div class="eq">36개월 할부는 25개월째부터 월 할부금 ${won(o.m)}이 1년 더 나가요</div>` : '') +
+          `</div>`;
+        pcEl('pcDetail').innerHTML = h;
+      }
       pcEl('pcRes').querySelectorAll('.pc-card').forEach(el => {
         el.onclick = () => { S.d = el.dataset.k; pcRender(); };
         el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); S.d = el.dataset.k; pcRender(); } };
