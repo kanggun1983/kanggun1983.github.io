@@ -907,6 +907,16 @@
         return r.ok ? 'ok' : String(r.status);
       } catch (e) { return 'net'; }
     }
+    // 강CRM을 닫아놔도 직원 폰에 알림 (강CRM에서 '상담 알림 서버'를 연결했을 때만)
+    function pcAlertStaff(extra) {
+      const A = PC.data && PC.data.alert;
+      if (!A || !A.url) return;
+      const who = (extra && extra.name) || (getCrmId() ? '등록 고객' : '새 고객');
+      try {
+        fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+          body: JSON.stringify({ who: who.slice(0, 20), summary: pcSummary().slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
+      } catch (e) {}
+    }
     function pcSmsFallback() {
       const cid = getCrmId();
       smsTo([`[폰값계산${cid ? '/' + cid : ''}] 상담 요청드려요`, ...pcLines()].join('\n'));
@@ -926,6 +936,7 @@
       const res = await pcSend('ask', extra);
       if (res === 'ok') {
         PC.asked = true;
+        pcAlertStaff(extra);
         btn.style.display = 'none';
         const done = pcEl('pcDone');
         done.innerHTML = '상담 요청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.<br><a href="#" onclick="pcSmsFallback(); return false;">급하시면 문자로도 보내기</a>';
