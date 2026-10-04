@@ -511,6 +511,7 @@
               <div><div class="pc-sub">지금 쓰는 요금제</div><input class="pc-in" id="pcCurPlan" placeholder="예) 5G 레귤러"></div>
               <div><div class="pc-sub">지금 쓰는 휴대폰</div><input class="pc-in" id="pcCurPhone" placeholder="예) 갤럭시 S22"></div>
             </div>
+            <label class="pc-agree" id="pcTradeRow" style="margin-top:10px;"><input type="checkbox" id="pcTrade"><span style="flex:1;min-width:0;">지금 쓰는 폰 <b style="color:var(--text-main);">기기 보상(반납)</b>도 받고 싶어요<br><span class="pc-ask" style="font-size:11.5px;">보상금은 담당자가 안내해 드려요</span></span></label>
 
             <div id="pcNotReady" class="pc-empty" style="display:none;"></div>
 
@@ -764,6 +765,7 @@
       pcEl('pcPlan').onchange = e => { PC.st.p = +e.target.value; PC.st.d = ''; pcRender(); };
       pcEl('pcChg').onchange = e => { PC.st.c = +e.target.value; pcRender(); };
       pcEl('pcDist').onchange = pcRender;
+      pcEl('pcTrade').onchange = () => { PC.touched = true; pcScheduleLog(); pcRender(); };
       pcEl('pcDate').onchange = pcRender;
       ['pcCar', 'pcModel', 'pcPlan', 'pcChg', 'pcDist', 'pcDate'].forEach(id => pcEl(id).addEventListener('change', () => { PC.touched = true; pcScheduleLog(); }));
       const known = !!getCrmId();
@@ -897,7 +899,8 @@
         h += `<div class="sec"><div class="st">① 기기값</div>` +
           ln('출고가', won(md.price)) +
           (isG ? ln('공통지원금', '-' + won(sup), 'minus') : '') +
-          ln('유통망지원금', '<span class="pc-ask">담당자 문의</span>') +
+          (dist ? ln('유통망지원금', '<span class="pc-ask">담당자 문의</span>') : '') +
+          (pcEl('pcTrade').checked ? ln('기존 폰 보상', '<span class="pc-ask">담당자 문의</span>') : '') +
           ln(o.cash ? '현금 납부' : '할부원금', won(o.dev), 'sum') +
           (o.cash ? '' : ln(`월 할부금 (${n}개월 · 연 5.9%)`, won(o.m)) + ln('총 할부수수료', won(interest))) +
           `</div>`;
@@ -961,7 +964,7 @@
 
       PC.last = {
         car: S.car, route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
-        ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, avg: avgOn, dist,
+        ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, avg: avgOn, dist, distOn,
         date: pcYmd(od), chg: noChg ? '그대로 유지' : chgPlan.name, cd: pcYmd(cd)
       };
     }
@@ -973,12 +976,12 @@
       const nowLabel = S.now === 'none' ? '새 번호' : S.now;
       const lines = [];
       if (S.what === 'phone') {
-        lines.push('지금: ' + [nowLabel, v('pcCurPlan'), v('pcCurPhone')].filter(Boolean).join(' / '));
+        lines.push('지금: ' + [nowLabel, v('pcCurPlan'), v('pcCurPhone')].filter(Boolean).join(' / ') + (pcEl('pcTrade').checked ? ' · 기기 보상 희망' : ''));
         if (PC.last) {
           const L = PC.last;
           lines.push(`희망: ${L.route} / ${L.model} / ${L.plan}`);
           lines.push(`${L.disc} · ${L.ins} · 월 ${won(L.mon)}${L.avg ? ' (2년 평균)' : ''}`);
-          lines.push(`유통망지원금 ${L.dist ? '받기' : '안 받음'} · 개통 예정 ${L.date}`);
+          lines.push((L.distOn ? `유통망지원금 ${L.dist ? '받기' : '안 받음'} · ` : '') + `개통 예정 ${L.date}`);
           lines.push(`변경 예정: ${L.chg} (${L.cd}부터)`);
         } else {
           lines.push(`희망: ${S.car} 개통 (기종·요금제 문의)`);
@@ -993,7 +996,8 @@
       const S = PC.st;
       if (S.what !== 'phone') return `알뜰유심 ${S.net} · ${S.use}`;
       const L = PC.last;
-      return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}${L.avg ? '(평균)' : ''}` : `${S.car} 개통 문의`;
+      const trade = pcEl('pcTrade') && pcEl('pcTrade').checked ? ' · 보상' : '';
+      return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}${L.avg ? '(평균)' : ''}${trade}` : `${S.car} 개통 문의${trade}`;
     }
     async function pcSend(kind, extra, keepalive) {
       const data = { kind, cid: getCrmId() || '', name: '', phone: '', agree: '', summary: pcSummary(), detail: pcLines().join('\n'), at: new Date().toISOString(), ...(extra || {}) };
