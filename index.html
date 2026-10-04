@@ -349,7 +349,14 @@
     .pc-keep.danger { background: #fee2e2; color: #991b1b; }
     .pc-keep strong { font-weight: 800; }
     .pc-empty { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-top: 12px; line-height: 1.6; word-break: keep-all; }
-    #pcAsk { margin: 18px 0 0; }
+    #pcAsk { margin: 14px 0 0; }
+    #pcAsk:disabled { opacity: 0.6; }
+    .pc-contact { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e2e8f0; }
+    .pc-agree { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--text-sub); line-height: 1.5; margin-top: 10px; cursor: pointer; word-break: keep-all; }
+    .pc-agree input { accent-color: var(--lgu-pink); width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+    .pc-done { margin-top: 14px; background: #ecfdf5; color: #065f46; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 700; line-height: 1.6; text-align: center; word-break: keep-all; }
+    .pc-done a { display: inline-block; margin-top: 6px; font-size: 12.5px; color: #047857; }
+    .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
   </style>
 </head>
 <body>
@@ -523,9 +530,22 @@
             <div class="pc-empty">지금 폰은 그대로, 유심만 바꾸면 끝이에요. 사용량에 맞는 가장 저렴한 요금제를 찾아서 알려드릴게요.</div>
           </div>
 
-          <button class="btn-vcard" id="pcAsk" onclick="pcRequest()">
-            <i class="fa-solid fa-comment-dots"></i> 이 조건으로 상담 받기
-          </button>
+          <div class="pc-contact">
+            <div id="pcKnown" class="pc-sub" style="display:none; margin-top:0;">등록된 연락처로 연락드릴게요.</div>
+            <div id="pcNewContact">
+              <div class="pc-two">
+                <div><div class="pc-sub" style="margin-top:0;">이름 (선택)</div><input class="pc-in" id="pcName" autocomplete="name" placeholder="예) 홍길동"></div>
+                <div><div class="pc-sub" style="margin-top:0;">연락받을 번호</div><input class="pc-in" id="pcTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000"></div>
+              </div>
+              <label class="pc-agree"><input type="checkbox" id="pcAgree">상담을 위해 이름·연락처와 계산한 조건을 강태훈 과장에게 보내는 데 동의해요</label>
+            </div>
+            <div class="pc-warn" id="pcErr" role="alert"></div>
+            <button class="btn-vcard" id="pcAsk" onclick="pcRequest()">
+              <i class="fa-solid fa-paper-plane"></i> 이 조건으로 상담 받기
+            </button>
+            <div id="pcDone" class="pc-done" style="display:none;" role="status"></div>
+            <p class="pc-privacy" id="pcPrivacy">계산한 조건은 상담을 위해 담당자에게만 전달돼요.</p>
+          </div>
         </div>
       </div>
 
@@ -639,7 +659,9 @@
        · carriers[통신사].ready 가 false면 "준비 중" 안내만 보여줌
        · 할부수수료 연 5.9% 원리금균등, 선택약정 25%
        ===================================================================== */
-    const PC = { data: null, last: null,
+    const FS_BASE = 'https://firestore.googleapis.com/v1/projects/phoneplace-db/databases/(default)/documents/';
+    const FS_KEY = 'AIzaSyCEtd4aYZtxF7RTciLDHEc9oSReCE4_1rk';   // 웹용 공개 키 (보안은 Firebase 규칙이 담당)
+    const PC = { data: null, last: null, touched: false, asked: false, logs: 0,
       st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외' } };
     const PC_W = ['일', '월', '화', '수', '목', '금', '토'];
     const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
@@ -649,6 +671,37 @@
     function pcYmd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
     function pcFd(d) { return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${PC_W[d.getDay()]})`; }
 
+    // 강CRM에서 올린 지원금(Firestore) → 없으면 저장소의 subsidy.json
+    async function pcFetchData() {
+      try {
+        const r = await fetch(FS_BASE + 'card_public/phonecalc?key=' + FS_KEY, { cache: 'no-store' });
+        if (r.ok) {
+          const j = await r.json();
+          const txt = j && j.fields && j.fields.json && j.fields.json.stringValue;
+          if (txt) {
+            const d = JSON.parse(txt);
+            if (Object.values(d.carriers || {}).some(c => c.ready && !c.hidden && c.models && c.models.length)) return d;
+          }
+        }
+      } catch (e) {}
+      const r2 = await fetch('/subsidy.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r2.ok) throw new Error('no data');
+      return r2.json();
+    }
+    // 예전 형식(keep {type,v} · lim {'5G','LTE'})도 같은 모양으로
+    function pcNormalize(d) {
+      d.rules = d.rules || {};
+      Object.keys(d.carriers || {}).forEach(k => {
+        const R = d.rules[k] || {};
+        let keep = R.keep;
+        if (keep && typeof keep === 'object') keep = (keep.type === 'M' ? 'M' : 'D') + keep.v;
+        const lim = R.lim || {};
+        d.rules[k] = { keep: keep || 'D186', lim5G: Number(R.lim5G || lim['5G'] || 0), limLTE: Number(R.limLTE || lim['LTE'] || 0), ex: R.ex || '' };
+      });
+      d.distKeep = Number(d.distKeep) || 186;
+      return d;
+    }
+
     function pcSeg(id, key, items, after) {
       const el = pcEl(id); el.innerHTML = '';
       items.forEach(([label, val], i) => {
@@ -657,7 +710,7 @@
         b.className = 'pc-opt' + (PC.st[key] === val ? ' on' : '');
         if (items.length % 2 === 1 && i === items.length - 1) b.style.gridColumn = 'span 2';
         b.textContent = label;
-        b.onclick = () => { PC.st[key] = val; if (after) after(); pcRender(); };
+        b.onclick = () => { PC.st[key] = val; PC.touched = true; if (after) after(); pcRender(); };
         el.appendChild(b);
       });
     }
@@ -676,9 +729,7 @@
     async function pcLoad() {
       pcEl('pcDate').value = pcYmd(new Date());
       try {
-        const r = await fetch('/subsidy.json?t=' + Date.now(), { cache: 'no-store' });
-        if (!r.ok) throw new Error('no data');
-        PC.data = await r.json();
+        PC.data = pcNormalize(await pcFetchData());
       } catch (e) {
         pcEl('pcBody').innerHTML = '<p class="pc-empty">지원금 정보를 불러오지 못했어요. 아래 문자상담으로 원하는 기종을 알려주시면 바로 계산해 드릴게요.</p>' +
           '<button class="btn-vcard" style="margin:14px 0 0;" onclick="openSms()"><i class="fa-solid fa-comment-dots"></i> 문자로 상담하기</button>';
@@ -692,6 +743,11 @@
       pcEl('pcChg').onchange = e => { PC.st.c = +e.target.value; pcRender(); };
       pcEl('pcDist').onchange = pcRender;
       pcEl('pcDate').onchange = pcRender;
+      ['pcCar', 'pcModel', 'pcPlan', 'pcChg', 'pcDist'].forEach(id => pcEl(id).addEventListener('change', () => { PC.touched = true; }));
+      const known = !!getCrmId();
+      pcEl('pcKnown').style.display = known ? 'block' : 'none';
+      pcEl('pcNewContact').style.display = known ? 'none' : 'block';
+      ['pcTel', 'pcAgree'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('pcErr').textContent = ''; }));
       pcRender();
     }
 
@@ -714,7 +770,7 @@
       const t = pcType();
       pcEl('pcRoute').textContent = '가입 유형: ' + t.label;
       const C = D.carriers[S.car], R = D.rules[S.car];
-      const ready = !!(C && C.ready && C.models && C.models.length);
+      const ready = !!(C && C.ready && !C.hidden && C.models && C.models.length);
       pcEl('pcReady').style.display = ready ? 'block' : 'none';
       pcEl('pcNotReady').style.display = ready ? 'none' : 'block';
       if (!ready) {
@@ -725,14 +781,14 @@
 
       if (S.m >= C.models.length) S.m = 0;
       const md = C.models[S.m];
-      const LIM = (R.lim && (R.lim[md.gen] || R.lim['5G'])) || 0;
+      const LIM = (md.gen === 'LTE' ? R.limLTE : R.lim5G) || 0;
       pcFill('pcModel', C.models.map((m, i) => [m.name, i]), S.m);
 
-      const showIdx = C.plans.map((p, i) => i).filter(i => !C.show || C.show.includes(C.plans[i].name));
+      const showIdx = C.plans.map((p, i) => i).filter(i => (!C.show || C.show.includes(C.plans[i].name)) && C.plans[i].fee > 0);
       if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
       pcFill('pcPlan', showIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee), i]), S.p);
 
-      const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids);
+      const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids && C.plans[i].fee > 0);
       if (S.c === null || !chgIdx.includes(S.c)) {
         const safe = chgIdx.filter(i => C.plans[i].fee >= LIM);
         S.c = safe.length ? safe[safe.length - 1] : chgIdx[chgIdx.length - 1];
@@ -772,15 +828,16 @@
       /* 유지 기간 · 변경 가능일 · 위약금 경고 */
       const dist = pcEl('pcDist').checked;
       const od = pcEl('pcDate').value ? new Date(pcEl('pcDate').value + 'T00:00:00') : new Date();
-      const K = R.keep || { type: 'D', v: 186 };
+      const KC = String(R.keep || 'D186'), K = { type: KC[0] === 'M' ? 'M' : 'D', v: parseInt(KC.slice(1), 10) || 0 };
+      const DK = D.distKeep || 186;
       let days = null, rule;
-      if (S.d === '공통지원' || dist) { days = 186; rule = '186일'; }
+      if (S.d === '공통지원' || dist) { days = DK; rule = `${DK}일`; }
       else if (K.type === 'M') { rule = `개통월 포함 M+${K.v}`; }
       else { days = K.v; rule = `${K.v}일`; }
       let cd;
       if (days !== null) { cd = new Date(od); cd.setDate(cd.getDate() + days); }
       else { cd = new Date(od.getFullYear(), od.getMonth() + K.v + 1, 1); }
-      const selWarn = S.d === '선택약정' && dist && !(K.type === 'D' && K.v >= 186);
+      const selWarn = S.d === '선택약정' && dist && !(K.type === 'D' && K.v >= DK);
       const bound = S.d === '공통지원' || (S.d === '선택약정' && dist);
       const chgPlan = C.plans[S.c];
       const pen = bound && chgPlan.fee < LIM;
@@ -797,28 +854,27 @@
       box.className = 'pc-keep ' + (pen ? 'danger' : selWarn ? 'warn' : 'ok');
       box.innerHTML =
         (pen ? `<div><strong><i class="fa-solid fa-circle-exclamation"></i> ${won(LIM)} 미만 요금제로 낮추면 위약금 발생</strong></div>` : '') +
-        (selWarn ? `<div><strong><i class="fa-solid fa-triangle-exclamation"></i> 유통망지원금을 받으면 선택약정도 186일 유지해야 해요</strong></div>` : '') +
+        (selWarn ? `<div><strong><i class="fa-solid fa-triangle-exclamation"></i> 유통망지원금을 받으면 선택약정도 ${DK}일 유지해야 해요</strong></div>` : '') +
         `<div>요금제 유지 기간: ${rule}</div>` +
         `<div>요금제 변경 가능일: <strong>${pcFd(cd)}</strong>부터</div>` +
         (bound && LIM ? `<div>변경 후에도 ${won(LIM)} 이상 요금제 유지 (${pcEsc(R.ex || '')})</div>` : '') +
         `<div>변경 후 월 납부: <strong>${won(after)}</strong> (${pcEsc(chgPlan.name)})</div>`;
 
       PC.last = {
-        route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
+        car: S.car, route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
         ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, dist,
         date: pcYmd(od), chg: chgPlan.name, cd: pcYmd(cd)
       };
     }
 
-    /* 상담 요청: 계산한 조건을 문자에 담아서 보내기 (강CRM 연결 전까지) */
-    function pcRequest() {
-      const S = PC.st, cid = getCrmId();
+    /* 상담 요청 → 강CRM '명함상담'으로 바로 전달 (안 되면 문자앱으로) */
+    function pcLines() {
+      const S = PC.st;
       const v = id => (pcEl(id) && pcEl(id).value.trim()) || '';
       const nowLabel = S.now === 'none' ? '새 번호' : S.now;
-      const lines = [`[폰값계산${cid ? '/' + cid : ''}] 상담 요청드려요`];
+      const lines = [];
       if (S.what === 'phone') {
-        const cur = [nowLabel, v('pcCurPlan'), v('pcCurPhone')].filter(Boolean).join(' / ');
-        lines.push('지금: ' + cur);
+        lines.push('지금: ' + [nowLabel, v('pcCurPlan'), v('pcCurPhone')].filter(Boolean).join(' / '));
         if (PC.last) {
           const L = PC.last;
           lines.push(`희망: ${L.route} / ${L.model} / ${L.plan}`);
@@ -832,8 +888,64 @@
         lines.push('지금: ' + [nowLabel, v('pcMvnoPhone')].filter(Boolean).join(' / '));
         lines.push(`희망: 알뜰유심 ${S.net} / 데이터 ${S.use}`);
       }
-      smsTo(lines.join('\n'));
+      return lines;
     }
+    function pcSummary() {
+      const S = PC.st;
+      if (S.what !== 'phone') return `알뜰유심 ${S.net} · ${S.use}`;
+      const L = PC.last;
+      return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}` : `${S.car} 개통 문의`;
+    }
+    async function pcSend(kind, extra, keepalive) {
+      const data = { kind, cid: getCrmId() || '', name: '', phone: '', agree: '', summary: pcSummary(), detail: pcLines().join('\n'), at: new Date().toISOString(), ...(extra || {}) };
+      const fields = {};
+      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
+      try {
+        const r = await fetch(FS_BASE + 'card_requests?key=' + FS_KEY, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive
+        });
+        return r.ok ? 'ok' : String(r.status);
+      } catch (e) { return 'net'; }
+    }
+    function pcSmsFallback() {
+      const cid = getCrmId();
+      smsTo([`[폰값계산${cid ? '/' + cid : ''}] 상담 요청드려요`, ...pcLines()].join('\n'));
+    }
+    async function pcRequest() {
+      const err = pcEl('pcErr'), btn = pcEl('pcAsk');
+      err.textContent = '';
+      const extra = {};
+      if (!getCrmId()) {
+        const tel = pcEl('pcTel').value.replace(/\D/g, '');
+        if (!/^01\d{8,9}$/.test(tel)) { err.textContent = '연락받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; pcEl('pcTel').focus(); return; }
+        if (!pcEl('pcAgree').checked) { err.textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+        Object.assign(extra, { phone: tel, name: pcEl('pcName').value.trim().slice(0, 20), agree: 'Y' });
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+      const res = await pcSend('ask', extra);
+      if (res === 'ok') {
+        PC.asked = true;
+        btn.style.display = 'none';
+        const done = pcEl('pcDone');
+        done.innerHTML = '상담 요청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.<br><a href="#" onclick="pcSmsFallback(); return false;">급하시면 문자로도 보내기</a>';
+        done.style.display = 'block';
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 이 조건으로 상담 받기';
+        err.textContent = `상담 요청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+        pcSmsFallback();
+      }
+    }
+    /* 명함 링크로 들어온 고객이 계산만 해보고 나갈 때 → 강CRM에 '계산만 해봄'으로 남김 (한 번 열 때 최대 3번) */
+    function pcLogCalc() {
+      if (!getCrmId() || !PC.touched || PC.asked || PC.logs >= 3 || !PC.data) return;
+      PC.touched = false;
+      PC.logs++;
+      pcSend('calc', null, true);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pcLogCalc(); });
+    window.addEventListener('pagehide', pcLogCalc);
 
     document.addEventListener('DOMContentLoaded', function () {
       pcLoad();
