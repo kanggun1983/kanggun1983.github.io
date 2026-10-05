@@ -17,6 +17,7 @@
       try {
         var ua = navigator.userAgent || '';
         var params = new URLSearchParams(location.search);
+        if (params.get('staff') === '1') { window.KCRM_STAFF = true; window.KCRM_LEAVING = true; return; }   // 강CRM 안 직원용 폰값계산 (알림·이동·기록 없음)
         if (params.get('stay') === '1') return;                                   // 크롬이 없어서 되돌아온 경우
         if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;   // 설치한 명함 앱으로 연 경우
         if (Date.now() - Number(sessionStorage.getItem('kcrm_chrome_try') || 0) < 15000) return;   // 방금 옮기려다 실패했으면 그만
@@ -149,6 +150,7 @@
     }
 
     function getCrmId() {
+      if (window.KCRM_STAFF) return null;
       try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
     }
 
@@ -387,6 +389,11 @@
     .pc-done { margin-top: 14px; background: #ecfdf5; color: #065f46; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 700; line-height: 1.6; text-align: center; word-break: keep-all; }
     .pc-done a { display: inline-block; margin-top: 6px; font-size: 12.5px; color: #047857; }
     .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
+    /* 강CRM 안 직원용: 계산기만 */
+    body.kc-staff { background: #fff; padding: 0 !important; }
+    body.kc-staff .header, body.kc-staff .tab-menu, body.kc-staff .pc-contact, body.kc-staff #welcomeBack { display: none !important; }
+    body.kc-staff .mobile-card { box-shadow: none !important; border-radius: 0 !important; margin: 0 auto !important; max-width: 640px; }
+    body.kc-staff > :not(.mobile-card):not(script):not(style) { display: none !important; }
   </style>
 </head>
 <body>
@@ -1048,6 +1055,7 @@
       return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}${L.avg ? '(평균)' : ''}${trade}` : `${S.car} 개통 문의${trade}`;
     }
     async function pcSend(kind, extra, keepalive) {
+      if (window.KCRM_STAFF) return false;
       const data = { kind, cid: getCrmId() || '', name: '', phone: '', agree: '', summary: pcSummary(), detail: pcLines().join('\n'), at: new Date().toISOString(), ...(extra || {}) };
       const fields = {};
       Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
@@ -1117,6 +1125,11 @@
     window.addEventListener('pagehide', () => pcLogCalc(true));
 
     document.addEventListener('DOMContentLoaded', function () {
+      if (window.KCRM_STAFF) {
+        document.body.classList.add('kc-staff');
+        const b = document.querySelectorAll('.tab-btn')[2];
+        if (b) switchTab({ currentTarget: b }, 'calc');
+      }
       pcLoad();
       if (getCrmId()) document.getElementById('welcomeBack').style.display = 'block';
       if (deferredInstall && !isStandalone()) showInstallButton(true);
