@@ -369,6 +369,15 @@
     .pc-keep.warn { background: #fef3c7; color: #92400e; }
     .pc-keep.danger { background: #fee2e2; color: #991b1b; }
     .pc-keep strong { font-weight: 800; }
+    .pc-mv { margin-top: 10px; display: grid; gap: 8px; }
+    .pc-mv-h { font-size: 13px; font-weight: 800; color: var(--text-main); margin-top: 12px; }
+    .pc-mv-i { text-align: left; border: 2px solid #e2e8f0; background: #fff; border-radius: 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; cursor: pointer; font: inherit; color: inherit; width: 100%; }
+    .pc-mv-i.on { border-color: var(--lgu-pink); background: #fdf2f8; }
+    .pc-mv-i .nm { font-size: 14px; font-weight: 800; color: var(--text-main); }
+    .pc-mv-i .sb { font-size: 12px; color: var(--text-sub); margin-top: 2px; line-height: 1.4; }
+    .pc-mv-i .pr { margin-left: auto; text-align: right; flex-shrink: 0; }
+    .pc-mv-i .pr b { font-size: 17px; color: var(--lgu-pink); display: block; }
+    .pc-mv-i .pr s { font-size: 11px; color: #94a3b8; }
     .pc-empty { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-top: 12px; line-height: 1.6; word-break: keep-all; }
     #pcAsk { margin: 14px 0 0; }
     #pcAsk:disabled { opacity: 0.6; }
@@ -548,6 +557,7 @@
             <div class="pc-seg" id="pcNet"></div>
             <div class="pc-lb"><b>4</b>한 달 데이터 사용량</div>
             <div class="pc-seg" id="pcUse"></div>
+            <div id="pcMvnoRes"></div>
             <div class="pc-sub">지금 쓰는 휴대폰 (그대로 쓰실 폰)</div>
             <input class="pc-in" id="pcMvnoPhone" placeholder="예) 아이폰 13">
             <div class="pc-empty">지금 폰은 그대로, 유심만 바꾸면 끝이에요. 사용량에 맞는 가장 저렴한 요금제를 찾아서 알려드릴게요.</div>
@@ -725,6 +735,42 @@
       return d;
     }
 
+    // 📶 알뜰유심 추천 (강CRM에서 정책표 사진으로 올린 요금제 · 고객용 정보만)
+    function pcMvGb(p) {
+      const t = String(p.data || '');
+      if (/일\s*\d/.test(t)) return 999;
+      return (t.match(/(\d+(?:\.\d+)?)\s*GB/gi) || []).reduce((s, x) => s + parseFloat(x), 0);
+    }
+    function pcMvQos(p) { const m = String(p.qos || '').match(/(\d+(?:\.\d+)?)\s*(M|K)/i); return m ? (m[2].toUpperCase() === 'M' ? +m[1] : +m[1] / 1000) : 0; }
+    function pcMvnoList() {
+      const S = PC.st, D = PC.data || {};
+      const net = String(S.net || '').replace('망', '');
+      const all = [];
+      (Array.isArray(D.mvno) ? D.mvno : []).filter(m => m.net === net).forEach(m => (m.plans || []).forEach(p => all.push({ ...p, brand: m.brand, date: m.date })));
+      const fit = all.filter(p => {
+        const gb = pcMvGb(p), q = pcMvQos(p);
+        if (/키즈|청소년|시니어/.test(p.name)) return false;
+        if (S.use === '7GB 이하') return gb > 0 && gb <= 8;
+        if (S.use === '15GB 내외') return gb >= 10 && gb <= 25;
+        return gb >= 70 || (gb >= 7 && q >= 1);
+      }).sort((a, b) => a.price - b.price);
+      return { all, fit: fit.slice(0, 4) };
+    }
+    function pcMvnoRender() {
+      const S = PC.st, box = pcEl('pcMvnoRes');
+      if (!box) return;
+      const { all, fit } = pcMvnoList();
+      if (!all.length) { box.innerHTML = ''; return; }
+      const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      if (!fit.length) { box.innerHTML = `<div class="pc-empty">이 조건에 맞는 요금제는 상담으로 찾아드릴게요.</div>`; return; }
+      box.innerHTML = `<div class="pc-mv-h">추천 요금제 <span style="font-weight:600;color:var(--text-sub)">· ${e(fit[0].brand)}${fit[0].date ? ' · ' + e(fit[0].date) + ' 기준' : ''}</span></div><div class="pc-mv">` +
+        fit.map((p, i) => `<button type="button" class="pc-mv-i${S.mplan === p.brand + '|' + p.name ? ' on' : ''}" data-mv="${i}">
+            <span style="min-width:0"><span class="nm">${e(p.name)}</span>
+            <span class="sb">${e([p.data && '데이터 ' + p.data, p.qos && '소진 후 ' + p.qos, p.voice && '통화 ' + p.voice].filter(Boolean).join(' · '))}${p.bonus ? '<br>결합 시 ' + e(p.bonus) : ''}</span></span>
+            <span class="pr"><b>${won(p.price)}</b>${p.base > p.price ? `<s>${won(p.base)}</s>` : ''}</span></button>`).join('') +
+        `</div><div class="pc-sub" style="margin-top:6px">월 요금은 할인 적용 후 금액이에요. 누르면 이 요금제로 상담 요청돼요.</div>`;
+      box.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { const p = fit[+b.dataset.mv]; S.mplan = p.brand + '|' + p.name; S.mprice = p.price; PC.touched = true; pcMvnoRender(); });
+    }
     function pcSeg(id, key, items, after) {
       const el = pcEl(id); el.innerHTML = '';
       items.forEach(([label, val], i) => {
@@ -785,8 +831,9 @@
       pcEl('pcMvno').style.display = phone ? 'none' : 'block';
 
       if (!phone) {
-        pcSeg('pcNet', 'net', [['SK망', 'SK망'], ['KT망', 'KT망'], ['LG망', 'LG망']]);
-        pcSeg('pcUse', 'use', [['7GB 이하', '7GB 이하'], ['15GB 내외', '15GB 내외'], ['무제한', '무제한']]);
+        pcSeg('pcNet', 'net', [['SK망', 'SK망'], ['KT망', 'KT망'], ['LG망', 'LG망']], () => { S.mplan = ''; });
+        pcSeg('pcUse', 'use', [['7GB 이하', '7GB 이하'], ['15GB 내외', '15GB 내외'], ['무제한', '무제한']], () => { S.mplan = ''; });
+        pcMvnoRender();
         return;
       }
 
@@ -989,12 +1036,13 @@
       } else {
         lines.push('지금: ' + [nowLabel, v('pcMvnoPhone')].filter(Boolean).join(' / '));
         lines.push(`희망: 알뜰유심 ${S.net} / 데이터 ${S.use}`);
+        if (S.mplan) lines.push(`관심 요금제: ${S.mplan.replace('|', ' ')} 월 ${won(S.mprice || 0)}`);
       }
       return lines;
     }
     function pcSummary() {
       const S = PC.st;
-      if (S.what !== 'phone') return `알뜰유심 ${S.net} · ${S.use}`;
+      if (S.what !== 'phone') return `알뜰유심 ${S.net} · ${S.use}${S.mplan ? ' · ' + S.mplan.split('|')[1] : ''}`;
       const L = PC.last;
       const trade = pcEl('pcTrade') && pcEl('pcTrade').checked ? ' · 보상' : '';
       return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}${L.avg ? '(평균)' : ''}${trade}` : `${S.car} 개통 문의${trade}`;
