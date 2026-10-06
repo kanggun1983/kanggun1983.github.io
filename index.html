@@ -26,7 +26,7 @@
         var inApp = /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps|BAND\/|everytimeapp|; wv\)/i.test(ua);
         var isChrome = /Chrome\/\d/.test(ua) && !/SamsungBrowser|Whale|EdgA|OPR\/|Firefox|YaBrowser|DuckDuckGo/i.test(ua) && !inApp;
         var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
-        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) : '');
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) : '') + (/^#pn=/.test(location.hash) ? location.hash : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
           window.KCRM_LEAVING = true;
@@ -417,6 +417,19 @@
     .bs .go:disabled { opacity: .5; }
     .bs .tel { display: block; text-align: center; margin-top: 10px; font-size: 14px; font-weight: 700; color: #4f46e5; text-decoration: none; padding: 8px; }
     .bs .err { color: #b91c1c; font-size: 13px; font-weight: 700; margin-top: 8px; min-height: 1em; }
+    /* 📢 매장 공지 창 (강CRM에서 전체 푸시 보낼 때 같이 저장) */
+    .nt-back { position: fixed; inset: 0; z-index: 1100; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; padding: 20px; }
+    .nt { width: 100%; max-width: 360px; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.25); animation: ntIn .25s ease-out; }
+    @keyframes ntIn { from { transform: translateY(16px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+    .nt img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
+    .nt .bd { padding: 18px 18px 16px; }
+    .nt .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: #4f46e5; background: #eef2ff; border-radius: 9999px; padding: 4px 10px; }
+    .nt h3 { font-size: 19px; font-weight: 800; color: var(--text-main); margin: 10px 0 6px; line-height: 1.35; word-break: keep-all; }
+    .nt p { font-size: 15px; line-height: 1.6; color: #334155; white-space: pre-wrap; word-break: break-word; }
+    .nt .row { display: flex; gap: 8px; margin-top: 16px; }
+    .nt .row button { flex: 1; height: 50px; border-radius: 14px; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+    .nt .ok { border: 0; background: linear-gradient(110deg, #3b82f6, #4f46e5); color: #fff; }
+    .nt .ask { border: 1px solid #cbd5e1; background: #fff; color: var(--text-main); }
     /* 강CRM 안 직원용: 계산기만 */
     body.kc-staff { background: #fff; padding: 0 !important; }
     body.kc-staff .header, body.kc-staff .tab-menu, body.kc-staff .pc-contact, body.kc-staff #welcomeBack { display: none !important; }
@@ -1190,6 +1203,87 @@
 
   <script>
   (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
+
+  <!-- 📢 매장 공지 창 -->
+  <div class="nt-back" id="ntBack" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
+    <div class="nt">
+      <img id="ntImg" alt="" style="display:none">
+      <div class="bd">
+        <span class="tag" id="ntTag"><i class="fa-solid fa-bullhorn"></i> 진천점 소식</span>
+        <h3 id="ntTitle"></h3>
+        <p id="ntBody"></p>
+        <div class="row">
+          <button type="button" class="ask" id="ntAsk"><i class="fa-solid fa-comment-dots"></i> 문의하기</button>
+          <button type="button" class="ok" id="ntOk">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /* 📢 알림 내용 팝업
+       ① 푸시 알림을 눌러서 열면 → 그 알림 내용을 바로 보여줌 (주소 끝 #pn= · 한 명에게 보낸 알림도)
+       ② 그냥 명함을 열면 → 강CRM에서 전체 푸시와 함께 저장한 공지를 한 번 보여줌 (14일 동안) */
+    (function () {
+      if (window.KCRM_STAFF || window.KCRM_LEAVING) return;
+      const $ = (id) => document.getElementById(id);
+      const KEY = 'cardNoticeSeen';
+      const seen = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+      const val = (f, k) => (f && f[k] && f[k].stringValue) || '';
+      let bound = false, curId = '';
+      function close() { $('ntBack').style.display = 'none'; try { if (curId) localStorage.setItem(KEY, curId); } catch (e) {} }
+      function show(n, fromPush) {
+        curId = n.id || '';
+        $('ntTag').innerHTML = fromPush ? '<i class="fa-solid fa-bell"></i> 받은 알림' : '<i class="fa-solid fa-bullhorn"></i> 진천점 소식';
+        $('ntTitle').textContent = n.heading || '알려드려요';
+        $('ntBody').textContent = n.body;
+        const img = $('ntImg');
+        if (/^https:\/\//.test(n.image || '')) { img.src = n.image; img.style.display = 'block'; img.onerror = () => { img.style.display = 'none'; }; }
+        else { img.removeAttribute('src'); img.style.display = 'none'; }
+        if (!bound) {
+          bound = true;
+          $('ntOk').onclick = close;
+          $('ntAsk').onclick = () => { close(); if (typeof openSms === 'function') openSms(); };
+          $('ntBack').addEventListener('click', (e) => { if (e.target === $('ntBack')) close(); });
+          document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('ntBack').style.display === 'flex') close(); });
+        }
+        $('ntBack').style.display = 'flex';
+      }
+      // ① 알림을 눌러서 연 경우 (#pn=…)
+      function fromHash() {
+        const m = /^#pn=([A-Za-z0-9_-]{4,3000})$/.exec(location.hash || '');
+        if (!m) return false;
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        try {
+          let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+          const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || '') };
+          if (!n.body) return false;
+          show(n, true);
+          return true;
+        } catch (e) { return false; }
+      }
+      // ② 그냥 연 경우: 전체 공지
+      async function load() {
+        if (fromHash()) return;
+        try {
+          const r = await fetch(FS_BASE + 'card_public/notice?key=' + FS_KEY, { cache: 'no-store' });
+          if (!r.ok) return;
+          const f = (await r.json()).fields || {};
+          const n = { id: val(f, 'id'), heading: val(f, 'heading'), body: val(f, 'body'), image: val(f, 'image'), at: val(f, 'at'), until: val(f, 'until') };
+          const now = Date.now();
+          if (!n.id || !n.body || n.id === seen()) return;
+          if (n.at && new Date(n.at).getTime() > now) return;   // 아직 예약 시간 전
+          if (!n.until || new Date(n.until).getTime() < now) return;   // 기간 지남
+          if ($('ntBack').style.display === 'flex') return;
+          show(n, false);
+        } catch (e) { /* 공지는 없어도 그만 */ }
+      }
+      // 명함이 이미 열려 있을 때 알림을 누르면 주소 끝(#)만 바뀜 → 그때도 보여주기
+      window.addEventListener('hashchange', fromHash);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(load, 300));
+      else setTimeout(load, 300);
+    })();
   </script>
 
   <!-- 📌 맨 아래 고정 배너 -->
