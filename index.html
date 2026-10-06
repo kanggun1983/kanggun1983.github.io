@@ -389,6 +389,34 @@
     .pc-done { margin-top: 14px; background: #ecfdf5; color: #065f46; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 700; line-height: 1.6; text-align: center; word-break: keep-all; }
     .pc-done a { display: inline-block; margin-top: 6px; font-size: 12.5px; color: #047857; }
     .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
+
+    /* 📌 맨 아래 고정 배너 (인터넷+TV 등 · 강CRM에서 문구·켜고 끄기) */
+    body.has-bb { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+    .bb-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; pointer-events: none; background: linear-gradient(to top, rgba(241,245,249,.95) 55%, rgba(241,245,249,0)); }
+    .bb { pointer-events: auto; width: 100%; max-width: 400px; border: 0; border-radius: 22px; padding: 12px 16px; display: flex; align-items: center; gap: 14px; text-align: left; color: #fff; cursor: pointer; font: inherit;
+      background: linear-gradient(110deg, #3b82f6 0%, #4f46e5 100%); box-shadow: 0 8px 22px rgba(79,70,229,.35); }
+    .bb:active { transform: scale(.98); }
+    .bb .ic { width: 52px; height: 52px; border-radius: 9999px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .bb .tt { display: block; font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+    .bb .st { display: block; font-size: 14px; font-weight: 600; opacity: .9; margin-top: 1px; }
+    .bb .ar { margin-left: auto; font-size: 16px; opacity: .85; }
+    body.has-bb #onesignal-bell-container.onesignal-reset.onesignal-bell-container-bottom-right,
+    body.has-bb #onesignal-bell-container.onesignal-reset.onesignal-bell-container-bottom-left { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+    body.has-bb #chatbase-bubble-button { bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
+    .bs-back { position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.5); display: none; align-items: flex-end; justify-content: center; }
+    .bs { width: 100%; max-width: 440px; background: #fff; border-radius: 24px 24px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 90vh; overflow-y: auto; }
+    .bs h3 { font-size: 19px; font-weight: 800; color: var(--text-main); }
+    .bs .sub { font-size: 13px; color: var(--text-sub); margin: 2px 0 14px; }
+    .bs .lab { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin: 12px 0 6px; }
+    .bs .opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .bs .opt { height: 46px; border-radius: 12px; border: 2px solid #e2e8f0; background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: var(--text-main); cursor: pointer; }
+    .bs .opt.on { border-color: #4f46e5; background: #eef2ff; color: #3730a3; }
+    .bs input[type=text], .bs input[type=tel] { width: 100%; height: 48px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 12px; font: inherit; font-size: 16px; }
+    .bs .agree { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text-sub); margin-top: 10px; line-height: 1.5; }
+    .bs .go { width: 100%; height: 54px; border: 0; border-radius: 16px; background: linear-gradient(110deg, #3b82f6, #4f46e5); color: #fff; font: inherit; font-size: 17px; font-weight: 800; margin-top: 16px; cursor: pointer; }
+    .bs .go:disabled { opacity: .5; }
+    .bs .tel { display: block; text-align: center; margin-top: 10px; font-size: 14px; font-weight: 700; color: #4f46e5; text-decoration: none; padding: 8px; }
+    .bs .err { color: #b91c1c; font-size: 13px; font-weight: 700; margin-top: 8px; min-height: 1em; }
     /* 강CRM 안 직원용: 계산기만 */
     body.kc-staff { background: #fff; padding: 0 !important; }
     body.kc-staff .header, body.kc-staff .tab-menu, body.kc-staff .pc-contact, body.kc-staff #welcomeBack { display: none !important; }
@@ -1162,6 +1190,104 @@
 
   <script>
   (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
+
+  <!-- 📌 맨 아래 고정 배너 -->
+  <div class="bb-wrap" id="bbWrap" style="display:none">
+    <button type="button" class="bb" id="bbBtn" aria-haspopup="dialog">
+      <span class="ic"><i class="fa-solid fa-tv" id="bbIcon"></i></span>
+      <span style="min-width:0"><span class="tt" id="bbTitle">인터넷+TV 가입</span><span class="st" id="bbSub">최대 현금 지원</span></span>
+      <i class="fa-solid fa-chevron-right ar" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="bs-back" id="bsBack" role="dialog" aria-modal="true" aria-labelledby="bsTitle">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="bsTitle" style="flex:1">인터넷+TV 가입 상담</h3><button type="button" id="bsClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p class="sub" id="bsSub">원하시는 상품을 고르면 혜택을 계산해서 연락드릴게요.</p>
+      <span class="lab">원하는 상품</span>
+      <div class="opts" id="bsProd"></div>
+      <span class="lab">지금 쓰는 인터넷</span>
+      <div class="opts" id="bsNow"></div>
+      <div id="bsWho">
+        <span class="lab">연락받을 번호</span>
+        <input type="tel" id="bsTel" inputmode="tel" placeholder="010-0000-0000" autocomplete="tel">
+        <span class="lab">이름 <span style="font-weight:500;color:var(--text-sub)">(선택)</span></span>
+        <input type="text" id="bsName" placeholder="예) 홍길동" autocomplete="name">
+        <label class="agree"><input type="checkbox" id="bsAgree" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"> 상담 연락을 위해 이름·번호를 매장 담당자에게 보내는 데 동의해요. (상담 후 보관하지 않아요)</label>
+      </div>
+      <p class="err" id="bsErr" role="alert"></p>
+      <button type="button" class="go" id="bsGo"><i class="fa-solid fa-paper-plane"></i> 상담 신청하기</button>
+      <a class="tel" href="tel:01044443353"><i class="fa-solid fa-phone"></i> 바로 전화로 상담하기</a>
+      <p id="bsDone" style="display:none;text-align:center;font-weight:700;color:#3730a3;padding:14px 0"></p>
+    </div>
+  </div>
+
+  <script>
+    /* 📌 맨 아래 고정 배너 + 상담 신청 창 */
+    (function () {
+      if (window.KCRM_STAFF) return;
+      const $ = (id) => document.getElementById(id);
+      const B = { prod: '인터넷+TV', now: '모름' };
+      function opts(id, key, list) {
+        const box = $(id); box.innerHTML = '';
+        list.forEach(v => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt' + (B[key] === v ? ' on' : ''); b.textContent = v; b.onclick = () => { B[key] = v; opts(id, key, list); }; box.appendChild(b); });
+      }
+      function conf() {
+        const d = (typeof PC !== 'undefined' && PC.data && PC.data.banner) || {};
+        return { on: d.on !== false, title: d.title || '인터넷+TV 가입', sub: d.sub || '최대 현금 지원', icon: d.icon || 'fa-tv' };
+      }
+      function show() {
+        const c = conf();
+        $('bbWrap').style.display = c.on ? 'flex' : 'none';
+        document.body.classList.toggle('has-bb', c.on);
+        $('bbTitle').textContent = c.title; $('bbSub').textContent = c.sub;
+        $('bbIcon').className = 'fa-solid ' + (/^fa-[a-z0-9-]+$/.test(c.icon) ? c.icon : 'fa-tv');
+      }
+      function openSheet() {
+        const c = conf();
+        $('bsTitle').textContent = c.title + ' 상담';
+        opts('bsProd', 'prod', ['인터넷', '인터넷+TV', 'TV만']);
+        opts('bsNow', 'now', ['SK', 'KT', 'LG', '케이블', '없음', '모름']);
+        $('bsWho').style.display = getCrmId() ? 'none' : 'block';
+        $('bsErr').textContent = ''; $('bsDone').style.display = 'none'; $('bsGo').style.display = 'block'; $('bsGo').disabled = false;
+        $('bsBack').style.display = 'flex';
+      }
+      function closeSheet() { $('bsBack').style.display = 'none'; }
+      $('bbBtn').onclick = openSheet;
+      $('bsClose').onclick = closeSheet;
+      $('bsBack').addEventListener('click', (e) => { if (e.target === $('bsBack')) closeSheet(); });
+      $('bsGo').onclick = async () => {
+        const extra = {};
+        if (!getCrmId()) {
+          const tel = $('bsTel').value.replace(/\D/g, '');
+          if (!/^01\d{8,9}$/.test(tel)) { $('bsErr').textContent = '연락받을 번호를 정확히 넣어주세요.'; $('bsTel').focus(); return; }
+          if (!$('bsAgree').checked) { $('bsErr').textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+          Object.assign(extra, { phone: tel, name: $('bsName').value.trim().slice(0, 20), agree: 'Y' });
+        }
+        const summary = `🏠 ${B.prod} 가입 상담 · 지금 ${B.now}`;
+        Object.assign(extra, { summary, detail: `희망: ${B.prod} 가입\n지금 쓰는 인터넷: ${B.now}\n(명함 아래 배너 '${conf().title}'에서 신청)` });
+        $('bsGo').disabled = true; $('bsGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+        const res = await pcSend('ask', extra);
+        $('bsGo').innerHTML = '<i class="fa-solid fa-paper-plane"></i> 상담 신청하기';
+        if (res === 'ok') {
+          $('bsErr').textContent = '';
+          const A = PC.data && PC.data.alert;
+          if (A && A.url) { try { fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: (extra.name || (getCrmId() ? '등록 고객' : '새 고객')).slice(0, 20), summary, crm: A.crm || '' }) }).catch(() => {}); } catch (e) {} }
+          $('bsGo').style.display = 'none';
+          $('bsDone').innerHTML = '상담 신청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.';
+          $('bsDone').style.display = 'block';
+        } else {
+          $('bsGo').disabled = false;
+          $('bsErr').textContent = '신청을 바로 못 보내서 문자로 보내드릴게요.';
+          const cid = getCrmId();
+          smsTo([`[명함배너${cid ? '/' + cid : ''}] ${summary}`].join('\n'));
+        }
+      };
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+      // 지원금 정보가 도착하면 강CRM 설정(문구·켜고 끄기) 반영
+      show();
+      let tries = 0; const t = setInterval(() => { if ((typeof PC !== 'undefined' && PC.data) || ++tries > 40) { clearInterval(t); show(); } }, 250);
+    })();
   </script>
 </body>
 </html>
