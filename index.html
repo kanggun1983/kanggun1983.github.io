@@ -13,6 +13,19 @@
        · 안드로이드의 네이버·인스타·페북·밴드·다음 앱 안 브라우저, 삼성 인터넷 등 → 크롬으로
        · 아이폰은 알림이 '사파리 → 홈 화면에 추가'에서만 돼서 크롬으로 옮기지 않음
        · 명함번호(?c=)도 그대로 넘김 · 크롬이 없거나 안 열리면 지금 브라우저에서 그대로 보여줌 (무한 반복 방지) */
+    /* ===== [추가] 아이폰: 홈 화면에 추가한 명함 앱에도 고객번호(?c=)가 따라가게 =====
+       아이폰은 홈 화면 앱이 사파리와 저장공간을 따로 써서, 사파리에서 기억한 번호를 앱이 모름
+       → 사파리에서는 주소에 ?c=를 남겨두고, 시작 주소가 없는 manifest-ios.json을 써서
+         '홈 화면에 추가' 때 지금 주소(?c= 포함)가 앱 시작 주소가 되게 함 */
+    (function () {
+      try {
+        var p0 = new URLSearchParams(location.search);
+        var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        var c0 = p0.get('c') || '';
+        if (ios && !standalone && p0.get('staff') !== '1' && /^[A-Za-z0-9_-]{2,40}$/.test(c0)) window.KCRM_IOS_KEEP_C = true;
+      } catch (e) {}
+    })();
     (function () {
       try {
         var ua = navigator.userAgent || '';
@@ -47,8 +60,10 @@
 
   <!-- 홈 화면 아이콘 -->
   <link rel="icon" type="image/png" href="https://kanggun1983.github.io/profile.png?v=1.1">
-  <link rel="apple-touch-icon" href="https://kanggun1983.github.io/profile.png?v=1.1">
-  <link rel="manifest" href="/manifest.json">
+  <!-- [수정] 아이폰 홈 화면 아이콘도 안드로이드처럼 진천점 아이콘으로 (예전엔 얼굴 사진) -->
+  <link rel="apple-touch-icon" href="/card-icon-maskable-512.png?v=2">
+  <script>document.write('<link rel="manifest" href="' + (window.KCRM_IOS_KEEP_C ? '/manifest-ios.json?v=1' : '/manifest.json') + '">');</script>
+  <noscript><link rel="manifest" href="/manifest.json"></noscript>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="LGU+진천점">
 
@@ -105,7 +120,8 @@
           localStorage.setItem('kcrm_cid', cid);
           // 주소창에서 명함번호 지우기 (고객이 명함을 '공유'해도 번호가 남에게 넘어가 알림이 섞이지 않게)
           //   카톡 → 크롬으로 옮길 때는 [알림받기]가 번호를 직접 넘겨줌 (externalUrl)
-          params.delete('c');
+          //   [수정] 아이폰 사파리는 남겨둠 → '홈 화면에 추가'한 앱이 이 주소로 시작해서 고객번호를 앎
+          if (!window.KCRM_IOS_KEEP_C) params.delete('c');
           const q = params.toString();
           history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
         }
