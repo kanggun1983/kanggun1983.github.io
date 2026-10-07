@@ -251,6 +251,13 @@
             alert('이 브라우저는 알림을 지원하지 않습니다. Chrome 또는 Safari에서 열어 주세요.');
             return;
           }
+          // 강CRM에서 '이 폰으로 알림 받기'를 켠 직원 폰: 같은 주소라 알림 등록이 하나뿐 → 고객으로 바꾸면 직원 알림이 끊김
+          var staffPhone = false;
+          try { staffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+          if (staffPhone) {
+            alert('이 폰은 강CRM 직원 알림(상담요청·약속 알림)을 받는 폰이라, 고객 명함 알림으로는 연결하지 않아요.\n\n고객 알림 시험은 강CRM 직원 알림을 켜지 않은 다른 폰으로 해주세요.');
+            return;
+          }
           if (OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn) {
             await linkCrmUser(OneSignal);   // [추가] 이미 알림을 받는 폰도 강CRM 고객번호로 다시 연결
             alert('이미 이벤트 혜택 알림을 받고 계십니다. 😊');
