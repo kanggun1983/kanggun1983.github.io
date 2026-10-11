@@ -424,6 +424,10 @@
     .qt-count { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 4px; }
     .qt-count b { color: var(--lgu-pink); font-weight: 700; }
     .qt-go { margin-top: 14px !important; }
+    .qt-off { opacity: .38; filter: grayscale(1); pointer-events: none; }
+    .qt-fix { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; background: #fdf2f8; border-radius: 14px; padding: 10px 12px; }
+    .qt-fix-chip { cursor: default; flex-shrink: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 9999px; }
+    .qt-fix-t { flex: 1; min-width: 160px; font-size: 12.5px; font-weight: 600; color: var(--lgu-dark); line-height: 1.45; word-break: keep-all; }
     .qt-trade-note { font-size: 12.5px; font-weight: 700; color: #b91c1c; margin-top: 6px; }
     .qt-more { width: 100%; margin: 18px 0 4px; padding: 13px 12px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
     .qt-more .qt-chev { margin-left: 4px; transition: transform .2s; }
@@ -693,14 +697,24 @@
             <div class="qt-chips" id="qtNow" role="radiogroup" aria-label="지금 쓰는 통신사"></div>
             <div class="qt-lb">원하는 통신사</div>
             <div class="qt-chips" id="qtCar" role="radiogroup" aria-label="원하는 통신사"></div>
+            <!-- [V3.4] 알뜰폰을 고르면: 통신망 고르기 + 약정 7개월 고정 (할부·할인 방식은 잠김) -->
+            <div id="qtMvnoBox" style="display:none">
+              <div class="qt-lb2">알뜰폰 통신망</div>
+              <div class="qt-chips" id="qtNet" role="radiogroup" aria-label="알뜰폰 통신망"></div>
+              <div class="qt-fix"><span class="qt-chip on qt-fix-chip">약정 7개월 (고정)</span><span class="qt-fix-t">알뜰폰은 약정 7개월로 고정이라 기기값 할부·할인 방식은 고르지 않아도 돼요</span></div>
+            </div>
             <div class="qt-route" id="qtRoute"></div>
-            <div class="qt-lb">기기값 할부</div>
-            <div class="qt-chips" id="qtIns" role="radiogroup" aria-label="기기값 할부"></div>
+            <div id="qtInsWrap">
+              <div class="qt-lb">기기값 할부</div>
+              <div class="qt-chips" id="qtIns" role="radiogroup" aria-label="기기값 할부"></div>
+            </div>
             <div class="qt-lb">지금 내는 월 요금 <span class="qt-opt">(선택)</span></div>
             <div class="qt-chips" id="qtFee" role="radiogroup" aria-label="지금 내는 월 요금"></div>
-            <div class="qt-lb">원하는 할인 방식</div>
-            <p class="qt-help">공통 지원금은 기기값을 할인받고, 선택 약정은 매달 요금의 25%를 할인받아요.</p>
-            <div class="qt-chips" id="qtDisc" role="radiogroup" aria-label="원하는 할인 방식"></div>
+            <div id="qtDiscWrap">
+              <div class="qt-lb">원하는 할인 방식</div>
+              <p class="qt-help">공통 지원금은 기기값을 할인받고, 선택 약정은 매달 요금의 25%를 할인받아요.</p>
+              <div class="qt-chips" id="qtDisc" role="radiogroup" aria-label="원하는 할인 방식"></div>
+            </div>
             <div class="qt-lb">지금 쓰는 폰 보상(반납) <span class="qt-opt">(선택)</span></div>
             <div class="qt-chips" id="qtTrade" role="radiogroup" aria-label="지금 쓰는 폰 보상"></div>
             <div id="qtTradeWrap" style="display:none">
@@ -1432,7 +1446,7 @@
       const car = cars.find(k => norm(k) === norm(q.car) && D.carriers[k].ready && !D.carriers[k].hidden);
       if (car) S.car = car;
       const notes = [];
-      if (q.car === '알뜰폰') notes.push('알뜰폰 희망 · 폰값은 통신사 기준으로 계산 (알뜰유심 요금제는 [알뜰유심 가입]에서 추천)');
+      if (/^알뜰폰/.test(q.car || '')) { const nt = (/(SK|KT|LG)망/.exec(q.car) || [])[0]; notes.push(`알뜰폰${nt ? '(' + nt + ')' : ''} 희망 · 약정 7개월 · 폰값은 통신사 기준으로 계산 (알뜰유심 요금제는 [알뜰유심 가입]에서 추천)`); }
       else if (q.car && !car) notes.push(`${q.car} 지원금표가 없어서 ${S.car}로 계산`);
       const C = D.carriers[S.car];
       let found = false;
@@ -1555,7 +1569,9 @@
        · 강CRM에는 예전처럼 '상담요청'으로 들어가요 (요약 맨 앞 📱 견적요청)
        · 월 납부액 계산기는 아래 [월 납부액 직접 계산해 보기]로 그대로 쓸 수 있어요 · 강CRM 안(직원용)은 계산기 그대로
        ===================================================================== */
-    const QT = { brand: '', model: '', cap: '', color: '', now: '', car: '추천', ins: '24개월 할부', fee: '', disc: '상담이 필요해요', trade: '', memoMode: 'later', sent: false, groups: [], noData: false };
+    const QT = { brand: '', model: '', cap: '', color: '', now: '', car: '추천', net: '추천', ins: '24개월 할부', fee: '', disc: '상담이 필요해요', trade: '', memoMode: 'later', sent: false, groups: [], noData: false };
+    const QT_MVNO_TERM = '약정 7개월';   // 알뜰폰은 약정 7개월 고정
+    const qtNetLabel = () => QT.net === '추천' ? '통신망 추천' : QT.net;
     const QT_OPTIONAL = new Set(['color', 'fee', 'trade']);
     const qtBrandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
     const QT_CAP_RE = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;   // 'iPhone 17 256GB (New)'처럼 용량이 가운데 있어도
@@ -1588,8 +1604,10 @@
     const qtCarNorm = (c) => String(c || '').replace(/\s+/g, '').replace('LGU+', 'LGU+').toUpperCase();
     function qtRoute() {
       if (!QT.now || QT.car === '추천') return '';
-      if (QT.now === '새 번호') return QT.car === '알뜰폰' ? '알뜰폰 신규가입' : '신규가입';
+      const mvTo = QT.net && QT.net !== '추천' ? `알뜰폰(${QT.net})` : '알뜰폰';
+      if (QT.now === '새 번호') return QT.car === '알뜰폰' ? `${mvTo} 신규가입` : '신규가입';
       if (QT.car === '알뜰폰' && QT.now === '알뜰폰') return '알뜰폰끼리 이동 (상담)';
+      if (QT.car === '알뜰폰') return `${QT.now} → ${mvTo} 번호이동`;
       if (QT.now !== '알뜰폰' && qtCarNorm(QT.now) === qtCarNorm(QT.car)) return '기기변경';
       return `${QT.now} → ${QT.car} 번호이동`;
     }
@@ -1635,10 +1653,15 @@
       const order = ['LG U+', 'KT', 'SKT'];
       cars.sort((a, b) => (order.indexOf(a) + 1 || 9) - (order.indexOf(b) + 1 || 9));
       qtChips('qtCar', [...cars.map(c => [c, c]), ['알뜰폰', '알뜰폰'], ['추천해 주세요', '추천']], 'car');
+      const mv = QT.car === '알뜰폰';
+      pcEl('qtMvnoBox').style.display = mv ? 'block' : 'none';
+      if (mv) qtChips('qtNet', [['SK망', 'SK망'], ['KT망', 'KT망'], ['LG망', 'LG망'], ['추천해 주세요', '추천']], 'net');
       pcEl('qtRoute').textContent = qtRoute() ? '가입 유형: ' + qtRoute() : '';
       qtChips('qtIns', [['36개월 할부', '36개월 할부'], ['24개월 할부', '24개월 할부'], ['12개월 할부', '12개월 할부'], ['일시불', '일시불'], ['상담이 필요해요', '할부 상담 필요']], 'ins');
       qtChips('qtFee', [['3만원 이하', '3만원 이하'], ['3~5만원', '3~5만원'], ['5~7만원', '5~7만원'], ['7~10만원', '7~10만원'], ['10만원 이상', '10만원 이상']], 'fee');
       qtChips('qtDisc', [['공통 지원금', '공통 지원금'], ['선택 약정', '선택 약정'], ['상담이 필요해요', '상담이 필요해요']], 'disc');
+      // 알뜰폰: 할부·할인 방식은 잠금 (약정 7개월 고정)
+      ['qtInsWrap', 'qtDiscWrap'].forEach(id => { const w = pcEl(id); w.classList.toggle('qt-off', mv); w.setAttribute('aria-disabled', mv ? 'true' : 'false'); w.querySelectorAll('button').forEach(b => { b.disabled = mv; }); });
       qtChips('qtTrade', [['네, 보상 받고 싶어요', 'yes'], ['아니요', 'no']], 'trade');
       pcEl('qtTradeWrap').style.display = QT.trade === 'yes' ? 'block' : 'none';
       qtChips('qtMemoMode', [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']], 'memoMode');
@@ -1669,18 +1692,19 @@
       const model = QT.noData ? pcEl('qtModelText').value.trim().slice(0, 40) : QT.model;
       const title = [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
       const route = qtRoute(), when = pcEl('qtWhen').value, region = pcEl('qtRegion').value, memo = pcEl('qtMemo').value.trim();
-      const carTxt = QT.car === '추천' ? '추천' : QT.car;
+      const mv = QT.car === '알뜰폰';
+      const carTxt = QT.car === '추천' ? '추천' : (mv ? `알뜰폰(${qtNetLabel()})` : QT.car);
       const tradePhone = QT.trade === 'yes' ? pcEl('qtTradePhone').value.trim().slice(0, 30) : '';
-      const core = `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}${QT.trade === 'yes' ? ' · 기기 보상' : ''}`;
+      const core = `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${mv ? QT_MVNO_TERM : `${QT.ins} · ${QT.disc}`}${QT.trade === 'yes' ? ' · 기기 보상' : ''}`;
       const lines = [
         '📱 견적요청',
         `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
         QT.color && `색상: ${QT.color}`,
         `지금 통신사: ${QT.now || '-'}`,
-        `원하는 통신사: ${QT.car === '추천' ? '추천해 주세요' : QT.car}${route ? ` (${route})` : ''}`,
-        `할부: ${QT.ins}`,
+        `원하는 통신사: ${QT.car === '추천' ? '추천해 주세요' : (mv ? `알뜰폰 · ${QT.net === '추천' ? '통신망 추천해 주세요' : QT.net}` : QT.car)}${route ? ` (${route})` : ''}`,
+        mv ? `약정: 7개월 (알뜰폰 고정)` : `할부: ${QT.ins}`,
         QT.fee && `지금 월 요금: ${QT.fee}`,
-        `할인 방식: ${QT.disc}`,
+        !mv && `할인 방식: ${QT.disc}`,
         QT.trade && `기기 보상: ${QT.trade === 'yes' ? '원해요' + (tradePhone ? ` (지금 폰: ${tradePhone})` : '') : '안 해요'}`,
         `개통 시기: ${when || '-'}`,
         `지역: ${region || '-'}`,
