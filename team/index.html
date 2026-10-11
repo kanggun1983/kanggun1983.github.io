@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <script>window.KCRM_TEAM = true;   /* 👥 직원 공용 명함 (대표 명함과 같은 원본) */</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#e6007e">
+  <title>LGU+ 진천점 명함</title>
+
+  <script>
+    /* ===== [추가] 명함 링크를 열면 크롬으로 자동으로 열기 =====
+       · 카톡 안 브라우저 → 카톡 전용 '외부 브라우저로 열기' (아이폰은 사파리로)
+       · 안드로이드의 네이버·인스타·페북·밴드·다음 앱 안 브라우저, 삼성 인터넷 등 → 크롬으로
+       · 아이폰은 알림이 '사파리 → 홈 화면에 추가'에서만 돼서 크롬으로 옮기지 않음
+       · 명함번호(?c=)도 그대로 넘김 · 크롬이 없거나 안 열리면 지금 브라우저에서 그대로 보여줌 (무한 반복 방지) */
+    /* ===== [추가] 아이폰: 홈 화면에 추가한 명함 앱에도 고객번호(?c=)가 따라가게 =====
+       아이폰은 홈 화면 앱이 사파리와 저장공간을 따로 써서, 사파리에서 기억한 번호를 앱이 모름
+       → 사파리에서는 주소에 ?c=를 남겨두고, 시작 주소가 없는 manifest-ios.json을 써서
+         '홈 화면에 추가' 때 지금 주소(?c= 포함)가 앱 시작 주소가 되게 함 */
+    (function () {
+      try {
+        var p0 = new URLSearchParams(location.search);
+        var ios = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+        var c0 = p0.get('c') || '';
+        if (ios && !standalone && p0.get('staff') !== '1' && /^[A-Za-z0-9_-]{2,40}$/.test(c0)) window.KCRM_IOS_KEEP_C = true;
+      } catch (e) {}
+    })();
+    (function () {
+      try {
+        var ua = navigator.userAgent || '';
+        var params = new URLSearchParams(location.search);
+        if (params.get('staff') === '1') { window.KCRM_STAFF = true; window.KCRM_LEAVING = true; return; }   // 강CRM 안 직원용 폰값계산 (알림·이동·기록 없음)
+        if (params.get('stay') === '1') return;                                   // 크롬이 없어서 되돌아온 경우
+        if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return;   // 설치한 명함 앱으로 연 경우
+        if (Date.now() - Number(sessionStorage.getItem('kcrm_chrome_try') || 0) < 15000) return;   // 방금 옮기려다 실패했으면 그만
+        var isAndroid = /Android/i.test(ua);
+        var isKakao = /KAKAOTALK/i.test(ua);
+        var inApp = /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps|BAND\/|everytimeapp|; wv\)/i.test(ua);
+        var isChrome = /Chrome\/\d/.test(ua) && !/SamsungBrowser|Whale|EdgA|OPR\/|Firefox|YaBrowser|DuckDuckGo/i.test(ua) && !inApp;
+        var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
+        var okp = /^\d{10,14}$/.test(params.get('ok') || '') ? '&ok=' + params.get('ok') : '';   // 방금 본인 확인한 표시도 같이 넘김
+        var r0 = params.get('r') || '';   // [V2.9] 공유받은 명함(?r=)도 같이 넘김
+        var s0 = window.KCRM_TEAM && /^[a-z0-9]{3,12}$/.test(params.get('s') || '') ? params.get('s') : '';   // [V3.8] 직원 공용 명함: 보낸 직원
+        var rg = params.get('reg') === '1' ? 'reg=1' + (params.get('m') ? '&m=' + encodeURIComponent(String(params.get('m')).slice(0, 20)) : '') : '';   // [V3.7] 매장 QR 고객 등록
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (rg ? ((/^[A-Za-z0-9_-]{2,40}$/.test(cid) || /^[A-Za-z0-9_-]{2,40}$/.test(r0)) ? '&' : '?') + rg : '');
+        if (s0) target += (target.indexOf('?') >= 0 ? '&' : '?') + 's=' + s0;
+        target += (/^#pn=/.test(location.hash) ? location.hash : '');
+        if (isKakao) {
+          sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
+          window.KCRM_LEAVING = true;
+          location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(target);
+          // [수정] 넘긴 뒤 카톡 안 브라우저는 스스로 닫기 → 카톡으로 돌아오면 흰 빈 화면 없이 바로 채팅방
+          setTimeout(function () { location.href = 'kakaotalk://inappbrowser/close'; }, 1200);
+          return;
+        }
+        if (isAndroid && !isChrome) {
+          sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
+          window.KCRM_LEAVING = true;   // 크롬으로 옮겨가는 중 → 이 창에서는 알림(OneSignal)을 켜지 않음
+          var fallback = target + (target.indexOf('?') >= 0 ? '&' : '?') + 'stay=1';
+          location.replace('intent://' + target.replace(/^https:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(fallback) + ';end');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- 홈 화면 아이콘 -->
+  <link rel="icon" type="image/png" href="/card-icon-maskable-512.png?v=2">
+  <!-- [수정] 아이폰 홈 화면 아이콘도 안드로이드처럼 진천점 아이콘으로 (예전엔 얼굴 사진) -->
+  <link rel="apple-touch-icon" href="/card-icon-maskable-512.png?v=2">
+  <script>document.write('<link rel="manifest" href="' + (window.KCRM_IOS_KEEP_C ? '/team/manifest-ios.json?v=1' : '/team/manifest.json?v=1') + '">');</script>
+  <noscript><link rel="manifest" href="/team/manifest.json?v=1"></noscript>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="LGU+진천점">
+
+  <!-- 링크 미리보기 카드 (문자·카톡에 링크를 보내면 이 그림·제목으로 카드가 떠요) -->
+  <meta property="og:type" content="profile">
+  <meta property="og:site_name" content="LGU+ 진천점">
+  <meta property="og:locale" content="ko_KR">
+  <meta property="og:title" content="LGU+ 진천점 디지털 명함">
+  <meta property="og:description" content="휴대폰·인터넷 무료 견적 · LGU+ 진천점">
+  <meta property="og:image" content="https://kanggun1983.github.io/team/og-team.jpg?v=1">
+  <meta property="og:image:secure_url" content="https://kanggun1983.github.io/team/og-team.jpg?v=1">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="LGU+ 진천점 디지털 명함">
+  <meta property="og:url" content="https://kanggun1983.github.io/team/">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="LGU+ 진천점 디지털 명함">
+  <meta name="twitter:description" content="휴대폰·인터넷 무료 견적 · LGU+ 진천점">
+  <meta name="twitter:image" content="https://kanggun1983.github.io/team/og-team.jpg?v=1">
+  <meta name="description" content="LGU+ 진천점 디지털 명함 · 휴대폰·인터넷 무료 견적">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- OneSignal SDK v16 -->
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    /* ===== 인앱브라우저 판별 ===== */
+    function getInAppType() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (ua.includes('kakaotalk')) return 'kakao';
+      if (ua.includes('naver(inapp') || ua.includes('naver')) return 'naver';
+      if (ua.includes('daumapps')) return 'daum';
+      if (ua.includes('band/')) return 'band';
+      if (ua.includes('everytimeapp')) return 'everytime';
+      if (ua.includes(' line/')) return 'line';
+      if (ua.includes('instagram')) return 'instagram';
+      if (ua.includes('fban') || ua.includes('fbav')) return 'facebook';
+      return null;
+    }
+
+    /* ===== 강CRM 연동: 개인 링크(?c=명함번호)로 들어온 고객 식별 ===== */
+    (function () {
+      try {
+        const params = new URLSearchParams(location.search);
+        if (params.has('stay')) {   // 크롬으로 못 옮겨서 돌아온 표시는 주소창에서 지움
+          params.delete('stay');
+          const q0 = params.toString();
+          history.replaceState(null, '', location.pathname + (q0 ? '?' + q0 : '') + location.hash);
+        }
+        // [V2.9] 고객이 [명함 공유하기]로 보낸 주소(?r=명함번호) → 받은 사람은 새 손님 + '지인 소개'로 (본인 확인 없이)
+        const rid = params.get('r');
+        if (rid !== null) {
+          if (/^[A-Za-z0-9_-]{2,40}$/.test(rid) && !window.KCRM_STAFF && !window.KCRM_LEAVING && !params.get('c')) {
+            const mine0 = localStorage.getItem('kcrm_cid') || '';
+            if (!mine0 && rid !== mine0) localStorage.setItem('kcrm_ref', rid);
+          }
+          if (!window.KCRM_LEAVING) {
+            params.delete('r');
+            const qr = params.toString();
+            history.replaceState(null, '', location.pathname + (qr ? '?' + qr : '') + location.hash);
+          }
+        }
+        const cid = params.get('c');
+        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF) {
+          // [V2.5] 명함 링크를 받은 지인이 열어도 원래 고객으로 연결되지 않게: 이 폰에서 처음 여는 번호면 '본인 확인' 뒤에 연결
+          //   · 이미 이 폰에 연결된 같은 번호 → 그대로
+          //   · 방금(10분 안 · 홈 화면 앱은 1시간 안) 본인 확인한 주소(ok=) → 바로 연결 (사파리 → 홈 화면 앱, 앱 안 브라우저 → 크롬)
+          //   · 예전에 '아니요(지인에게 받음)'라고 한 번호 → 연결 안 함 (소개로만 기록)
+          //   · 그 밖 → 확인 대기 (화면이 뜨면 "강○숙 고객님 본인이세요?")
+          const mine = localStorage.getItem('kcrm_cid') || '';
+          let notList = [];
+          try { notList = JSON.parse(localStorage.getItem('kcrm_not') || '[]'); } catch (e) {}
+          const okTs = Number(params.get('ok') || 0);
+          const standalone0 = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+          const age = Date.now() - okTs;
+          const freshOk = okTs > 0 && age > -5 * 60 * 1000 && age < (standalone0 ? 60 : 10) * 60 * 1000;
+          if (window.KCRM_LEAVING) { /* 크롬·사파리로 옮겨가는 창: 아무것도 저장 안 함 */ }
+          else if (cid === mine) { localStorage.removeItem('kcrm_cid_pending'); }
+          else if (freshOk) { localStorage.setItem('kcrm_cid', cid); localStorage.removeItem('kcrm_cid_pending'); }
+          else if (notList.indexOf(cid) >= 0) { if (!mine) localStorage.setItem('kcrm_ref', cid); }
+          else localStorage.setItem('kcrm_cid_pending', cid);
+          // 주소창 정리: 확인 표시(ok)는 항상 지움 · 명함번호도 지움 (아이폰 사파리는 '홈 화면에 추가'용으로 내 번호·확인 대기일 때만 남김)
+          params.delete('ok');
+          const keepC = window.KCRM_IOS_KEEP_C && notList.indexOf(cid) < 0;
+          if (!keepC) params.delete('c');
+          const q = params.toString();
+          history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
+        }
+      } catch (e) {}
+    })();
+
+    /* ===== [추가] 명함 앱으로 설치하기 =====
+       크롬이 '설치할 수 있음(아직 앱으로 설치 안 됨)'이라고 알려줄 때만 버튼을 보여줌
+       → 예전에 '바로가기'로 깔린 고객도 한 번 누르면 새 아이콘의 진짜 앱이 설치됨 */
+    let deferredInstall = null;
+    function showInstallButton(on) {
+      const b = document.getElementById('installAppBtn');
+      if (b) b.style.display = on ? 'flex' : 'none';
+    }
+    window.addEventListener('beforeinstallprompt', function (e) {
+      e.preventDefault();          // 크롬 기본 안내 대신 명함 안 버튼으로
+      if (window.KCRM_LEAVING) return;
+      deferredInstall = e;
+      showInstallButton(true);
+    });
+    window.addEventListener('appinstalled', function () {
+      deferredInstall = null;
+      showInstallButton(false);
+    });
+    async function installCardApp() {
+      if (!deferredInstall) {
+        alert('크롬 오른쪽 위 메뉴 [⋮] → [앱 설치]를 눌러 설치해 주세요.');
+        return;
+      }
+      const ev = deferredInstall;
+      deferredInstall = null;      // 설치 창은 한 번만 띄울 수 있음
+      try {
+        ev.prompt();
+        const choice = await ev.userChoice;
+        if (choice && choice.outcome === 'accepted') {
+          showInstallButton(false);
+          alert('설치했어요! 🎉\n홈 화면에 예전 명함 아이콘이 있으면 길게 눌러 삭제해 주세요.');
+        }
+      } catch (err) {
+        alert('크롬 오른쪽 위 메뉴 [⋮] → [앱 설치]를 눌러 설치해 주세요.');
+      }
+    }
+
+    function getCrmId() {
+      if (window.KCRM_STAFF) return null;
+      try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
+    }
+    // [V2.5] 본인 확인을 기다리는 명함번호 (이 폰에서 처음 연 개인 링크)
+    function getPendingId() {
+      if (window.KCRM_STAFF) return null;
+      try { const p = localStorage.getItem('kcrm_cid_pending'); return p && p !== localStorage.getItem('kcrm_cid') ? p : null; } catch (e) { return null; }
+    }
+    // [V2.5] 지인에게 받은 명함으로 들어온 경우 그 명함번호 (상담요청에 '소개'로 붙임)
+    function getRefId() {
+      if (window.KCRM_STAFF || getCrmId()) return null;
+      try { return localStorage.getItem('kcrm_ref'); } catch (e) { return null; }
+    }
+
+    // 강CRM 명함번호를 OneSignal external_id로 연결 (같은 고객의 여러 알림을 한 사람으로 묶음)
+    async function linkCrmUser(OneSignal) {
+      const cid = getCrmId();
+      if (!cid) return;
+      // 강CRM에서 '이 폰으로 알림 받기'를 켠 직원 폰이면 고객으로 바꾸지 않음 (바뀌면 상담요청 알림이 안 옴)
+      try { if (localStorage.getItem('kcrmStaffAlert') === 'on') return; } catch (e) {}
+      try {
+        await OneSignal.login(cid);
+        OneSignal.User.addTags({ source: 'namecard', crm: 'linked' });
+      } catch (e) { console.error('CRM link error:', e); }
+    }
+
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function (OneSignal) {
+      // [추가] 크롬으로 옮겨가는 창에서는 켜지 않음 → OneSignal에 같은 사람이 여러 줄로 쌓이는 것 줄이기
+      if (window.KCRM_LEAVING) return;
+      await OneSignal.init({
+        appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
+        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerParam: { scope: "/" }
+      });
+      var isStaffPhone = false;
+      try { isStaffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+      if (isStaffPhone) return;   // 직원 폰: 직원 등록 그대로 두기
+      if (getCrmId()) await linkCrmUser(OneSignal);
+      else OneSignal.User.addTag('source', 'namecard');
+      if (window.KCRM_TEAM) { try { OneSignal.User.addTags({ card: 'team', team_s: window.KCRM_TEAM_S || '' }); } catch (e) {} }
+    });
+
+    function isIOS() {
+      return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    function isStandalone() {
+      return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    }
+
+    // [수정] 다른 브라우저로 옮길 때 쓸 주소 (명함번호 포함)
+    function externalUrl() {
+      const mine = getCrmId(), cid = mine || getPendingId();
+      // 본인 확인을 마친 번호면 '방금 확인함(ok)'도 같이 → 옮겨간 브라우저에서 다시 묻지 않음
+      const sq = window.KCRM_TEAM && window.KCRM_TEAM_S ? 's=' + window.KCRM_TEAM_S : '';
+      return location.origin + location.pathname + (cid ? '?c=' + encodeURIComponent(cid) + (mine ? '&ok=' + Date.now() : '') + (sq ? '&' + sq : '') : (sq ? '?' + sq : ''));
+    }
+
+    // [추가] 앱 안 브라우저(네이버·인스타·밴드 등)에서 [알림받기]를 누르면 폰 기본 브라우저로 옮겨 열기
+    //   안드로이드: intent 주소로 바로 열기 → 안 열리면 주소를 복사해두고 안내
+    //   아이폰: 앱 안에서는 Safari로 옮길 수 없어서 주소를 복사해두고 안내
+    function copyText(text) {
+      try { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).catch(function () {}); return true; } } catch (e) {}
+      return copyTextOld(text);
+    }
+    // [V2.9] 복사가 실제로 됐는지 기다려서 알려줌 (안 되면 예전 방식으로 한 번 더)
+    async function copyTextAsync(text) {
+      try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+      return copyTextOld(text);
+    }
+    function copyTextOld(text) {
+      try {
+        const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok;
+      } catch (e) { return false; }
+    }
+    function openInRealBrowser() {
+      const url = externalUrl();
+      const copied = copyText(url);
+      const guide = (copied ? '명함 주소를 복사해 두었어요.\n' : '') + (isIOS()
+        ? '\n우측 하단(또는 상단) 메뉴에서 [Safari로 열기]를 누르거나, Safari를 열고 주소창에 붙여넣어 주세요.\n그다음 [알림받기]를 눌러 주세요.'
+        : '\n우측 상단 메뉴 [⋮]에서 [다른 브라우저로 열기]를 누르거나, 크롬을 열고 주소창에 붙여넣어 주세요.\n그다음 [알림받기]를 눌러 주세요.');
+      if (isIOS()) { alert('앱 안에서는 알림을 켤 수 없어요.\n' + guide); return; }
+      // 안드로이드: 폰 기본 브라우저로 바로 열기 시도 → 1.5초 안에 안 넘어가면 안내
+      let left = false;
+      const onHide = () => { left = true; };
+      document.addEventListener('visibilitychange', onHide, { once: true });
+      location.href = 'intent://' + url.replace(/^https:\/\//, '') + '#Intent;scheme=https;end';
+      setTimeout(() => {
+        document.removeEventListener('visibilitychange', onHide);
+        if (!left && document.visibilityState === 'visible') alert('앱 안에서는 알림을 켤 수 없어요.\n' + guide);
+      }, 1500);
+    }
+
+    /* ===== 알림 권한 요청 ===== */
+    function requestNotificationPermission() {
+      // [V2.5] 처음 여는 개인 링크면 본인인지 먼저 (지인 폰이 원래 고객 알림으로 연결되지 않게) · 답한 버튼 안에서 바로 이어서 진행
+      if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') requestNotificationPermission(); }); return; }
+      const inApp = getInAppType();
+      if (inApp === 'kakao') {
+        // 카카오톡은 외부 브라우저로 자동 전환 (명함번호도 같이 넘김) → 넘긴 뒤 카톡 안 브라우저는 닫기
+        location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(externalUrl());
+        setTimeout(function () { location.href = 'kakaotalk://inappbrowser/close'; }, 1200);
+        return;
+      }
+      if (inApp) {
+        openInRealBrowser();   // [수정] 네이버·인스타 등 앱 안 브라우저 → 폰 기본 브라우저로 (명함번호도 같이)
+        return;
+      }
+      // 아이폰은 '홈 화면에 추가'한 뒤에만 웹 푸시가 됩니다 (iOS 16.4 이상)
+      if (isIOS() && !isStandalone()) {
+        alert('아이폰은 알림을 받으려면 먼저 홈 화면에 추가해야 합니다.\n\n① 하단 공유 버튼 [⬆︎] 누르기\n② [홈 화면에 추가] 선택\n③ 홈 화면의 명함 아이콘으로 열어서 다시 [알림받기]를 눌러 주세요.');
+        return;
+      }
+
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      window.OneSignalDeferred.push(async function (OneSignal) {
+        try {
+          if (!OneSignal.Notifications.isPushSupported()) {
+            alert('이 브라우저는 알림을 지원하지 않습니다. Chrome 또는 Safari에서 열어 주세요.');
+            return;
+          }
+          // 강CRM에서 '이 폰으로 알림 받기'를 켠 직원 폰: 같은 주소라 알림 등록이 하나뿐 → 고객으로 바꾸면 직원 알림이 끊김
+          var staffPhone = false;
+          try { staffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+          if (staffPhone) {
+            alert('이 폰은 강CRM 직원 알림(상담요청·약속 알림)을 받는 폰이라, 고객 명함 알림으로는 연결하지 않아요.\n\n고객 알림 시험은 강CRM 직원 알림을 켜지 않은 다른 폰으로 해주세요.');
+            return;
+          }
+          if (OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn) {
+            await linkCrmUser(OneSignal);   // [추가] 이미 알림을 받는 폰도 강CRM 고객번호로 다시 연결
+            alert('이미 이벤트 혜택 알림을 받고 계십니다. 😊');
+            return;
+          }
+          await OneSignal.Notifications.requestPermission();
+          // v16의 requestPermission()은 결과값을 돌려주지 않으므로 permission 속성으로 확인
+          if (OneSignal.Notifications.permission) {
+            await OneSignal.User.PushSubscription.optIn();
+            await linkCrmUser(OneSignal);   // [추가] 알림을 켠 뒤 한 번 더 연결 (강CRM에 '알림 받음'으로 바로 뜨게)
+            alert('🎉 이벤트 혜택 알림 신청이 완료되었습니다!');
+          } else {
+            alert('알림이 차단되어 있습니다.\n브라우저 주소창 옆 [🔒/설정] → 알림 → 허용으로 바꿔 주세요.');
+          }
+        } catch (e) {
+          console.error('Notification Error:', e);
+          alert('알림 권한 요청 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+        }
+      });
+    }
+  </script>
+
+  <style>
+    :root {
+      --lgu-pink: #e6007e;
+      --lgu-dark: #a8005b;
+      --bg-color: #f1f5f9;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-sub: #475569;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      background-color: var(--bg-color);
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; min-height: 100dvh;
+      padding: 12px;
+      padding-top: calc(12px + env(safe-area-inset-top, 0px));
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .mobile-card { width: 100%; max-width: 400px; background: var(--card-bg); border-radius: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+    .header { background: linear-gradient(135deg, var(--lgu-pink) 0%, var(--lgu-dark) 100%); color: #fff; padding: 28px 20px 24px; text-align: center; }
+    .brand-title { font-size: 14px; font-weight: 700; letter-spacing: 1px; margin-bottom: 14px; opacity: 0.95; }
+    .profile-img-wrap { width: 108px; height: 108px; margin: 0 auto 12px; border-radius: 50%; border: 3.5px solid #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.2); overflow: hidden; background-color: #fff; }
+    .profile-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .profile-name { font-size: 22px; font-weight: 800; margin-bottom: 12px; color: #fff; }
+    .intro-box { background: rgba(255,255,255,0.15); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); border-radius: 14px; padding: 14px 16px; font-size: 13px; line-height: 1.65; color: #fff; text-align: center; word-break: keep-all; }
+    .tab-menu { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; }
+    .tab-btn { flex: 1; padding: 14px 2px; border: none; border-bottom: 3.5px solid transparent; background: none; font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s; }
+    .tab-btn.active { color: var(--lgu-pink); border-bottom-color: var(--lgu-pink); }
+    .content-area { padding: 20px; background-color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .info-item { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; }
+    .info-item:last-child { margin-bottom: 0; }
+    .info-item i { width: 28px; color: var(--lgu-pink); font-size: 16px; }
+    .info-item span.label { color: var(--text-sub); width: 70px; font-weight: 500; }
+    .info-item span.value { font-weight: 700; color: var(--text-main); flex: 1; word-break: keep-all; }
+    .btn-vcard { width: 100%; padding: 16px; background: var(--lgu-pink); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(230,0,126,0.35); margin-bottom: 16px; text-decoration: none; }
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .btn-row .btn-vcard { margin-bottom: 0; font-size: 14px; padding: 14px 8px; box-shadow: none; }
+    .btn-row-main { margin-bottom: 16px; }
+    .btn-row-main .btn-vcard { font-size: 16px; padding: 16px 6px; box-shadow: 0 4px 14px rgba(230,0,126,0.3); white-space: nowrap; }
+    .btn-row-main .btn-share { background: #fff; color: var(--lgu-pink); border: 2px solid var(--lgu-pink); box-shadow: none; padding: 14px 6px; }
+    .btn-row-main .btn-share:active { background: #fde8f3; }
+    .sh-btn { width: 100%; height: 54px; border-radius: 16px; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; border: 2px solid #e2e8f0; background: #fff; color: var(--text-main); text-decoration: none; }
+    .sh-btn.pri { border: 0; background: linear-gradient(110deg, #e6007e, #a8005b); color: #fff; }
+    .sh-url { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; word-break: break-all; margin-top: 4px; }
+    .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 2px; background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; text-decoration: none; color: var(--text-main); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .action-btn:hover { background: #f1f5f9; }
+    .action-btn i { font-size: 16px; color: var(--lgu-pink); margin-bottom: 6px; }
+    .service-card { background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); }
+    .service-card i { font-size: 20px; color: var(--lgu-pink); background: #fde8f3; padding: 12px; border-radius: 12px; flex-shrink: 0; }
+    .service-title { font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+    .service-desc { font-size: 12.5px; color: var(--text-sub); font-weight: 500; line-height: 1.4; }
+    .welcome-back { background: #fde8f3; color: var(--lgu-dark); font-size: 13px; font-weight: 700; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; text-align: center; display: none; }
+    button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
+    #chatbase-bubble-button { display: none !important; }
+
+    /* ===== 견적요청 (고객용 간단 양식) ===== */
+    .qt-box { border-top: 8px solid #f1f5f9; margin: 18px -20px 0; padding: 4px 20px 2px; }
+    .qt-box:first-of-type { border-top: none; margin-top: 6px; padding-top: 0; }
+    .qt-lb { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
+    .qt-lb2 { font-size: 13px; font-weight: 700; color: var(--text-main); margin: 14px 0 8px; }
+    .qt-opt { font-size: 12px; font-weight: 600; color: #94a3b8; }
+    .qt-help { font-size: 12px; color: var(--text-sub); margin: -4px 0 10px; line-height: 1.5; word-break: keep-all; }
+    .qt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .qt-chip { min-height: 42px; padding: 0 15px; border: 1px solid #cbd5e1; border-radius: 9999px; background: #fff; font: inherit; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; }
+    .qt-chip.on { background: var(--lgu-dark); border-color: var(--lgu-dark); color: #fff; font-weight: 800; }
+    .qt-price { font-size: 13px; color: var(--text-sub); margin-top: 6px; }
+    .qt-price b { color: var(--text-main); }
+    .qt-route { font-size: 13px; font-weight: 800; color: var(--lgu-pink); margin-top: 8px; min-height: 1em; }
+    .qt-ta { margin-top: 10px; resize: none; line-height: 1.5; font: inherit; font-size: 14px; }
+    .qt-count { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .qt-count b { color: var(--lgu-pink); font-weight: 700; }
+    .qt-go { margin-top: 14px !important; }
+    .qt-off { opacity: .38; filter: grayscale(1); pointer-events: none; }
+    .qt-mv-note { font-size: 13px; font-weight: 600; color: var(--lgu-dark); background: #fdf2f8; border-radius: 12px; padding: 10px 12px; margin: 10px 0 4px; line-height: 1.5; word-break: keep-all; }
+    .qt-fix { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-top: 12px; background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 14px; padding: 12px 14px; }
+    .qt-fix-h { flex-basis: 100%; font-size: 14px; font-weight: 700; color: var(--lgu-dark); line-height: 1.45; word-break: keep-all; }
+    .qt-fix-l { flex-basis: 100%; margin: 2px 0 0; padding-left: 18px; font-size: 13px; font-weight: 600; color: var(--lgu-dark); line-height: 1.6; word-break: keep-all; }
+    .qt-fix-chip { cursor: default; flex-shrink: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 9999px; }
+    .qt-fix-t { flex: 1; min-width: 160px; font-size: 12.5px; font-weight: 600; color: var(--lgu-dark); line-height: 1.45; word-break: keep-all; }
+    .qt-trade-note { font-size: 12.5px; font-weight: 700; color: #b91c1c; margin-top: 6px; }
+    .qt-more { width: 100%; margin: 18px 0 4px; padding: 13px 12px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
+    .qt-more .qt-chev { margin-left: 4px; transition: transform .2s; }
+    .qt-more[aria-expanded="true"] .qt-chev { transform: rotate(180deg); }
+    #pcHolder { display: none; }
+    #pcHolder.open { display: block; margin-top: 8px; }
+    body.kc-staff #qtBody { display: none !important; }
+    body.kc-staff #pcHolder { display: block !important; }
+    .pc-staff-send { display: none; }
+    body.kc-staff .pc-staff-send { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 640px; margin: 0 auto; background: #fff; padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 16px rgba(15,23,42,.12); }
+    body.kc-staff #pcKeep, body.kc-staff #pcMvno { margin-bottom: 150px; }   /* 아래 고정 버튼에 가리지 않게 */
+    body.kc-staff .pc-staff-send .btn-vcard { margin: 0; }
+    .pc-quote-for { font-size: 13px; font-weight: 700; color: var(--lgu-dark); background: #fde8f3; border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; line-height: 1.45; word-break: keep-all; }
+    .pc-quote-for:empty { display: none; }
+    /* ===== 폰값계산 탭 ===== */
+    .pc-intro { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 4px; word-break: keep-all; }
+    .pc-lb { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .pc-lb b { width: 20px; height: 20px; border-radius: 50%; background: var(--lgu-pink); color: #fff; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pc-brand { margin-left: auto; display: inline-flex; gap: 4px; background: #f1f5f9; border-radius: 10px; padding: 3px; }
+    .pc-brand button { border: none; background: transparent; border-radius: 8px; padding: 6px 12px; min-height: 32px; font-size: 13px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
+    .pc-brand button.on { background: #fff; color: var(--lgu-dark); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .pc-detail { margin-top: 12px; border: 1px solid #e2e8f0; border-radius: 14px; overflow: hidden; }
+    .pc-detail .hd { background: #fdf2f8; color: var(--lgu-dark); font-size: 13px; font-weight: 800; padding: 9px 14px; }
+    .pc-detail .sec { padding: 8px 14px; border-top: 1px solid #f1f5f9; }
+    .pc-detail .sec:first-of-type { border-top: none; }
+    .pc-detail .st { font-size: 12px; font-weight: 800; color: var(--text-sub); margin-bottom: 2px; }
+    .pc-detail .ln { display: flex; justify-content: space-between; gap: 8px; font-size: 13.5px; padding: 3px 0; color: var(--text-main); }
+    .pc-detail .ln > span:first-child { color: var(--text-sub); }
+    .pc-detail .ln.minus > span:last-child { color: var(--lgu-pink); }
+    .pc-detail .ln.sum { font-weight: 800; border-top: 1px dashed #e2e8f0; margin-top: 3px; padding-top: 6px; }
+    .pc-detail .ln.sum > span:first-child { color: var(--text-main); }
+    .pc-detail .ln.big > span:last-child { font-size: 17px; color: var(--lgu-dark); }
+    .pc-detail .eq { font-size: 11.5px; color: #94a3b8; text-align: right; margin-top: -1px; }
+    .pc-card .flow { font-size: 11px; color: var(--text-sub); margin-top: 4px; line-height: 1.4; }
+    .pc-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pc-opt { padding: 12px 6px; border: 1px solid #cbd5e1; border-radius: 12px; background: #fff; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; }
+    .pc-opt.on { border-color: var(--lgu-pink); background: #fde8f3; color: var(--lgu-dark); font-weight: 800; }
+    .pc-sel, .pc-in { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 12px; font-size: 14px; background: #fff; color: var(--text-main); }
+    .pc-sub { font-size: 12px; font-weight: 600; color: var(--text-sub); margin: 12px 0 5px; }
+    .pc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .pc-route { font-size: 13px; font-weight: 800; color: var(--lgu-pink); margin-top: 8px; }
+    .pc-card { border: 1px solid #cbd5e1; border-radius: 14px; padding: 12px; cursor: pointer; background: #fff; text-align: left; color: var(--text-main); }
+    .pc-card.on { border: 2px solid var(--lgu-pink); padding: 11px; }
+    .pc-card .t { font-size: 14px; font-weight: 800; }
+    .pc-card .s { font-size: 11.5px; color: var(--text-sub); margin-top: 2px; }
+    .pc-card .big { font-size: 21px; font-weight: 800; margin: 6px 0 4px; letter-spacing: -0.3px; }
+    .pc-badge { font-size: 11px; font-weight: 800; background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 6px; margin-left: 4px; }
+    .pc-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0; color: var(--text-main); }
+    .pc-row > span:first-child { color: var(--text-sub); }
+    .pc-info { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 10px 14px; margin-top: 12px; }
+    .pc-info input[type=checkbox] { accent-color: var(--lgu-pink); width: 16px; height: 16px; vertical-align: -3px; margin-right: 4px; }
+    .pc-info input[type=date] { padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background: #fff; color: var(--text-main); }
+    .pc-ask { color: #b91c1c; font-weight: 700; }
+    .pc-note { font-size: 11px; color: #94a3b8; text-align: right; line-height: 1.5; margin-top: 4px; }
+    .pc-warn { font-size: 12px; font-weight: 600; color: #b91c1c; margin-top: 6px; line-height: 1.5; }
+    .pc-keep { margin-top: 12px; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.7; word-break: keep-all; }
+    .pc-keep.ok { background: #fdf2f8; color: #831843; }
+    .pc-keep.warn { background: #fef3c7; color: #92400e; }
+    .pc-keep.danger { background: #fee2e2; color: #991b1b; }
+    .pc-keep strong { font-weight: 800; }
+    .pc-mv { margin-top: 10px; display: grid; gap: 8px; }
+    .pc-mv-h { font-size: 13px; font-weight: 800; color: var(--text-main); margin-top: 12px; }
+    .pc-mv-i { text-align: left; border: 2px solid #e2e8f0; background: #fff; border-radius: 14px; padding: 10px 12px; display: flex; gap: 10px; align-items: center; cursor: pointer; font: inherit; color: inherit; width: 100%; }
+    .pc-mv-i.on { border-color: var(--lgu-pink); background: #fdf2f8; }
+    .pc-mv-i .nm { font-size: 14px; font-weight: 800; color: var(--text-main); }
+    .pc-mv-i .sb { font-size: 12px; color: var(--text-sub); margin-top: 2px; line-height: 1.4; }
+    .pc-mv-i .pr { margin-left: auto; text-align: right; flex-shrink: 0; }
+    .pc-mv-i .pr b { font-size: 17px; color: var(--lgu-pink); display: block; }
+    .pc-mv-i .pr s { font-size: 11px; color: #94a3b8; }
+    .pc-empty { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; margin-top: 12px; line-height: 1.6; word-break: keep-all; }
+    #pcAsk { margin: 14px 0 0; }
+    #pcAsk:disabled { opacity: 0.6; }
+    .pc-contact { margin-top: 20px; padding-top: 16px; border-top: 1px dashed #e2e8f0; }
+    .pc-agree { display: flex; gap: 8px; align-items: flex-start; font-size: 12.5px; color: var(--text-sub); line-height: 1.5; margin-top: 10px; cursor: pointer; word-break: keep-all; }
+    .pc-agree input { accent-color: var(--lgu-pink); width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+    .pc-done { margin-top: 14px; background: #ecfdf5; color: #065f46; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 700; line-height: 1.6; text-align: center; word-break: keep-all; }
+    .pc-done a { display: inline-block; margin-top: 6px; font-size: 12.5px; color: #047857; }
+    .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
+
+    /* 📌 맨 아래 고정 배너 (인터넷+TV 등 · 강CRM에서 문구·켜고 끄기) */
+    body.has-bb { padding-bottom: calc(100px + env(safe-area-inset-bottom, 0px)); }
+    .bb-wrap { position: fixed; left: 0; right: 0; bottom: 0; z-index: 900; padding: 8px 12px calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; justify-content: center; pointer-events: none; background: linear-gradient(to top, rgba(241,245,249,.95) 55%, rgba(241,245,249,0)); }
+    .bb { pointer-events: auto; width: 100%; max-width: 400px; border: 0; border-radius: 22px; padding: 12px 16px; display: flex; align-items: center; gap: 14px; text-align: left; color: #fff; cursor: pointer; font: inherit;
+      background: linear-gradient(110deg, #3b82f6 0%, #4f46e5 100%); box-shadow: 0 8px 22px rgba(79,70,229,.35); }
+    .bb:active { transform: scale(.98); }
+    .bb .ic { width: 52px; height: 52px; border-radius: 9999px; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .bb .tt { display: block; font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+    .bb .st { display: block; font-size: 14px; font-weight: 600; opacity: .9; margin-top: 1px; }
+    .bb .ar { margin-left: auto; font-size: 16px; opacity: .85; }
+    body.has-bb #onesignal-bell-container.onesignal-reset.onesignal-bell-container-bottom-right,
+    body.has-bb #onesignal-bell-container.onesignal-reset.onesignal-bell-container-bottom-left { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
+    body.has-bb #chatbase-bubble-button { bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
+    .bs-back { position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.5); display: none; align-items: flex-end; justify-content: center; }
+    .bs { width: 100%; max-width: 440px; background: #fff; border-radius: 24px 24px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 90vh; overflow-y: auto; }
+    .bs h3 { font-size: 19px; font-weight: 800; color: var(--text-main); }
+    .bs .sub { font-size: 13px; color: var(--text-sub); margin: 2px 0 14px; }
+    .bs .lab { display: block; font-size: 13px; font-weight: 700; color: var(--text-main); margin: 12px 0 6px; }
+    .bs .opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .bs .opt { height: 46px; border-radius: 12px; border: 2px solid #e2e8f0; background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: var(--text-main); cursor: pointer; }
+    .bs .opt.on { border-color: #4f46e5; background: #eef2ff; color: #3730a3; }
+    .bs .opts2 { grid-template-columns: 1fr 1fr; }
+    .bs .opt.wide { grid-column: 1 / -1; }
+    .bs textarea { width: 100%; margin-top: 8px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 15px; line-height: 1.5; resize: none; }
+    .bs .cnt { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .bs .cnt b { color: #4f46e5; font-weight: 700; }
+    .bs input[type=text], .bs input[type=tel] { width: 100%; height: 48px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 12px; font: inherit; font-size: 16px; }
+    .bs .agree { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text-sub); margin-top: 10px; line-height: 1.5; }
+    .bs .go { width: 100%; height: 54px; border: 0; border-radius: 16px; background: linear-gradient(110deg, #3b82f6, #4f46e5); color: #fff; font: inherit; font-size: 17px; font-weight: 800; margin-top: 16px; cursor: pointer; }
+    .bs .go:disabled { opacity: .5; }
+    .bs .tel { display: block; text-align: center; margin-top: 10px; font-size: 14px; font-weight: 700; color: #4f46e5; text-decoration: none; padding: 8px; }
+    .bs .err { color: #b91c1c; font-size: 13px; font-weight: 700; margin-top: 8px; min-height: 1em; }
+    /* 📢 매장 공지 창 (강CRM에서 전체 푸시 보낼 때 같이 저장) */
+    .nt-back { position: fixed; inset: 0; z-index: 1100; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; padding: 20px; }
+    .nt { width: 100%; max-width: 360px; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.25); animation: ntIn .25s ease-out; }
+    @keyframes ntIn { from { transform: translateY(16px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
+    .nt img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
+    .nt .bd { padding: 18px 18px 16px; }
+    .nt .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: #4f46e5; background: #eef2ff; border-radius: 9999px; padding: 4px 10px; }
+    .nt h3 { font-size: 19px; font-weight: 800; color: var(--text-main); margin: 10px 0 6px; line-height: 1.35; word-break: keep-all; }
+    .nt p { font-size: 15px; line-height: 1.6; color: #334155; white-space: pre-wrap; word-break: break-word; }
+    .nt .row { display: flex; gap: 8px; margin-top: 16px; }
+    .nt .row button { flex: 1; height: 50px; border-radius: 14px; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+    .nt .ok { border: 0; background: linear-gradient(110deg, #3b82f6, #4f46e5); color: #fff; }
+    .nt .ask { border: 1px solid #cbd5e1; background: #fff; color: var(--text-main); }
+    /* 강CRM 안 직원용: 계산기만 */
+    body.kc-staff { background: #fff; padding: 0 !important; }
+    body.kc-staff .header, body.kc-staff .tab-menu, body.kc-staff .pc-contact, body.kc-staff #welcomeBack { display: none !important; }
+    body.kc-staff .mobile-card { box-shadow: none !important; border-radius: 0 !important; margin: 0 auto !important; max-width: 640px; }
+    body.kc-staff > :not(.mobile-card):not(script):not(style) { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-card">
+    <div class="header">
+      <div class="brand-title">LG U+ 진천점</div>
+      <div class="profile-img-wrap">
+        <img id="profileImg" src="/card-icon-maskable-512.png?v=2" alt="LGU+ 진천점">
+      </div>
+      <div class="profile-name">LGU+ 진천점</div>
+      <div class="intro-box">
+        "정확한 비교 분석과<br>
+        투명한 정보 제공을 원칙으로 합니다.<br><br>
+        고객에게 진짜 이득이 되는 조건만 선별하여<br>
+        최상의 만족을 약속드립니다."
+      </div>
+    </div>
+
+    <div class="tab-menu">
+      <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
+      <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
+      <button class="tab-btn" id="calcTabBtn" onclick="switchTab(event, 'calc')">견적요청</button>
+      <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
+    </div>
+
+    <div class="content-area">
+      <!-- 탭 1: 프로필 -->
+      <div id="tab-profile" class="tab-content active">
+        <!-- 강CRM 개인 링크로 들어온 기존 고객에게만 표시 -->
+        <div id="welcomeBack" class="welcome-back">다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂</div>
+
+        <div class="info-box">
+          <div class="info-item">
+            <i class="fa-solid fa-phone"></i>
+            <span class="label">대표전화</span>
+            <span class="value">&nbsp;</span>
+          </div>
+          <div class="info-item">
+            <i class="fa-solid fa-store"></i>
+            <span class="label">소속매장</span>
+            <span class="value">LGU+ 진천점</span>
+          </div>
+          <div class="info-item">
+            <i class="fa-solid fa-clock"></i>
+            <span class="label">영업시간</span>
+            <span class="value">10:00 - 20:00 (연중무휴)</span>
+          </div>
+        </div>
+
+        <div class="btn-row btn-row-main">
+          <button class="btn-vcard" onclick="downloadVCard()">
+            <i class="fa-solid fa-address-card"></i> 명함저장
+          </button>
+          <button class="btn-vcard btn-share" onclick="shareCard()">
+            <i class="fa-solid fa-share-nodes"></i> 명함 공유하기
+          </button>
+        </div>
+
+        <button class="btn-vcard" style="background: #334155;" onclick="requestNotificationPermission()">
+          <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
+        </button>
+
+        <!-- [추가] 아직 앱으로 설치 안 된 폰(안드로이드 크롬 등)에만 보이는 버튼 -->
+        <button id="installAppBtn" class="btn-vcard" style="display: none; background: #0f766e; box-shadow: 0 4px 14px rgba(15,118,110,0.3);" onclick="installCardApp()">
+          <i class="fa-solid fa-mobile-screen-button"></i> 명함 앱으로 설치하기
+        </button>
+
+        <div class="quick-actions">
+          <a href="tel:01044443353" class="action-btn">
+            <i class="fa-solid fa-phone"></i>전화걸기
+          </a>
+          <a href="#" class="action-btn" onclick="openSms(); return false;">
+            <i class="fa-solid fa-comment-dots"></i>문자상담
+          </a>
+          <a href="#" class="action-btn" onclick="openChatbot(); return false;">
+            <i class="fa-solid fa-robot"></i>AI상담원
+          </a>
+          <a href="https://m.booking.naver.com/booking/6/bizes/1588564?theme=place&amp;entry=pll&amp;lang=ko" target="_blank" rel="noopener" class="action-btn">
+            <i class="fa-solid fa-calendar-check"></i>방문예약
+          </a>
+          <a href="https://pf.kakao.com/_hxkKzX" target="_blank" rel="noopener" class="action-btn">
+            <i class="fa-solid fa-comments"></i>카카오채널
+          </a>
+        </div>
+      </div>
+
+      <!-- 탭 2: 주요 서비스 -->
+      <div id="tab-services" class="tab-content">
+        <div class="service-card">
+          <i class="fa-solid fa-sim-card"></i>
+          <div>
+            <div class="service-title">SK, KT, LG, 알뜰유심 전 통신사 가능</div>
+            <div class="service-desc">모든 통신사 신규가입, 번호이동, 기기변경 지원</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <div>
+            <div class="service-title">최신 스마트폰 맞춤 상담</div>
+            <div class="service-desc">iPhone, 갤럭시 최신 기종 최대 할인 안내</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <i class="fa-solid fa-handshake"></i>
+          <div>
+            <div class="service-title">통신사 결합 & 요금제 설계</div>
+            <div class="service-desc">가족 결합, 인터넷+TV 맞춤형 요금 절감</div>
+          </div>
+        </div>
+        <div class="service-card">
+          <i class="fa-solid fa-rotate"></i>
+          <div>
+            <div class="service-title">중고폰 최고가 보상 매입</div>
+            <div class="service-desc">기존 쓰시던 기기 안전하고 정직하게 매입</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 탭 3: 견적요청 (고객) · 직원(강CRM)은 예전 폰값계산 그대로 -->
+      <div id="tab-calc" class="tab-content">
+        <div id="qtBody">
+          <p class="pc-intro">원하시는 조건만 골라주세요. 담당자가 <b style="color:var(--text-main)">가장 좋은 조건으로 견적</b>을 보내드려요.</p>
+
+          <div class="qt-box">
+            <div class="qt-mv-note" id="qtMvPhoneNote" style="display:none">📶 알뜰폰은 지금 쓰는 폰을 그대로 써서 기종은 안 골라도 돼요</div>
+            <div id="qtPhoneWrap">
+              <div class="qt-lb">휴대폰 기종<span class="pc-brand" id="qtBrand" role="group" aria-label="제조사"></span></div>
+              <select class="pc-sel" id="qtModel" aria-label="휴대폰 기종"></select>
+              <input class="pc-in" id="qtModelText" placeholder="원하시는 기종 (예: 갤럭시 S26)" style="display:none">
+              <div class="qt-price" id="qtPrice"></div>
+              <div class="qt-lb2">용량</div>
+              <div class="qt-chips" id="qtCap" role="radiogroup" aria-label="용량"></div>
+              <div class="qt-lb2">색상 <span class="qt-opt">(선택)</span></div>
+              <div class="qt-chips" id="qtColor" role="radiogroup" aria-label="색상"></div>
+            </div>
+          </div>
+
+          <div class="qt-box">
+            <div class="qt-lb">지금 쓰는 통신사</div>
+            <div class="qt-chips" id="qtNow" role="radiogroup" aria-label="지금 쓰는 통신사"></div>
+            <div class="qt-lb">원하는 통신사</div>
+            <div class="qt-chips" id="qtCar" role="radiogroup" aria-label="원하는 통신사"></div>
+            <!-- [V3.4] 알뜰폰을 고르면: 통신망 고르기 + 약정 7개월 고정 (할부·할인 방식은 잠김) -->
+            <div id="qtMvnoBox" style="display:none">
+              <div class="qt-lb2">알뜰폰 통신망</div>
+              <div class="qt-chips" id="qtNet" role="radiogroup" aria-label="알뜰폰 통신망"></div>
+              <div class="qt-fix">
+                <div class="qt-fix-h">📶 알뜰폰은 <b>유심만 바꾸고 지금 쓰는 폰을 그대로</b> 써요</div>
+                <span class="qt-chip on qt-fix-chip">약정 7개월 (고정)</span>
+                <ul class="qt-fix-l">
+                  <li>위의 <b>휴대폰 기종</b>은 안 골라도 돼요</li>
+                  <li>아래 <b>기기값 할부 · 할인 방식 · 기기 보상</b>도 안 골라도 돼요</li>
+                </ul>
+              </div>
+            </div>
+            <div class="qt-route" id="qtRoute"></div>
+            <div id="qtInsWrap">
+              <div class="qt-lb">기기값 할부</div>
+              <div class="qt-chips" id="qtIns" role="radiogroup" aria-label="기기값 할부"></div>
+            </div>
+            <div class="qt-lb">지금 내는 월 요금 <span class="qt-opt">(선택)</span></div>
+            <div class="qt-chips" id="qtFee" role="radiogroup" aria-label="지금 내는 월 요금"></div>
+            <div id="qtDiscWrap">
+              <div class="qt-lb">원하는 할인 방식</div>
+              <p class="qt-help">공통 지원금은 기기값을 할인받고, 선택 약정은 매달 요금의 25%를 할인받아요.</p>
+              <div class="qt-chips" id="qtDisc" role="radiogroup" aria-label="원하는 할인 방식"></div>
+            </div>
+            <div id="qtTradeBox">
+              <div class="qt-lb">지금 쓰는 폰 보상(반납) <span class="qt-opt">(선택)</span></div>
+              <div class="qt-chips" id="qtTrade" role="radiogroup" aria-label="지금 쓰는 폰 보상"></div>
+              <div id="qtTradeWrap" style="display:none">
+                <input class="pc-in" id="qtTradePhone" maxlength="30" placeholder="지금 쓰는 폰 (예: 갤럭시 S22)" style="margin-top:10px" aria-label="지금 쓰는 폰">
+                <div class="qt-trade-note">보상금은 담당자가 폰 상태를 보고 안내해 드려요</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="qt-box">
+            <div class="qt-lb">개통 원하시는 때</div>
+            <select class="pc-sel" id="qtWhen" aria-label="개통 원하시는 때"></select>
+            <div class="qt-lb">지역</div>
+            <select class="pc-sel" id="qtRegion" aria-label="지역"></select>
+            <div class="qt-lb">문의사항</div>
+            <div class="qt-chips" id="qtMemoMode" role="radiogroup" aria-label="문의사항"></div>
+            <div id="qtMemoWrap" style="display:none">
+              <textarea class="pc-in qt-ta" id="qtMemo" maxlength="255" rows="4" placeholder="원하는 요금제, 제휴카드, 기기 보상(반납) 등 자세할수록 견적에 도움이 돼요."></textarea>
+              <div class="qt-count"><b id="qtMemoN">0</b> / 255자</div>
+            </div>
+          </div>
+
+          <div class="qt-box">
+            <div id="qtKnown" class="pc-sub" style="display:none; margin-top:16px;"><i class="fa-solid fa-circle-check" style="color:var(--lgu-pink)"></i> 등록된 연락처로 견적을 보내드릴게요.</div>
+            <div id="qtNewContact">
+              <div class="pc-two">
+                <div><div class="pc-sub" style="margin-top:0;">이름 (선택)</div><input class="pc-in" id="qtName" autocomplete="name" placeholder="예) 홍길동"></div>
+                <div><div class="pc-sub" style="margin-top:0;">연락받을 번호</div><input class="pc-in" id="qtTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000"></div>
+              </div>
+              <label class="pc-agree"><input type="checkbox" id="qtAgree">견적 안내를 위해 이름·연락처와 고른 조건을 LGU+ 진천점에 보내는 데 동의해요</label>
+            </div>
+            <div class="pc-warn" id="qtErr" role="alert"></div>
+            <button class="btn-vcard qt-go" id="qtGo" onclick="qtRequest()"><i class="fa-solid fa-paper-plane"></i> 무료 견적 받기</button>
+            <div id="qtDone" class="pc-done" style="display:none;" role="status"></div>
+            <p class="pc-privacy">고른 조건은 견적을 위해 담당자에게만 전달돼요.</p>
+          </div>
+
+          <button type="button" class="qt-more" id="pcToggle" aria-expanded="false" aria-controls="pcHolder" style="display:none"><i class="fa-solid fa-calculator"></i> 월 납부액 직접 계산해 보기 · 알뜰유심 추천 <i class="fa-solid fa-chevron-down qt-chev"></i></button>
+        </div>
+        <div id="pcHolder">
+        <p class="pc-intro">몇 번만 눌러 보시면 매달 내실 금액을 바로 확인할 수 있어요.</p>
+        <div id="pcBody">
+          <div class="pc-lb"><b>1</b>지금 쓰는 통신사</div>
+          <div class="pc-seg" id="pcNow"></div>
+
+          <div class="pc-lb"><b>2</b>무엇을 하실 건가요</div>
+          <div class="pc-seg" id="pcWhat"></div>
+
+          <!-- 휴대폰 구입 -->
+          <div id="pcPhone">
+            <div class="pc-lb"><b>3</b>개통할 통신사</div>
+            <select class="pc-sel" id="pcCar" aria-label="개통할 통신사"></select>
+            <div class="pc-route" id="pcRoute"></div>
+            <div class="pc-two">
+              <div><div class="pc-sub">지금 쓰는 요금제</div><input class="pc-in" id="pcCurPlan" placeholder="예) 5G 레귤러"></div>
+              <div><div class="pc-sub">지금 쓰는 휴대폰</div><input class="pc-in" id="pcCurPhone" placeholder="예) 갤럭시 S22"></div>
+            </div>
+            <label class="pc-agree" id="pcTradeRow" style="margin-top:10px;"><input type="checkbox" id="pcTrade"><span style="flex:1;min-width:0;">지금 쓰는 폰 <b style="color:var(--text-main);">기기 보상(반납)</b>도 받고 싶어요<br><span class="pc-ask" style="font-size:11.5px;">보상금은 담당자가 안내해 드려요</span></span></label>
+
+            <div id="pcNotReady" class="pc-empty" style="display:none;"></div>
+
+            <div id="pcReady">
+              <div class="pc-lb"><b>4</b>휴대폰 기종<span class="pc-brand" id="pcBrand" role="group" aria-label="제조사"></span></div>
+              <select class="pc-sel" id="pcModel" aria-label="휴대폰 기종"></select>
+
+              <div class="pc-lb"><b>5</b>요금제</div>
+              <select class="pc-sel" id="pcPlan" aria-label="요금제"></select>
+              <div class="pc-sub">유지 기간 후 바꿀 요금제</div>
+              <select class="pc-sel" id="pcChg" aria-label="유지 기간 후 바꿀 요금제"></select>
+              <div class="pc-warn" id="pcChgWarn"></div>
+
+              <div class="pc-lb"><b>6</b>기기값 결제</div>
+              <div class="pc-seg" id="pcIns"></div>
+
+              <div class="pc-lb"><b>7</b>할인 방식</div>
+              <div class="pc-seg" id="pcRes"></div>
+              <div class="pc-detail" id="pcDetail"></div>
+
+              <div class="pc-info">
+                <div class="pc-row"><span>출고가</span><span id="pcPrice"></span></div>
+                <label class="pc-row" id="pcDistRow" style="cursor:pointer;"><span><input type="checkbox" id="pcDist" checked>유통망지원금 받기</span><span class="pc-ask">담당자 문의</span></label>
+                <div class="pc-row"><span>개통 예정일</span><input type="date" id="pcDate" aria-label="개통 예정일"></div>
+                <div class="pc-note" id="pcNote"></div>
+              </div>
+              <div class="pc-keep ok" id="pcKeep"></div>
+              <!-- [V3.1] 강CRM(직원용)에서만: 계산한 견적을 고객에게 문자로 -->
+              <div class="pc-staff-send" id="pcStaffSend">
+                <div class="pc-quote-for" id="pcQuoteFor"></div>
+                <button type="button" class="btn-vcard" id="pcQuoteBtn" onclick="pcSendQuote()"><i class="fa-solid fa-paper-plane"></i> 이 견적 고객에게 보내기</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 알뜰유심 -->
+          <div id="pcMvno" style="display:none;">
+            <div class="pc-lb"><b>3</b>알뜰유심 통신망</div>
+            <div class="pc-seg" id="pcNet"></div>
+            <div class="pc-lb"><b>4</b>한 달 데이터 사용량</div>
+            <div class="pc-seg" id="pcUse"></div>
+            <div id="pcMvnoRes"></div>
+            <div class="pc-sub">지금 쓰는 휴대폰 (그대로 쓰실 폰)</div>
+            <input class="pc-in" id="pcMvnoPhone" placeholder="예) 아이폰 13">
+            <div class="pc-empty">지금 폰은 그대로, 유심만 바꾸면 끝이에요. 사용량에 맞는 가장 저렴한 요금제를 찾아서 알려드릴게요.</div>
+            <!-- [V3.5] 강CRM(직원용)에서만: 알뜰유심 요금제 견적 보내기 -->
+            <div class="pc-staff-send" id="pcStaffSendMv">
+              <div class="pc-quote-for" id="pcQuoteForMv"></div>
+              <button type="button" class="btn-vcard" onclick="pcSendQuote()"><i class="fa-solid fa-paper-plane"></i> 이 견적 고객에게 보내기</button>
+            </div>
+          </div>
+
+          <div class="pc-contact">
+            <div id="pcKnown" class="pc-sub" style="display:none; margin-top:0;">등록된 연락처로 연락드릴게요.</div>
+            <div id="pcNewContact">
+              <div class="pc-two">
+                <div><div class="pc-sub" style="margin-top:0;">이름 (선택)</div><input class="pc-in" id="pcName" autocomplete="name" placeholder="예) 홍길동"></div>
+                <div><div class="pc-sub" style="margin-top:0;">연락받을 번호</div><input class="pc-in" id="pcTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000"></div>
+              </div>
+              <label class="pc-agree"><input type="checkbox" id="pcAgree">상담을 위해 이름·연락처와 계산한 조건을 LGU+ 진천점에 보내는 데 동의해요</label>
+            </div>
+            <div class="pc-warn" id="pcErr" role="alert"></div>
+            <button class="btn-vcard" id="pcAsk" onclick="pcRequest()">
+              <i class="fa-solid fa-paper-plane"></i> 이 조건으로 상담 받기
+            </button>
+            <div id="pcDone" class="pc-done" style="display:none;" role="status"></div>
+            <p class="pc-privacy" id="pcPrivacy">계산한 조건은 상담을 위해 담당자에게만 전달돼요.</p>
+          </div>
+        </div>
+        </div>
+      </div>
+
+      <!-- 탭 4: 오시는 길 -->
+      <div id="tab-location" class="tab-content">
+        <div class="info-box">
+          <div class="info-item">
+            <i class="fa-solid fa-location-dot"></i>
+            <span class="value">대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+</span>
+          </div>
+        </div>
+        <div class="btn-row">
+          <a class="btn-vcard" style="background:#03c75a;" target="_blank" rel="noopener"
+             href="https://map.naver.com/p/search/%EB%8C%80%EA%B5%AC%20%EB%8B%AC%EC%84%9C%EA%B5%AC%20%EC%9B%94%EB%B0%B0%EB%A1%9C%2080">
+            <i class="fa-solid fa-map"></i> 네이버지도
+          </a>
+          <a class="btn-vcard" style="background:#fee500; color:#191919;" target="_blank" rel="noopener"
+             href="https://map.kakao.com/link/search/%EB%8C%80%EA%B5%AC%20%EB%8B%AC%EC%84%9C%EA%B5%AC%20%EC%9B%94%EB%B0%B0%EB%A1%9C%2080">
+            <i class="fa-solid fa-map-location-dot"></i> 카카오맵
+          </a>
+        </div>
+        <button class="btn-vcard" style="background: #1e293b;" onclick="copyAddress('대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호,114호 LGU+')">
+          <i class="fa-solid fa-map-pin"></i> 매장 주소 복사하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let PHONE = '01044443353';
+    // 명함 주인 (대표 명함) — 직원 공용 명함(/team/)은 강CRM에 넣은 직원·매장 정보로 바뀜
+    let CARD_P = { name: '강태훈', title: '과장', role: '모바일 컨설턴트', phone: '01044443353', store: 'LGU+ 진천점', who: '강태훈 과장', vcfName: '강태훈_과장_LGU플러스', note: '정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.' };
+
+    function switchTab(evt, tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      evt.currentTarget.classList.add('active');
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    /* ===== vCard ===== */
+    function downloadVCard() {
+      const vcardData = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        CARD_P.name === '강태훈' ? 'N:강;태훈;;;과장' : `N:${CARD_P.name};;;;${CARD_P.title || ''}`,
+        `FN:${CARD_P.who}`,
+        `ORG:${CARD_P.store}`,
+        CARD_P.role ? `TITLE:${CARD_P.role}` : '',
+        `TEL;TYPE=${/^01/.test(CARD_P.phone) ? 'CELL' : 'WORK'}:${String(CARD_P.phone).replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, '$1-$2-$3')}`,
+        'ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호\\,114호;;;;대한민국',
+        `URL:${location.origin}${location.pathname.replace(/index\.html$/, '')}`,
+        `NOTE:${CARD_P.note}`,
+        'END:VCARD'
+      ].filter(Boolean).join('\r\n');
+
+      const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = CARD_P.vcfName + '.vcf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+
+    /* ===== 주소 복사: 인앱브라우저 등 clipboard 미지원 대비 ===== */
+    function copyAddress(address) {
+      const done = () => alert('주소가 복사되었습니다!');
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(address).then(done).catch(() => fallbackCopy(address, done));
+      } else {
+        fallbackCopy(address, done);
+      }
+    }
+    function fallbackCopy(text, done) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      let ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+      if (ok) done(); else prompt('아래 주소를 길게 눌러 복사해 주세요.', text);
+    }
+
+    /* ===== 문자상담: 내용 미리 채우기 (CRM 고객이면 명함번호 포함) ===== */
+    function smsTo(body) {
+      const sep = isIOS() ? '&' : '?';
+      location.href = `sms:${PHONE}${sep}body=${encodeURIComponent(body)}`;
+    }
+    /* [V2.9] 📤 명함 공유하기
+       · 휴대폰 공유창(카톡·문자 등)으로 명함 주소를 보냄 · 공유창이 없는 브라우저는 [문자로 보내기 / 링크 복사] 창
+       · 강CRM 고객이 보내면 주소에 ?r=명함번호 → 받은 사람이 견적요청하면 강CRM에 '🤝 ○○ 고객이 받은 명함으로 들어온 지인' */
+    function cardShareUrl() {
+      const mine = getCrmId(), q = [];
+      if (mine) q.push('r=' + encodeURIComponent(mine));
+      if (window.KCRM_TEAM && window.KCRM_TEAM_S) q.push('s=' + window.KCRM_TEAM_S);   // 공용 명함: 같은 직원 명함으로
+      return location.origin + location.pathname.replace(/index\.html$/, '') + (q.length ? '?' + q.join('&') : '');
+    }
+    const shareText = () => `${CARD_P.store} ${CARD_P.who === CARD_P.store ? '' : CARD_P.who + ' '}명함이에요.\n휴대폰·인터넷 무료 견적 받아보세요 👇`;
+    async function shareCard() {
+      if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') shareCard(); }); return; }   // 개인 링크 처음 연 폰: 본인 확인 먼저 (소개 기록이 맞게)
+      const url = cardShareUrl();
+      if (navigator.share) {
+        try { await navigator.share({ title: `${CARD_P.who} 디지털 명함 · ${CARD_P.store}`, text: shareText(), url }); return; }
+        catch (e) { if (e && e.name === 'AbortError') return; }   // 고객이 공유창을 닫음
+      }
+      openShareSheet(url);
+    }
+    function openShareSheet(url) {
+      const el = (id) => document.getElementById(id);
+      el('shUrl').textContent = url;
+      el('shSub').textContent = getCrmId() ? '가족·지인에게 보내주세요. 받은 분이 견적을 요청하면 소개해 주신 고객님으로 함께 기록돼요.' : '가족·지인에게 이 명함을 보내주세요.';
+      el('shSms').href = 'sms:' + (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(shareText() + '\n' + url);
+      el('shCopy').innerHTML = '<i class="fa-regular fa-copy"></i> 링크 복사하기';
+      el('shBack').style.display = 'flex';
+    }
+    function openSms() {
+      const cid = getCrmId();
+      smsTo(cid ? `[명함상담/${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ');
+    }
+
+    /* ===== AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
+    function openChatbot() {
+      if (window.chatbase) {
+        try { window.chatbase('open'); return; } catch (e) {}
+      }
+      if (confirm('AI상담원을 불러오는 중입니다. 문자로 상담하시겠어요?')) openSms();
+    }
+
+    /* =====================================================================
+       폰값계산
+       · 지원금·요금제·유지기간·위약금 기준은 /subsidy.json 에서 불러옴
+         (나중에 강CRM 엑셀 등록이 이 파일을 갱신)
+       · carriers[통신사].ready 가 false면 "준비 중" 안내만 보여줌
+       · 할부수수료 연 5.9% 원리금균등, 선택약정 25%
+       ===================================================================== */
+    const FS_BASE = 'https://firestore.googleapis.com/v1/projects/phoneplace-db/databases/(default)/documents/';
+    const FS_KEY = 'AIzaSyCEtd4aYZtxF7RTciLDHEc9oSReCE4_1rk';   // 웹용 공개 키 (보안은 Firebase 규칙이 담당)
+    const PC = { data: null, last: null, touched: false, asked: false, logs: 0,
+      st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외' } };
+    const PC_W = ['일', '월', '화', '수', '목', '금', '토'];
+    const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
+    const pcEsc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    const pcEl = id => document.getElementById(id);
+    function pcInst(a, n) { const r = 0.059 / 12; return a <= 0 || !n ? 0 : a * r / (1 - Math.pow(1 + r, -n)); }
+    function pcYmd(d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+    function pcFd(d) { return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${PC_W[d.getDay()]})`; }
+
+    // 강CRM에서 올린 지원금(Firestore) → 없으면 저장소의 subsidy.json
+    let pcFsExtra = null;   // 강CRM 설정(상담 알림 서버·배너·알뜰유심) — 지원금표가 준비 안 됐어도 따로 씀
+    async function pcFetchData() {
+      try {
+        const r = await fetch(FS_BASE + 'card_public/phonecalc?key=' + FS_KEY, { cache: 'no-store' });
+        if (r.ok) {
+          const j = await r.json();
+          const txt = j && j.fields && j.fields.json && j.fields.json.stringValue;
+          if (txt) {
+            const d = JSON.parse(txt);
+            pcFsExtra = d;
+            if (Object.values(d.carriers || {}).some(c => c.ready && !c.hidden && c.models && c.models.length)) return d;
+          }
+        }
+      } catch (e) {}
+      const r2 = await fetch('/subsidy.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r2.ok) throw new Error('no data');
+      const base = await r2.json();
+      // [V2.7] 예전엔 지원금표를 파일로 대신 쓰면 '상담 알림 서버' 주소까지 빠져서 직원 폰 푸시가 안 갔음 → 강CRM 설정은 그대로 붙임
+      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
+      return base;
+    }
+    // 📣 직원 폰 푸시 (상담 알림 서버) — 저장이 실패해도 보냄 · 문자앱으로 넘어가도 끊기지 않게 keepalive
+    function cardAlertStaff(who, summary, failed) {
+      const A = (PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert);
+      if (!A || !A.url) return;
+      try {
+        fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+          body: JSON.stringify({ who: String(who || '고객').slice(0, 20), summary: ((failed ? '⚠️ 강CRM 저장 실패·문자 확인 · ' : '') + String(summary || '')).slice(0, 80), crm: A.crm || '',
+            ...(window.KCRM_TEAM && window.KCRM_TEAM_P ? { to: String(window.KCRM_TEAM_P.key || window.KCRM_TEAM_P.name || '').slice(0, 20) } : {}) }) }).catch(() => {});   // [V3.8] 공용 명함: 보낸 직원 + 대표에게만
+      } catch (e) {}
+    }
+    // [V3.0] 👀 관심 고객(등록 고객이 계산만 해보거나 견적을 보다 나감)도 직원 폰 푸시 — 강CRM 총관리자가 켰을 때만
+    //   · 명함을 한 번 열 때 한 번만 · 아침 9시~밤 9시에만 (그 밖엔 강CRM 목록에 기록만)
+    let interestPushed = false;
+    function cardInterestPush(summary) {
+      const A = (PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert);
+      if (!A || !A.url || A.interest !== true || interestPushed || window.KCRM_STAFF) return;
+      let h = new Date().getHours();
+      try { h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }).format(new Date())); } catch (e) {}
+      if (h < 9 || h >= 21) return;
+      interestPushed = true;
+      let who = '';
+      try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+      cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', summary);
+    }
+    // card_requests 저장 (인터넷이 잠깐 끊겼거나 서버가 잠깐 안 되면 한 번 더)
+    // [V2.8] 문서 번호(영문·숫자 20자)를 명함이 직접 만들어서 저장 — 서버가 정해주는 번호가 보안 규칙의 '20자 번호' 검사에 안 맞으면 저장이 거절됐음
+    function cardDocId() { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', b = new Uint8Array(20); crypto.getRandomValues(b); return Array.from(b, x => A[x % A.length]).join(''); }
+    async function cardSaveRequest(fields, keepalive) {
+      if (window.KCRM_TEAM && fields && fields.detail) {   // [V3.8] 직원 공용 명함에서 온 요청 표시
+        const P = window.KCRM_TEAM_P;
+        fields.detail = { stringValue: (String(fields.detail.stringValue || '') + `\n📇 명함: 공용 · ${P ? P.name : '매장'}${window.KCRM_TEAM_S ? ' (' + window.KCRM_TEAM_S + ')' : ''}`).slice(0, 1500) };
+      }
+      for (let i = 0; i < 2; i++) {
+        try {
+          const r = await fetch(FS_BASE + 'card_requests?documentId=' + cardDocId() + '&key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive });
+          if (r.ok) return 'ok';
+          if (r.status < 500 && r.status !== 429) return String(r.status);   // 규칙 거절 등은 다시 해도 같음
+          if (i === 1) return String(r.status);
+        } catch (e) { if (i === 1) return 'net'; }
+        await new Promise(res => setTimeout(res, 1500));
+      }
+      return 'net';
+    }
+    // 예전 형식(keep {type,v} · lim {'5G','LTE'})도 같은 모양으로
+    function pcNormalize(d) {
+      d.rules = d.rules || {};
+      Object.keys(d.carriers || {}).forEach(k => {
+        const R = d.rules[k] || {};
+        let keep = R.keep;
+        if (keep && typeof keep === 'object') keep = (keep.type === 'M' ? 'M' : 'D') + keep.v;
+        const lim = R.lim || {};
+        d.rules[k] = { keep: keep || 'D186', lim5G: Number(R.lim5G || lim['5G'] || 0), limLTE: Number(R.limLTE || lim['LTE'] || 0), ex: R.ex || '' };
+      });
+      d.distKeep = Number(d.distKeep) || 186;
+      return d;
+    }
+
+    // 📶 알뜰유심 추천 (강CRM에서 정책표 사진으로 올린 요금제 · 고객용 정보만)
+    function pcMvGb(p) {
+      const t = String(p.data || '');
+      if (/일\s*\d/.test(t)) return 999;
+      return (t.match(/(\d+(?:\.\d+)?)\s*GB/gi) || []).reduce((s, x) => s + parseFloat(x), 0);
+    }
+    function pcMvQos(p) { const m = String(p.qos || '').match(/(\d+(?:\.\d+)?)\s*(M|K)/i); return m ? (m[2].toUpperCase() === 'M' ? +m[1] : +m[1] / 1000) : 0; }
+    function pcMvnoList() {
+      const S = PC.st, D = PC.data || {};
+      const net = String(S.net || '').replace('망', '');
+      const all = [];
+      (Array.isArray(D.mvno) ? D.mvno : []).filter(m => m.net === net).forEach(m => (m.plans || []).forEach(p => all.push({ ...p, brand: m.brand, date: m.date })));
+      const fit = all.filter(p => {
+        const gb = pcMvGb(p), q = pcMvQos(p);
+        if (/키즈|청소년|시니어/.test(p.name)) return false;
+        if (S.use === '7GB 이하') return gb > 0 && gb <= 8;
+        if (S.use === '15GB 내외') return gb >= 10 && gb <= 25;
+        return gb >= 70 || (gb >= 7 && q >= 1);
+      }).sort((a, b) => a.price - b.price);
+      return { all, fit: fit.slice(0, 4) };
+    }
+    function pcMvnoRender() {
+      const S = PC.st, box = pcEl('pcMvnoRes');
+      if (!box) return;
+      const { all, fit } = pcMvnoList();
+      if (!all.length) { box.innerHTML = ''; return; }
+      const e = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      if (!fit.length) { box.innerHTML = `<div class="pc-empty">이 조건에 맞는 요금제는 상담으로 찾아드릴게요.</div>`; return; }
+      box.innerHTML = `<div class="pc-mv-h">추천 요금제 <span style="font-weight:600;color:var(--text-sub)">· ${e(fit[0].brand)}${fit[0].date ? ' · ' + e(fit[0].date) + ' 기준' : ''}</span></div><div class="pc-mv">` +
+        fit.map((p, i) => `<button type="button" class="pc-mv-i${S.mplan === p.brand + '|' + p.name ? ' on' : ''}" data-mv="${i}">
+            <span style="min-width:0"><span class="nm">${e(p.name)}</span>
+            <span class="sb">${e([p.data && '데이터 ' + p.data, p.qos && '소진 후 ' + p.qos, p.voice && '통화 ' + p.voice].filter(Boolean).join(' · '))}${p.bonus ? '<br>결합 시 ' + e(p.bonus) : ''}</span></span>
+            <span class="pr"><b>${won(p.price)}</b>${p.base > p.price ? `<s>${won(p.base)}</s>` : ''}</span></button>`).join('') +
+        `</div><div class="pc-sub" style="margin-top:6px">월 요금은 할인 적용 후 금액이에요. 누르면 이 요금제로 상담 요청돼요.</div>`;
+      box.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { const p = fit[+b.dataset.mv]; S.mplan = p.brand + '|' + p.name; S.mprice = p.price; PC.touched = true; pcMvnoRender(); });
+    }
+    function pcSeg(id, key, items, after) {
+      const el = pcEl(id); el.innerHTML = '';
+      items.forEach(([label, val], i) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'pc-opt' + (PC.st[key] === val ? ' on' : '');
+        if (items.length % 2 === 1 && i === items.length - 1) b.style.gridColumn = 'span 2';
+        b.textContent = label;
+        b.onclick = () => { PC.st[key] = val; PC.touched = true; pcScheduleLog(); if (after) after(); pcRender(); };
+        el.appendChild(b);
+      });
+    }
+    function pcFill(id, items, val) {
+      const el = pcEl(id); el.innerHTML = '';
+      items.forEach(([t, v]) => el.add(new Option(t, v)));
+      el.value = String(val);
+    }
+    function pcType() {
+      const n = PC.st.now, c = PC.st.car;
+      if (n === 'none') return { key: 'new', label: '신규가입' };
+      if (n === c) return { key: 'chg', label: '기기변경' };
+      return { key: 'mnp', label: `${n} → ${c} 통신사이동` };
+    }
+
+    async function pcLoad() {
+      pcEl('pcDate').value = pcYmd(new Date());
+      try {
+        PC.data = pcNormalize(await pcFetchData());
+      } catch (e) {
+        pcEl('pcBody').innerHTML = '<p class="pc-empty">지원금 정보를 불러오지 못했어요. 아래 문자상담으로 원하는 기종을 알려주시면 바로 계산해 드릴게요.</p>' +
+          '<button class="btn-vcard" style="margin:14px 0 0;" onclick="openSms()"><i class="fa-solid fa-comment-dots"></i> 문자로 상담하기</button>';
+        return;
+      }
+      const cars = Object.keys(PC.data.carriers);
+      PC.st.car = cars.find(k => PC.data.carriers[k].ready) || cars[0];
+      pcEl('pcCar').onchange = e => { PC.st.car = e.target.value; PC.st.m = 0; PC.st.p = null; PC.st.c = null; PC.st.d = ''; pcRender(); };
+      pcEl('pcModel').onchange = e => { PC.st.m = +e.target.value; PC.st.c = null; PC.st.d = ''; pcRender(); };   // 제조사는 그대로
+      pcEl('pcPlan').onchange = e => { PC.st.p = +e.target.value; PC.st.d = ''; pcRender(); };
+      pcEl('pcChg').onchange = e => { PC.st.c = +e.target.value; pcRender(); };
+      pcEl('pcDist').onchange = pcRender;
+      pcEl('pcTrade').onchange = () => { PC.touched = true; pcScheduleLog(); pcRender(); };
+      pcEl('pcDate').onchange = pcRender;
+      ['pcCar', 'pcModel', 'pcPlan', 'pcChg', 'pcDist', 'pcDate'].forEach(id => pcEl(id).addEventListener('change', () => { PC.touched = true; pcScheduleLog(); }));
+      const known = !!getCrmId();
+      pcEl('pcKnown').style.display = known ? 'block' : 'none';
+      pcEl('pcNewContact').style.display = known ? 'none' : 'block';
+      ['pcTel', 'pcAgree'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('pcErr').textContent = ''; }));
+      if (PC_PREFILL) pcApplyPrefill(PC_PREFILL);
+      pcRender();
+    }
+
+    function pcRender() {
+      const S = PC.st, D = PC.data;
+      if (!D) return;
+      pcSeg('pcNow', 'now', [['SKT', 'SKT'], ['KT', 'KT'], ['LG U+', 'LG U+'], ['알뜰폰', '알뜰폰'], ['없음 (새 번호)', 'none']], () => { S.d = ''; });
+      pcSeg('pcWhat', 'what', [['휴대폰 구입', 'phone'], ['알뜰유심 가입', 'mvno']]);
+      const phone = S.what === 'phone';
+      pcEl('pcPhone').style.display = phone ? 'block' : 'none';
+      pcEl('pcMvno').style.display = phone ? 'none' : 'block';
+
+      if (!phone) {
+        pcSeg('pcNet', 'net', [['SK망', 'SK망'], ['KT망', 'KT망'], ['LG망', 'LG망']], () => { S.mplan = ''; });
+        pcSeg('pcUse', 'use', [['7GB 이하', '7GB 이하'], ['15GB 내외', '15GB 내외'], ['무제한', '무제한']], () => { S.mplan = ''; });
+        pcMvnoRender();
+        return;
+      }
+
+      pcFill('pcCar', Object.keys(D.carriers).map(k => [k, k]), S.car);
+      const t = pcType();
+      pcEl('pcRoute').textContent = '가입 유형: ' + t.label;
+      const C = D.carriers[S.car], R = D.rules[S.car];
+      const ready = !!(C && C.ready && !C.hidden && C.models && C.models.length);
+      pcEl('pcReady').style.display = ready ? 'block' : 'none';
+      pcEl('pcNotReady').style.display = ready ? 'none' : 'block';
+      if (!ready) {
+        pcEl('pcNotReady').textContent = `${S.car} 지원금은 지금 업데이트 중이에요. 원하시는 기종과 요금제를 상담으로 남겨주시면 바로 계산해 드릴게요.`;
+        PC.last = null; PC.quote = null;
+        return;
+      }
+
+      /* 제조사 토글 (삼성 · 애플 · 기타) → 그 회사 기종만 */
+      const brandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
+      const brands = ['삼성', '애플', '기타'].filter(b => C.models.some(m => brandOf(m.name) === b));
+      if (S.m >= C.models.length) S.m = 0;
+      if (!brands.includes(S.brand)) S.brand = brandOf(C.models[S.m].name);
+      const bEl = pcEl('pcBrand');
+      bEl.innerHTML = '';
+      if (brands.length > 1) brands.forEach(b => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = b;
+        btn.className = S.brand === b ? 'on' : '';
+        btn.setAttribute('aria-pressed', S.brand === b ? 'true' : 'false');
+        btn.onclick = () => { if (S.brand === b) return; S.brand = b; S.m = C.models.findIndex(m => brandOf(m.name) === b); S.c = null; S.d = ''; PC.touched = true; pcScheduleLog(); pcRender(); };
+        bEl.appendChild(btn);
+      });
+      const mIdx = C.models.map((m, i) => i).filter(i => brands.length < 2 || brandOf(C.models[i].name) === S.brand);
+      if (!mIdx.includes(S.m)) S.m = mIdx[0];
+      const md = C.models[S.m];
+      const LIM = (md.gen === 'LTE' ? R.limLTE : R.lim5G) || 0;
+      pcFill('pcModel', mIdx.map(i => [C.models[i].name, i]), S.m);
+
+      const showIdx = C.plans.map((p, i) => i).filter(i => (!C.show || C.show.includes(C.plans[i].name)) && C.plans[i].fee > 0);
+      if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
+      pcFill('pcPlan', showIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee), i]), S.p);
+
+      const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids && C.plans[i].fee > 0);
+      if (S.c === null || (S.c !== -1 && !chgIdx.includes(S.c))) {
+        const safe = chgIdx.filter(i => C.plans[i].fee >= LIM);
+        S.c = safe.length ? safe[safe.length - 1] : chgIdx[chgIdx.length - 1];
+      }
+      pcFill('pcChg', [['그대로 유지 (안 바꿈)', -1], ...chgIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee) + (C.plans[i].fee < LIM ? ' (위약금 주의)' : ''), i])], S.c);
+
+      pcSeg('pcIns', 'ins', [['24개월', 24], ['36개월', 36], ['현금개통', 0]], () => { S.d = ''; });
+
+      const fee = C.plans[S.p].fee;
+      const sup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
+      const n = S.ins;
+
+      /* 유지 기간 (할인 방식마다 다름) → 2년 동안 '처음 요금제 몇 달 + 바꾼 요금제 나머지 달'로 평균 */
+      const distOn = D.showDist !== false;   // 강CRM에서 끄면 '유통망지원금 받기' 칸 숨김
+      pcEl('pcDistRow').style.display = distOn ? '' : 'none';
+      const dist = distOn && pcEl('pcDist').checked;
+      const od = pcEl('pcDate').value ? new Date(pcEl('pcDate').value + 'T00:00:00') : new Date();
+      const KC = String(R.keep || 'D186'), K = { type: KC[0] === 'M' ? 'M' : 'D', v: parseInt(KC.slice(1), 10) || 0 };
+      const DK = D.distKeep || 186;
+      const keepOf = (disc) => {
+        let days = null, rule;
+        if (disc === '공통지원' || dist) { days = DK; rule = `${DK}일`; }
+        else if (K.type === 'M') { rule = `개통월 포함 M+${K.v}`; }
+        else { days = K.v; rule = `${K.v}일`; }
+        let cd;
+        if (days !== null) { cd = new Date(od); cd.setDate(cd.getDate() + days); }
+        else { cd = new Date(od.getFullYear(), od.getMonth() + K.v + 1, 1); }
+        const months = Math.min(24, Math.max(0, (cd - od) / 86400000 / 30.4375));
+        return { rule, cd, months };
+      };
+      const noChg = S.c === -1;
+      const chgPlan = noChg ? C.plans[S.p] : C.plans[S.c];
+      const calc = (disc) => {
+        const rate = disc === '선택약정' ? 0.75 : 1;
+        const keep = keepOf(disc);
+        const f1 = fee * rate, f2 = chgPlan.fee * rate;
+        const avg = noChg ? f1 : (f1 * keep.months + f2 * (24 - keep.months)) / 24;
+        const dev = disc === '공통지원' ? md.price - sup : md.price;
+        const m = pcInst(dev, n);
+        return { m, fee: avg, f1, f2, keep, dev, cash: n === 0, mon: n ? m + avg : avg, tot: n ? m * n + avg * 24 : dev + avg * 24 };
+      };
+      const g = calc('공통지원'), s = calc('선택약정');
+      const best = g.tot <= s.tot ? '공통지원' : '선택약정';
+      if (!S.d) S.d = best;
+      const avgOn = !noChg && chgPlan.fee !== fee;
+
+      const card = (k, o, sub) =>
+        `<div class="pc-card${S.d === k ? ' on' : ''}" data-k="${k}" role="button" tabindex="0">` +
+          `<div class="t">${k}${best === k ? '<span class="pc-badge">추천</span>' : ''}</div>` +
+          `<div class="s">${sub}</div>` +
+          `<div class="s" style="margin-top:6px;">${avgOn ? '2년 평균 월 납부' : '월 납부'}</div>` +
+          `<div class="big">${won(o.mon)}</div>` +
+          (o.cash ? `<div class="pc-row"><span>기기 일시불</span><span>${won(o.dev)}</span></div>`
+                  : `<div class="pc-row"><span>기기</span><span>${won(o.m)}</span></div>`) +
+          `<div class="pc-row"><span>요금${avgOn ? ' 평균' : ''}</span><span>${won(o.fee)}</span></div>` +
+          (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
+        `</div>`;
+      pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '이 요금제는 공통지원금 없음') + card('선택약정', s, '요금 25% 할인');
+      /* 고른 할인 방식의 계산 상세: 할부원금 → 월 할부금 + 요금 = 월 합계 → 요금제 변경 후 */
+      {
+        const o = S.d === '공통지원' ? g : s, isG = S.d === '공통지원';
+        const pName = C.plans[S.p].name;
+        const interest = n ? Math.max(0, o.m * n - o.dev) : 0;
+        const ln = (a, b, cls) => `<div class="ln${cls ? ' ' + cls : ''}"><span>${a}</span><span>${b}</span></div>`;
+        const firstSum = (o.cash ? 0 : o.m) + o.f1;
+        let h = `<div class="hd">${S.d} 계산 상세</div>`;
+        h += `<div class="sec"><div class="st">① 기기값</div>` +
+          ln('출고가', won(md.price)) +
+          (isG ? ln('공통지원금', '-' + won(sup), 'minus') : '') +
+          (dist ? ln('유통망지원금', '<span class="pc-ask">담당자 문의</span>') : '') +
+          (pcEl('pcTrade').checked ? ln('기존 폰 보상', '<span class="pc-ask">담당자 문의</span>') : '') +
+          ln(o.cash ? '현금 납부' : '할부원금', won(o.dev), 'sum') +
+          (o.cash ? '' : ln(`월 할부금 (${n}개월 · 연 5.9%)`, won(o.m)) + ln('총 할부수수료', won(interest))) +
+          `</div>`;
+        h += `<div class="sec"><div class="st">② 요금제 · 처음 ${avgOn ? Math.round(o.keep.months) + '개월' : '2년'}</div>` +
+          ln(`${pcEsc(pName)} 기본요금`, won(fee)) +
+          (isG ? '' : ln('선택약정 25% 할인', '-' + won(fee * 0.25), 'minus')) +
+          ln('월 요금', won(o.f1)) +
+          ln('월 합계', won(firstSum), 'sum big') +
+          (o.cash ? '' : `<div class="eq">월 할부금 ${won(o.m)} + 월 요금 ${won(o.f1)}</div>`) +
+          `</div>`;
+        if (avgOn) {
+          const afterSum = (o.cash ? 0 : o.m) + o.f2;
+          h += `<div class="sec"><div class="st">③ 요금제 변경 후 · ${pcFd(o.keep.cd)}부터</div>` +
+            ln(`${pcEsc(chgPlan.name)} 기본요금`, won(chgPlan.fee)) +
+            (isG ? '' : ln('선택약정 25% 할인', '-' + won(chgPlan.fee * 0.25), 'minus')) +
+            ln('월 요금', won(o.f2)) +
+            ln('월 합계', won(afterSum), 'sum big') +
+            (o.cash ? '' : `<div class="eq">월 할부금 ${won(o.m)} + 월 요금 ${won(o.f2)}</div>`) +
+            `</div>`;
+        }
+        h += `<div class="sec">` +
+          ln(avgOn ? '2년 평균 월 납부' : '월 납부', won(o.mon), 'sum') +
+          ln('2년 총 부담액', won(o.tot)) +
+          (n === 36 ? `<div class="eq">36개월 할부는 25개월째부터 월 할부금 ${won(o.m)}이 1년 더 나가요</div>` : '') +
+          `</div>`;
+        pcEl('pcDetail').innerHTML = h;
+      }
+      pcEl('pcRes').querySelectorAll('.pc-card').forEach(el => {
+        el.onclick = () => { S.d = el.dataset.k; PC.touched = true; pcScheduleLog(); pcRender(); };
+        el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); S.d = el.dataset.k; pcRender(); } };
+      });
+
+      pcEl('pcPrice').textContent = won(md.price) + ' · ' + md.gen;
+      pcEl('pcNote').textContent = `${S.car} 공통지원금 ${C.date || ''} 기준 · ` +
+        (n ? `할부 ${n}개월, 할부수수료 연 5.9% 포함` : '현금개통 (할부수수료 없음)') +
+        (avgOn ? ' · 월 납부는 유지 기간 뒤 요금제 변경까지 반영한 2년 평균' : '') + ' · 추천은 2년 총 부담액 기준';
+
+      /* 유지 기간 · 변경 가능일 · 위약금 경고 */
+      const cur = S.d === '공통지원' ? g : s;
+      const { rule, cd } = cur.keep;
+      const selWarn = S.d === '선택약정' && dist && !(K.type === 'D' && K.v >= DK);
+      const bound = S.d === '공통지원' || (S.d === '선택약정' && dist);
+      const pen = !noChg && bound && chgPlan.fee < LIM;
+      const why = S.d === '공통지원' ? '공통지원금' : '유통망지원금';
+
+      pcEl('pcChgWarn').innerHTML = pen
+        ? `<i class="fa-solid fa-circle-exclamation"></i> ${why}을 받으면 ${pcEsc(S.car)} 기준 ${won(LIM)} 미만 요금제로 낮출 때 위약금이 발생해요`
+        : '';
+
+      const after = (cur.cash ? 0 : cur.m) + cur.f2;
+      const box = pcEl('pcKeep');
+      box.className = 'pc-keep ' + (pen ? 'danger' : selWarn ? 'warn' : 'ok');
+      box.innerHTML =
+        (pen ? `<div><strong><i class="fa-solid fa-circle-exclamation"></i> ${won(LIM)} 미만 요금제로 낮추면 위약금 발생</strong></div>` : '') +
+        (selWarn ? `<div><strong><i class="fa-solid fa-triangle-exclamation"></i> 유통망지원금을 받으면 선택약정도 ${DK}일 유지해야 해요</strong></div>` : '') +
+        `<div>요금제 유지 기간: ${rule}</div>` +
+        `<div>요금제 변경 가능일: <strong>${pcFd(cd)}</strong>부터</div>` +
+        (bound && LIM ? `<div>변경 후에도 ${won(LIM)} 이상 요금제 유지 (${pcEsc(R.ex || '')})</div>` : '') +
+        (noChg ? `<div>요금제를 바꾸지 않으면 2년 내내 월 <strong>${won(cur.mon)}</strong></div>`
+               : `<div>변경 후 월 납부: <strong>${won(after)}</strong> (${pcEsc(chgPlan.name)})</div>`);
+
+      // [V3.1] 견적 문자용 (강CRM에서 고객에게 보내기)
+      PC.quote = {
+        model: md.name, gen: md.gen, car: S.car, route: t.label, plan: C.plans[S.p].name, fee, chgName: chgPlan.name, chgFee: chgPlan.fee,
+        noChg, avgOn, disc: S.d, isG: S.d === '공통지원', sup, price: md.price, dev: cur.dev, m: cur.m, n, cash: cur.cash,
+        f1: cur.f1, f2: cur.f2, mon: cur.mon, tot: cur.tot, keepMonths: Math.round(cur.keep.months), cdLabel: pcFd(cur.keep.cd),
+        date: C.date || '', dist, trade: !!(pcEl('pcTrade') && pcEl('pcTrade').checked), pen, LIM, why,
+        // 비교 견적용: 두 할인 방식 모두
+        cmp: {
+          best,
+          g: { sup, dev: g.dev, m: g.m, f1: g.f1, f2: g.f2, mon: g.mon, tot: g.tot, keepMonths: Math.round(g.keep.months), cdLabel: pcFd(g.keep.cd) },
+          s: { dev: s.dev, m: s.m, f1: s.f1, f2: s.f2, mon: s.mon, tot: s.tot, keepMonths: Math.round(s.keep.months), cdLabel: pcFd(s.keep.cd) },
+          penG: !noChg && LIM > 0 && chgPlan.fee < LIM
+        }
+      };
+      PC.last = {
+        car: S.car, route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
+        ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, avg: avgOn, dist, distOn,
+        date: pcYmd(od), chg: noChg ? '그대로 유지' : chgPlan.name, cd: pcYmd(cd)
+      };
+    }
+
+    /* [V3.1] 📤 견적 보내기 (강CRM 직원용 계산기)
+       · 계산한 견적을 고객용 문자 문구로 만들어 강CRM으로 넘김 → 강CRM이 받는 사람 확인 후 문자앱으로
+       · 강CRM이 '견적요청'에서 열면 주소의 q= 로 고객이 고른 조건(지금 통신사·원하는 통신사·기종·용량·할부·할인)을 미리 채움 */
+    function pcQuoteText() {
+      const q = PC.quote;
+      if (!q) return '';
+      const L = [];
+      L.push(`📱 ${q.model}`);
+      L.push(`· 가입: ${/→/.test(q.route) ? q.route.replace('통신사이동', '번호이동') : q.car + ' ' + q.route}`);
+      L.push(`· 요금제: ${q.plan} (월 ${won(q.fee)})${q.avgOn ? ` → ${q.keepMonths}개월 뒤 ${q.chgName}` : ''}`);
+      L.push(`· 할인: ${q.isG ? '공통지원금 (기기값 할인)' : '선택약정 (요금 25% 할인)'} · ${q.cash ? '현금개통' : `할부 ${q.n}개월`}`);
+      L.push('');
+      L.push('[기기값]');
+      L.push(`· 출고가 ${won(q.price)}`);
+      if (q.isG && q.sup) L.push(`· 공통지원금 -${won(q.sup)}`);
+      L.push(q.cash ? `· 현금 납부 ${won(q.dev)}` : `· 할부원금 ${won(q.dev)} → 월 ${won(q.m)}`);
+      L.push('');
+      L.push('[월 납부]');
+      const first = (q.cash ? 0 : q.m) + q.f1, after = (q.cash ? 0 : q.m) + q.f2;
+      if (q.avgOn) {
+        L.push(`· 처음 ${q.keepMonths}개월: 월 ${won(first)}`);
+        L.push(`· ${q.cdLabel.replace(/\s*\(.\)$/, '')}부터: 월 ${won(after)}`);
+        L.push(`· 2년 평균: 월 ${won(q.mon)}`);
+      } else {
+        L.push(`· 2년 동안: 월 ${won(first)}`);
+      }
+      if (!q.cash && q.n === 36) L.push(`· 36개월 할부라 25개월째부터는 월 할부금 ${won(q.m)}만 1년 더`);
+      L.push('');
+      L.push(q.cash ? '※ 현금개통 기준이에요.' : '※ 할부수수료(연 5.9%) 포함이에요.');
+      if (q.pen) L.push(`※ ${q.why}을 받으면 ${won(q.LIM)} 미만 요금제로 낮출 때 위약금이 있어요.`);
+      if (q.dist || q.trade) L.push(`※ ${[q.dist && '유통망지원금', q.trade && '기존 폰 보상'].filter(Boolean).join('·')}은 상담 때 더 챙겨드려요.`);
+      L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
+      return L.join('\n');
+    }
+    // 📊 비교 견적: 공통지원 · 선택약정을 나란히 (강CRM '견적 보내기'에서 켜고 끔)
+    function pcQuoteCompareText() {
+      const q = PC.quote;
+      if (!q || !q.cmp) return pcQuoteText();
+      const X = q.cmp, L = [];
+      const noDate = (t) => String(t || '').replace(/\s*\(.\)$/, '');
+      L.push(`📱 ${q.model}`);
+      L.push(`· 가입: ${/→/.test(q.route) ? q.route.replace('통신사이동', '번호이동') : q.car + ' ' + q.route}`);
+      L.push(`· 요금제: ${q.plan} (월 ${won(q.fee)})${q.avgOn ? ` → 유지 기간 뒤 ${q.chgName}` : ''}`);
+      L.push(`· ${q.cash ? '현금개통' : `할부 ${q.n}개월`} · 출고가 ${won(q.price)}`);
+      const part = (no, key, title, o) => {
+        const first = (q.cash ? 0 : o.m) + o.f1, after = (q.cash ? 0 : o.m) + o.f2;
+        L.push('');
+        L.push(`${no} ${title}${X.best === key ? ' 👍 추천' : ''}`);
+        L.push(q.cash ? `· 기기값 현금 ${won(o.dev)}` : `· 할부원금 ${won(o.dev)} → 월 ${won(o.m)}`);
+        if (q.avgOn) {
+          L.push(`· 처음 ${o.keepMonths}개월 월 ${won(first)}`);
+          L.push(`· ${noDate(o.cdLabel)}부터 월 ${won(after)}`);
+          L.push(`· 2년 평균 월 ${won(o.mon)}`);
+        } else {
+          L.push(`· 2년 동안 월 ${won(first)}`);
+        }
+      };
+      part('①', '공통지원', `공통지원금 (기기값 ${X.g.sup ? won(X.g.sup) + ' ' : ''}할인)`, X.g);
+      part('②', '선택약정', '선택약정 (요금 25% 할인)', X.s);
+      const diff = Math.abs(X.g.tot - X.s.tot);
+      L.push('');
+      const totLb = (!q.cash && q.n === 36) ? '총 부담액(할부 36개월 포함)' : '2년 총액';
+      L.push(diff < 1000 ? `👉 ${totLb}은 두 방식이 거의 같아요` : `👉 ${totLb}으로 ${X.best === '공통지원' ? '공통지원금' : '선택약정'}이 약 ${won(Math.round(diff / 1000) * 1000)} 더 저렴해요`);
+      if (!q.cash && q.n === 36) L.push('※ 36개월 할부는 25개월째부터 월 할부금만 1년 더 나가요.');
+      L.push(q.cash ? '※ 현금개통 기준이에요.' : '※ 할부수수료(연 5.9%) 포함이에요.');
+      if (X.penG) L.push(`※ 공통지원금을 받으면 ${won(q.LIM)} 미만 요금제로 낮출 때 위약금이 있어요.`);
+      if (q.dist || q.trade) L.push(`※ ${[q.dist && '유통망지원금', q.trade && '기존 폰 보상'].filter(Boolean).join('·')}은 상담 때 더 챙겨드려요.`);
+      L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
+      return L.join('\n');
+    }
+    // 📶 알뜰유심 견적 (고른 요금제 하나 / 비교는 추천 요금제 모두)
+    function pcMvQuoteText(all) {
+      const S = PC.st, { fit } = pcMvnoList();
+      if (!fit.length) return '';
+      const pick = fit.find(p => S.mplan === p.brand + '|' + p.name) || fit[0];
+      const plans = all ? fit : [pick];
+      const L = [`📶 알뜰유심 ${all ? '추천 요금제' : '요금 견적'} (${S.net} · 데이터 ${S.use})`];
+      plans.forEach((p, i) => {
+        L.push('');
+        L.push(`${all ? '①②③④'[i] + ' ' : ''}${p.name} (${p.brand})${all && p === pick ? ' 👍 추천' : ''}`);
+        L.push(`· 월 ${won(p.price)}${p.base > p.price ? ` (정상 ${won(p.base)})` : ''}`);
+        const spec = [p.data && '데이터 ' + p.data, p.qos && '소진 후 ' + p.qos, p.voice && '통화 ' + p.voice].filter(Boolean).join(' · ');
+        if (spec) L.push('· ' + spec);
+        if (p.bonus) L.push('· 결합 시 ' + p.bonus);
+      });
+      L.push('');
+      L.push('· 약정 7개월');
+      L.push('※ 지금 쓰는 폰 그대로, 유심만 바꾸면 돼요.');
+      if (plans[0].date) L.push(`※ ${plans[0].date} 기준 요금이라 바뀔 수 있어요.`);
+      return L.join('\n');
+    }
+    function pcSendQuote() {
+      if (PC.st.what === 'mvno') {
+        const one = pcMvQuoteText(false);
+        if (!one) { alert('이 조건에 맞는 알뜰유심 요금제가 없어요. 통신망이나 데이터 사용량을 바꿔 보세요.'); return; }
+        const { fit } = pcMvnoList(), pk = fit.find(p => PC.st.mplan === p.brand + '|' + p.name) || fit[0];
+        const msgMv = { type: 'kcrm-quote', kind: 'mvno', text: one, textCompare: pcMvQuoteText(true), summary: `알뜰유심 ${PC.st.net} · ${pk.name} 월 ${won(pk.price)}` };
+        if (window.parent && window.parent !== window) { window.parent.postMessage(msgMv, '*'); return; }
+        alert(copyText(one) ? '견적 문구를 복사했어요.' : one); return;
+      }
+      if (!PC.quote) { alert('기종과 요금제를 먼저 골라주세요.'); return; }
+      const msg = { type: 'kcrm-quote', text: pcQuoteText(), textCompare: pcQuoteCompareText(), summary: pcSummary(), model: PC.quote.model, car: PC.quote.car, mon: Math.round(PC.quote.mon) };
+      if (window.parent && window.parent !== window) { window.parent.postMessage(msg, '*'); return; }
+      alert(copyText(msg.text) ? '견적 문구를 복사했어요. 문자나 카톡에 붙여넣어 주세요.' : msg.text);
+    }
+    // 강CRM이 넘긴 견적요청 조건 (직원용에서만)
+    const PC_PREFILL = (function () {
+      try { const v = new URLSearchParams(location.search).get('q'); return v && window.KCRM_STAFF ? JSON.parse(v) : null; } catch (e) { return null; }
+    })();
+    function pcApplyPrefill(q) {
+      const S = PC.st, D = PC.data;
+      if (!q || !D) return;
+      const norm = (x) => String(x || '').replace(/\s+/g, '').toUpperCase();
+      const nowMap = { 'SKT': 'SKT', 'KT': 'KT', 'LGU+': 'LG U+', '알뜰폰': '알뜰폰', '새번호': 'none' };
+      if (nowMap[norm(q.now)]) S.now = nowMap[norm(q.now)];
+      const cars = Object.keys(D.carriers || {});
+      const car = cars.find(k => norm(k) === norm(q.car) && D.carriers[k].ready && !D.carriers[k].hidden);
+      if (car) S.car = car;
+      const notes = [];
+      if (/^알뜰폰/.test(q.car || '')) {
+        const nt = (/(SK|KT|LG)망/.exec(q.car) || [])[0];
+        S.what = 'mvno'; if (nt) S.net = nt; S.mplan = '';   // 유심만 → 알뜰유심 추천 화면
+        notes.push(`알뜰폰${nt ? '(' + nt + ')' : ''} 유심 희망 · 약정 7개월 · 데이터 사용량을 고르고 요금제를 눌러 보내세요`);
+      }
+      else if (q.car && !car) notes.push(`${q.car} 지원금표가 없어서 ${S.car}로 계산`);
+      const C = D.carriers[S.car];
+      let found = false;
+      if (C && Array.isArray(C.models) && q.model) {
+        const capRe = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;
+        const split = (nm) => { const m = capRe.exec(nm); return { base: norm(m ? nm.replace(capRe, ' ') : nm), cap: m ? (m[1] + m[2]).toUpperCase() : '' }; };
+        const want = { base: norm(q.model), cap: String(q.cap || '').toUpperCase() };
+        let idx = C.models.findIndex(m => { const x = split(m.name); return x.base === want.base && x.cap === want.cap; });
+        if (idx < 0) idx = C.models.findIndex(m => split(m.name).base === want.base);
+        if (idx >= 0) { S.m = idx; S.brand = ''; S.c = null; found = true; }
+      }
+      if (q.model && !found) notes.push(`'${q.model}${q.cap ? ' ' + q.cap : ''}'을 표에서 못 찾아 직접 골라주세요`);
+      if (/36/.test(q.ins || '')) S.ins = 36; else if (/24/.test(q.ins || '')) S.ins = 24; else if (/일시불/.test(q.ins || '')) S.ins = 0;
+      else if (/12/.test(q.ins || '')) notes.push('할부 12개월은 계산기에 없어서 24개월로 계산');
+      if (/공통/.test(q.disc || '')) S.d = '공통지원'; else if (/선택/.test(q.disc || '')) S.d = '선택약정';
+      if (q.trade && pcEl('pcTrade')) pcEl('pcTrade').checked = true;   // 고객이 기기 보상 원함
+      if (q.tradePhone && pcEl('pcCurPhone')) pcEl('pcCurPhone').value = String(q.tradePhone).slice(0, 30);
+      if (q.trade) notes.push('기기 보상 원함' + (q.tradePhone ? ` (${String(q.tradePhone).slice(0, 30)})` : ''));
+      const who = String(q.who || '').slice(0, 20);
+      const forTxt = `👤 ${who ? who + ' 고객' : '고객'} 견적요청 조건으로 채웠어요` + (notes.length ? ` · ${notes.join(' · ')}` : '') + (S.what === 'mvno' ? '.' : '. 요금제를 고르고 보내세요.');
+      pcEl('pcQuoteFor').textContent = forTxt;
+      if (pcEl('pcQuoteForMv')) pcEl('pcQuoteForMv').textContent = forTxt;
+    }
+
+    /* 상담 요청 → 강CRM '명함상담'으로 바로 전달 (안 되면 문자앱으로) */
+    function pcLines() {
+      const S = PC.st;
+      const v = id => (pcEl(id) && pcEl(id).value.trim()) || '';
+      const nowLabel = S.now === 'none' ? '새 번호' : S.now;
+      const lines = [];
+      if (S.what === 'phone') {
+        lines.push('지금: ' + [nowLabel, v('pcCurPlan'), v('pcCurPhone')].filter(Boolean).join(' / ') + (pcEl('pcTrade').checked ? ' · 기기 보상 희망' : ''));
+        if (PC.last) {
+          const L = PC.last;
+          lines.push(`희망: ${L.route} / ${L.model} / ${L.plan}`);
+          lines.push(`${L.disc} · ${L.ins} · 월 ${won(L.mon)}${L.avg ? ' (2년 평균)' : ''}`);
+          lines.push((L.distOn ? `유통망지원금 ${L.dist ? '받기' : '안 받음'} · ` : '') + `개통 예정 ${L.date}`);
+          lines.push(`변경 예정: ${L.chg} (${L.cd}부터)`);
+        } else {
+          lines.push(`희망: ${S.car} 개통 (기종·요금제 문의)`);
+        }
+      } else {
+        lines.push('지금: ' + [nowLabel, v('pcMvnoPhone')].filter(Boolean).join(' / '));
+        lines.push(`희망: 알뜰유심 ${S.net} / 데이터 ${S.use}`);
+        if (S.mplan) lines.push(`관심 요금제: ${S.mplan.replace('|', ' ')} 월 ${won(S.mprice || 0)}`);
+      }
+      return lines;
+    }
+    function pcSummary() {
+      const S = PC.st;
+      if (S.what !== 'phone') return `알뜰유심 ${S.net} · ${S.use}${S.mplan ? ' · ' + S.mplan.split('|')[1] : ''}`;
+      const L = PC.last;
+      const trade = pcEl('pcTrade') && pcEl('pcTrade').checked ? ' · 보상' : '';
+      return L ? `${L.car} ${L.model} · ${L.plan} · ${L.disc} · 월 ${won(L.mon)}${L.avg ? '(평균)' : ''}${trade}` : `${S.car} 개통 문의${trade}`;
+    }
+    async function pcSend(kind, extra, keepalive) {
+      if (window.KCRM_STAFF) return false;
+      const data = { kind, cid: getCrmId() || '', name: '', phone: '', agree: '', summary: pcSummary(), detail: pcLines().join('\n'), at: new Date().toISOString(), ...(extra || {}) };
+      const ref = getRefId();
+      if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로 표시
+      const fields = {};
+      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
+      return cardSaveRequest(fields, keepalive);
+    }
+    // 강CRM을 닫아놔도 직원 폰에 알림 (강CRM에서 '상담 알림 서버'를 연결했을 때만)
+    function cardWho(extra) { return (extra && extra.name) || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객')); }
+    function pcAlertStaff(extra, failed) { cardAlertStaff(cardWho(extra), pcSummary(), failed); }
+    function pcSmsFallback() {
+      const cid = getCrmId();
+      smsTo([`[폰값계산${cid ? '/' + cid : ''}] 상담 요청드려요`, ...pcLines()].join('\n'));
+    }
+    async function pcRequest() {
+      const err = pcEl('pcErr'), btn = pcEl('pcAsk');
+      err.textContent = '';
+      if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') pcRequest(); }); return; }
+      const extra = {};
+      if (!getCrmId()) {
+        const tel = pcEl('pcTel').value.replace(/\D/g, '');
+        if (!/^01\d{8,9}$/.test(tel)) { err.textContent = '연락받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; pcEl('pcTel').focus(); return; }
+        if (!pcEl('pcAgree').checked) { err.textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+        Object.assign(extra, { phone: tel, name: pcEl('pcName').value.trim().slice(0, 20), agree: 'Y' });
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+      const res = await pcSend('ask', extra);
+      if (res === 'ok') {
+        PC.asked = true;
+        pcAlertStaff(extra);
+        btn.style.display = 'none';
+        const done = pcEl('pcDone');
+        done.innerHTML = '상담 요청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.<br><a href="#" onclick="pcSmsFallback(); return false;">급하시면 문자로도 보내기</a>';
+        done.style.display = 'block';
+      } else {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 이 조건으로 상담 받기';
+        err.textContent = `상담 요청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+        pcAlertStaff(extra, true);   // 저장은 안 됐어도 직원 폰에는 알림
+        pcSmsFallback();
+      }
+    }
+    /* 명함 링크로 들어온 고객이 계산만 해보고 나갈 때 → 강CRM에 '계산만 해봄'으로 남김 (한 번 열 때 최대 3번) */
+    //   · 계산을 바꾸고 20초 동안 그대로 두면 한 번 기록 (나가는 순간에만 보내면 폰에 따라 안 가는 경우가 있어서)
+    let pcLogTimer = null;
+    function pcLogCalc(leaving) {
+      clearTimeout(pcLogTimer);
+      if (!getCrmId() || !PC.touched || PC.asked || PC.logs >= 3 || !PC.data) return;
+      PC.touched = false;
+      PC.logs++;
+      pcSend('calc', null, !!leaving);
+      cardInterestPush('👀 계산만 해봄 · ' + pcSummary());
+    }
+    function pcScheduleLog() {
+      clearTimeout(pcLogTimer);
+      if (getCrmId() && !PC.asked) pcLogTimer = setTimeout(() => pcLogCalc(false), 20000);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pcLogCalc(false); });
+    window.addEventListener('pagehide', () => pcLogCalc(true));
+
+
+    /* =====================================================================
+       📱 견적요청 (고객용 간단 양식) — 기종·용량·통신사·할부·할인 방식만 골라서 '무료 견적 받기'
+       · 강CRM에는 예전처럼 '상담요청'으로 들어가요 (요약 맨 앞 📱 견적요청)
+       · 월 납부액 계산기는 아래 [월 납부액 직접 계산해 보기]로 그대로 쓸 수 있어요 · 강CRM 안(직원용)은 계산기 그대로
+       ===================================================================== */
+    const QT = { brand: '', model: '', cap: '', color: '', now: '', car: '추천', net: '추천', ins: '24개월 할부', fee: '', disc: '상담이 필요해요', trade: '', memoMode: 'later', sent: false, groups: [], noData: false };
+    const QT_MVNO_TERM = '약정 7개월';   // 알뜰폰은 약정 7개월 고정
+    const qtNetLabel = () => QT.net === '추천' ? '통신망 추천' : QT.net;
+    const QT_OPTIONAL = new Set(['color', 'fee', 'trade']);
+    const qtBrandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
+    const QT_CAP_RE = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;   // 'iPhone 17 256GB (New)'처럼 용량이 가운데 있어도
+    function qtCapBytes(c) { const m = /(\d+(?:\.\d+)?)\s*(GB|TB|G|T)/i.exec(c || ''); return m ? parseFloat(m[1]) * (/t/i.test(m[2]) ? 1024 : 1) : 0; }
+    function qtBuildGroups() {
+      const D = PC.data, map = new Map();
+      Object.values((D && D.carriers) || {}).forEach(C => {
+        if (!C || !C.ready || C.hidden || !Array.isArray(C.models)) return;
+        C.models.forEach(m => {
+          const nm = String(m.name || '').trim(); if (!nm) return;
+          const cm = QT_CAP_RE.exec(nm), base = cm ? nm.replace(QT_CAP_RE, ' ').replace(/\s+/g, ' ').trim() : nm, cap = cm ? cm[1] + cm[2].toUpperCase() : '';   // 용량 표시가 없는 이름 = 기본 용량
+          if (!map.has(base)) map.set(base, { base, brand: qtBrandOf(nm), caps: new Map() });
+          const g = map.get(base);
+          if (!g.caps.has(cap)) g.caps.set(cap, Number(m.price) || 0);
+        });
+      });
+      QT.groups = [...map.values()].map(g => ({ ...g, caps: [...g.caps.entries()].sort((a, b) => qtCapBytes(a[0]) - qtCapBytes(b[0])) }));   // '' (기본)이 맨 앞
+      QT.noData = !QT.groups.length;
+    }
+    function qtChips(id, items, key) {
+      const el = pcEl(id); if (!el) return; el.innerHTML = '';
+      items.forEach(([label, val]) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'qt-chip' + (QT[key] === val ? ' on' : ''); b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', QT[key] === val ? 'true' : 'false');
+        b.textContent = label;
+        b.onclick = () => { QT[key] = (QT[key] === val && QT_OPTIONAL.has(key)) ? '' : val; if (key !== 'memoMode') qtTouch(); qtRender(); };
+        el.appendChild(b);
+      });
+    }
+    const qtCarNorm = (c) => String(c || '').replace(/\s+/g, '').replace('LGU+', 'LGU+').toUpperCase();
+    function qtRoute() {
+      if (!QT.now || QT.car === '추천') return '';
+      const mvTo = QT.net && QT.net !== '추천' ? `알뜰폰(${QT.net})` : '알뜰폰';
+      if (QT.now === '새 번호') return QT.car === '알뜰폰' ? `${mvTo} 신규가입` : '신규가입';
+      if (QT.car === '알뜰폰' && QT.now === '알뜰폰') return '알뜰폰끼리 이동 (상담)';
+      if (QT.car === '알뜰폰') return `${QT.now} → ${mvTo} 번호이동`;
+      if (QT.now !== '알뜰폰' && qtCarNorm(QT.now) === qtCarNorm(QT.car)) return '기기변경';
+      return `${QT.now} → ${QT.car} 번호이동`;
+    }
+    function qtContactUi() {
+      const known = !!getCrmId();
+      pcEl('qtKnown').style.display = known ? 'block' : 'none';
+      pcEl('qtNewContact').style.display = known ? 'none' : 'block';
+    }
+    function qtRender() {
+      if (window.KCRM_STAFF) return;
+      // 기종
+      const sel = pcEl('qtModel'), txt = pcEl('qtModelText'), bEl = pcEl('qtBrand');
+      if (QT.noData) {
+        sel.style.display = 'none'; txt.style.display = 'block'; bEl.innerHTML = ''; pcEl('qtPrice').textContent = '';
+        pcEl('qtCap').innerHTML = ''; pcEl('qtCap').previousElementSibling.style.display = 'none';
+      } else {
+        sel.style.display = 'block'; txt.style.display = 'none';
+        const brands = ['삼성', '애플', '기타'].filter(b => QT.groups.some(g => g.brand === b));
+        if (!brands.includes(QT.brand)) QT.brand = brands[0];
+        bEl.innerHTML = '';
+        if (brands.length > 1) brands.forEach(b => {
+          const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = b; btn.className = QT.brand === b ? 'on' : ''; btn.setAttribute('aria-pressed', QT.brand === b ? 'true' : 'false');
+          btn.onclick = () => { if (QT.brand === b) return; QT.brand = b; QT.model = ''; QT.cap = ''; qtTouch(); qtRender(); };
+          bEl.appendChild(btn);
+        });
+        const list = QT.groups.filter(g => brands.length < 2 || g.brand === QT.brand);
+        if (!list.some(g => g.base === QT.model)) { QT.model = list[0] ? list[0].base : ''; QT.cap = ''; }
+        sel.innerHTML = ''; list.forEach(g => sel.add(new Option(g.base, g.base))); sel.value = QT.model;
+        const g = list.find(x => x.base === QT.model);
+        const caps = g ? g.caps : [];
+        if (!caps.some(c => c[0] === QT.cap)) QT.cap = caps[0] ? caps[0][0] : '';
+        const capLb = pcEl('qtCap').previousElementSibling;
+        const showCaps = caps.length > 1 || (caps[0] && caps[0][0]);
+        capLb.style.display = showCaps ? 'block' : 'none';
+        qtChips('qtCap', showCaps ? caps.map(c => [c[0] ? c[0].replace(/B$/, '') : '기본 용량', c[0]]) : [], 'cap');
+        const price = (caps.find(c => c[0] === QT.cap) || [])[1] || 0;
+        QT.price = price;
+        pcEl('qtPrice').innerHTML = price ? `출고가 <b>${won(price)}</b>` : '';
+      }
+      qtChips('qtColor', [['블랙 계열', '블랙 계열'], ['화이트·실버', '화이트·실버'], ['컬러', '컬러'], ['상담 때 정할게요', '상담 때 정할게요']], 'color');
+      qtChips('qtNow', [['SKT', 'SKT'], ['KT', 'KT'], ['LG U+', 'LG U+'], ['알뜰폰', '알뜰폰'], ['새 번호', '새 번호']], 'now');
+      const cars = Object.keys((PC.data && PC.data.carriers) || {}).length ? Object.keys(PC.data.carriers) : ['LG U+', 'KT', 'SKT'];
+      const order = ['LG U+', 'KT', 'SKT'];
+      cars.sort((a, b) => (order.indexOf(a) + 1 || 9) - (order.indexOf(b) + 1 || 9));
+      qtChips('qtCar', [...cars.map(c => [c, c]), ['알뜰폰', '알뜰폰'], ['추천해 주세요', '추천']], 'car');
+      const mv = QT.car === '알뜰폰';
+      pcEl('qtMvnoBox').style.display = mv ? 'block' : 'none';
+      if (mv) qtChips('qtNet', [['SK망', 'SK망'], ['KT망', 'KT망'], ['LG망', 'LG망'], ['추천해 주세요', '추천']], 'net');
+      pcEl('qtRoute').textContent = qtRoute() ? '가입 유형: ' + qtRoute() : '';
+      qtChips('qtIns', [['36개월 할부', '36개월 할부'], ['24개월 할부', '24개월 할부'], ['12개월 할부', '12개월 할부'], ['일시불', '일시불'], ['상담이 필요해요', '할부 상담 필요']], 'ins');
+      qtChips('qtFee', [['3만원 이하', '3만원 이하'], ['3~5만원', '3~5만원'], ['5~7만원', '5~7만원'], ['7~10만원', '7~10만원'], ['10만원 이상', '10만원 이상']], 'fee');
+      qtChips('qtDisc', [['공통 지원금', '공통 지원금'], ['선택 약정', '선택 약정'], ['상담이 필요해요', '상담이 필요해요']], 'disc');
+      pcEl('qtMvPhoneNote').style.display = mv ? 'block' : 'none';
+      qtChips('qtTrade', [['네, 보상 받고 싶어요', 'yes'], ['아니요', 'no']], 'trade');
+      pcEl('qtTradeWrap').style.display = QT.trade === 'yes' ? 'block' : 'none';
+      // 원하는 통신사가 알뜰폰일 때만: 기종·할부·할인 방식·기기 보상 잠금 (유심만 · 약정 7개월 고정)
+      ['qtPhoneWrap', 'qtInsWrap', 'qtDiscWrap', 'qtTradeBox'].forEach(id => { const w = pcEl(id); w.classList.toggle('qt-off', mv); w.setAttribute('aria-disabled', mv ? 'true' : 'false'); w.querySelectorAll('button, select, input').forEach(b => { b.disabled = mv; }); if (mv) w.querySelectorAll('.on').forEach(b => b.classList.remove('on')); });   // 잠긴 칸은 골라진 것처럼 안 보이게
+      qtChips('qtMemoMode', [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']], 'memoMode');
+      pcEl('qtMemoWrap').style.display = QT.memoMode === 'now' ? 'block' : 'none';
+      qtContactUi();
+    }
+    function qtInit() {
+      if (window.KCRM_STAFF) return;
+      qtBuildGroups();
+      const fill = (id, ph, items) => { const el = pcEl(id); el.innerHTML = ''; el.add(new Option(ph, '')); items.forEach(t => el.add(new Option(t, t))); };
+      fill('qtWhen', '선택해 주세요', ['최대한 빨리', '이번 주 안', '다음 주', '이번 달 안', '다음 달 이후', '아직 알아보는 중']);
+      fill('qtRegion', '선택해 주세요', ['대구 달서구', '대구 (다른 구)', '경북', '그 밖 지역']);
+      pcEl('qtModel').onchange = (e) => { QT.model = e.target.value; QT.cap = ''; qtTouch(); qtRender(); };
+      ['qtWhen', 'qtRegion'].forEach(id => pcEl(id).addEventListener('change', qtTouch));
+      pcEl('qtTradePhone').addEventListener('change', qtTouch);
+      pcEl('qtMemo').oninput = (e) => { pcEl('qtMemoN').textContent = String(e.target.value.length); };
+      ['qtTel', 'qtAgree', 'qtModelText'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('qtErr').textContent = ''; }));
+      const tg = pcEl('pcToggle');
+      tg.onclick = () => { const h = pcEl('pcHolder'), open = !h.classList.contains('open'); h.classList.toggle('open', open); tg.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) setTimeout(() => h.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); };
+      // [V3.3] '월 납부액 직접 계산해 보기 · 알뜰유심 추천'은 강CRM 총관리자가 켜고 끔 (customerCalc: false면 숨김)
+      const calcOn = !!PC.data && PC.data.customerCalc !== false;
+      tg.style.display = calcOn ? '' : 'none';
+      if (!calcOn) { pcEl('pcHolder').classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }
+      qtRender();
+    }
+    // 고른 조건 → 요약·내용 (견적요청 보내기와 '견적 보다 나감' 기록에 같이 씀)
+    function qtBuild() {
+      const model = QT.noData ? pcEl('qtModelText').value.trim().slice(0, 40) : QT.model;
+      const mvSim = QT.car === '알뜰폰';   // 원하는 통신사가 알뜰폰 → 유심만 (지금 폰 그대로)
+      const title = mvSim ? '알뜰폰 유심 (지금 폰 그대로)' : [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
+      const route = qtRoute(), when = pcEl('qtWhen').value, region = pcEl('qtRegion').value, memo = pcEl('qtMemo').value.trim();
+      const mv = QT.car === '알뜰폰';
+      const carTxt = QT.car === '추천' ? '추천' : (mv ? `알뜰폰(${qtNetLabel()})` : QT.car);
+      const tradePhone = QT.trade === 'yes' ? pcEl('qtTradePhone').value.trim().slice(0, 30) : '';
+      const core = mv ? `알뜰폰 유심 · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT_MVNO_TERM}` : `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}${QT.trade === 'yes' ? ' · 기기 보상' : ''}`;
+      const lines = [
+        '📱 견적요청',
+        mv ? '상품: 알뜰폰 유심 (지금 쓰는 폰 그대로)' : `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
+        !mv && QT.color && `색상: ${QT.color}`,
+        `지금 통신사: ${QT.now || '-'}`,
+        `원하는 통신사: ${QT.car === '추천' ? '추천해 주세요' : (mv ? `알뜰폰 · ${QT.net === '추천' ? '통신망 추천해 주세요' : QT.net}` : QT.car)}${route ? ` (${route})` : ''}`,
+        mv ? `약정: 7개월 (알뜰폰 고정)` : `할부: ${QT.ins}`,
+        QT.fee && `지금 월 요금: ${QT.fee}`,
+        !mv && `할인 방식: ${QT.disc}`,
+        !mv && QT.trade && `기기 보상: ${QT.trade === 'yes' ? '원해요' + (tradePhone ? ` (지금 폰: ${tradePhone})` : '') : '안 해요'}`,
+        `개통 시기: ${when || '-'}`,
+        `지역: ${region || '-'}`,
+        `문의: ${QT.memoMode === 'now' && memo ? memo : '상담 때 이야기할게요'}`
+      ].filter(Boolean);
+      return { model: mv ? title : model, title, core, lines };
+    }
+    /* [V3.0] 👀 견적 보다 나감 — 등록 고객(개인 링크)이 견적요청 화면에서 조건을 고르다 [무료 견적 받기]를 안 누르면
+       · 고르고 20초 동안 그대로 두거나 화면을 떠날 때 강CRM '명함견적'에 기록 (한 번 열 때 최대 2번 · 적던 문의 글은 안 남김)
+       · 총관리자가 '관심 고객도 직원 폰 푸시'를 켰으면 직원 폰에도 알림 */
+    let qtLogTimer = null;
+    function qtLogView(leaving) {
+      clearTimeout(qtLogTimer);
+      if (window.KCRM_STAFF || !getCrmId() || !QT.touched || QT.sent || (QT.logs || 0) >= 2) return;
+      const B = qtBuild();
+      if (!B.model) return;
+      QT.touched = false; QT.logs = (QT.logs || 0) + 1;
+      const summary = `👀 견적 보다 나감 · ${B.core}`;
+      const lines = ['👀 견적 보다 나감 (견적요청 화면에서 고르다 안 보냄)', ...B.lines.slice(1).filter(l => !/^문의: /.test(l))];
+      qtSend({ kind: 'calc', summary, detail: lines.join('\n') }, !!leaving);
+      cardInterestPush(summary);
+    }
+    function qtTouch() {
+      if (window.KCRM_STAFF || QT.sent) return;
+      QT.touched = true;
+      clearTimeout(qtLogTimer);
+      if (getCrmId()) qtLogTimer = setTimeout(() => qtLogView(false), 20000);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') qtLogView(false); });
+    window.addEventListener('pagehide', () => qtLogView(true));
+    async function qtSend(extra, keepalive) {
+      const data = { kind: 'ask', cid: getCrmId() || '', name: '', phone: '', agree: '', summary: '', detail: '', at: new Date().toISOString(), ...extra };
+      const ref = getRefId();
+      if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로
+      const fields = {};
+      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
+      return cardSaveRequest(fields, keepalive);
+    }
+    async function qtRequest() {
+      const err = pcEl('qtErr'), btn = pcEl('qtGo');
+      err.textContent = '';
+      if (QT.sent || window.KCRM_STAFF) return;
+      if (getPendingId()) { showOwnerSheet(function (ans) { qtContactUi(); if (ans === 'yes') qtRequest(); }); return; }
+      const B = qtBuild();
+      if (!B.model) { err.textContent = '원하시는 기종을 골라주세요.'; return; }
+      const extra = {};
+      if (!getCrmId()) {
+        const tel = pcEl('qtTel').value.replace(/\D/g, '');
+        if (!/^01\d{8,9}$/.test(tel)) { err.textContent = '견적 받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; pcEl('qtTel').focus(); return; }
+        if (!pcEl('qtAgree').checked) { err.textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+        Object.assign(extra, { phone: tel, name: pcEl('qtName').value.trim().slice(0, 20), agree: 'Y' });
+      }
+      const summary = `📱 견적요청 · ${B.core}`;
+      const lines = B.lines;
+      Object.assign(extra, { summary, detail: lines.join('\n') });
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+      const res = await qtSend(extra);
+      if (res === 'ok') {
+        QT.sent = true; clearTimeout(qtLogTimer);
+        cardAlertStaff(cardWho(extra), summary);
+        btn.style.display = 'none';
+        const done = pcEl('qtDone');
+        done.innerHTML = '견적 요청을 보냈어요! 🙌<br>영업시간(10:00~20:00)에 가장 좋은 조건으로 연락드릴게요.<br><a href="#" id="qtSmsAlso">급하시면 문자로도 보내기</a>';
+        done.style.display = 'block';
+        pcEl('qtSmsAlso').onclick = (e) => { e.preventDefault(); const cid = getCrmId(); smsTo([`[견적요청${cid ? '/' + cid : ''}]`, ...lines.slice(1)].join('\n')); };
+      } else {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 무료 견적 받기';
+        err.textContent = `견적 요청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+        cardAlertStaff(cardWho(extra), summary, true);   // 저장은 안 됐어도 직원 폰에는 알림
+        const cid = getCrmId(); smsTo([`[견적요청${cid ? '/' + cid : ''}]`, ...lines.slice(1)].join('\n'));
+      }
+    }
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.KCRM_STAFF) {
+        document.body.classList.add('kc-staff');
+        const b = document.querySelectorAll('.tab-btn')[2];
+        if (b) switchTab({ currentTarget: b }, 'calc');
+      }
+      pcLoad().then(qtInit, qtInit);   // 지원금표(기종 목록)를 불러온 뒤 견적요청 양식 채우기
+      if (window.KCRM_STAFF) { const tb = document.getElementById('calcTabBtn'); if (tb) tb.textContent = '폰값계산'; }
+      if (getCrmId()) showWelcomeBack();
+      if (getPendingId()) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인
+      if (deferredInstall && !isStandalone()) showInstallButton(true);
+    });
+
+    /* ===== 챗봇 인사말 말풍선: 최대 20초만 감시 ===== */
+    let greetTries = 0;
+    const handleGreetingBubble = setInterval(function () {
+      if (++greetTries > 66) { clearInterval(handleGreetingBubble); return; }
+      document.querySelectorAll('div').forEach(el => {
+        if (el.innerText && el.innerText.includes('안녕하세요! LGU+ 진천점입니다') && el.style.position) {
+          el.style.background = 'rgba(255, 255, 255, 0.75)';
+          el.style.backdropFilter = 'blur(10px)';
+          el.style.webkitBackdropFilter = 'blur(10px)';
+          el.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+          el.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+          el.style.transition = 'opacity 0.5s ease';
+          if (!el.dataset.fadeStarted) {
+            el.dataset.fadeStarted = 'true';
+            setTimeout(function () {
+              el.style.opacity = '0';
+              setTimeout(function () { el.style.display = 'none'; }, 500);
+            }, 4000);
+            clearInterval(handleGreetingBubble);
+          }
+        }
+      });
+    }, 300);
+  </script>
+
+  <script>
+  (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+  </script>
+
+  <!-- 📢 매장 공지 창 -->
+  <div class="nt-back" id="ntBack" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
+    <div class="nt">
+      <img id="ntImg" alt="" style="display:none">
+      <div class="bd">
+        <span class="tag" id="ntTag"><i class="fa-solid fa-bullhorn"></i> 진천점 소식</span>
+        <h3 id="ntTitle"></h3>
+        <p id="ntBody"></p>
+        <div class="row">
+          <button type="button" class="ask" id="ntAsk"><i class="fa-solid fa-comment-dots"></i> 문의하기</button>
+          <button type="button" class="ok" id="ntOk">확인</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /* 📢 알림 내용 팝업
+       ① 푸시 알림을 눌러서 열면 → 그 알림 내용을 바로 보여줌 (주소 끝 #pn= · 한 명에게 보낸 알림도)
+       ② 그냥 명함을 열면 → 강CRM에서 전체 푸시와 함께 저장한 공지를 한 번 보여줌 (14일 동안) */
+    (function () {
+      if (window.KCRM_STAFF || window.KCRM_LEAVING) return;
+      const $ = (id) => document.getElementById(id);
+      const KEY = 'cardNoticeSeen';
+      const seen = () => { try { return localStorage.getItem(KEY) || ''; } catch (e) { return ''; } };
+      const val = (f, k) => (f && f[k] && f[k].stringValue) || '';
+      let bound = false, curId = '';
+      function close() { $('ntBack').style.display = 'none'; try { if (curId) localStorage.setItem(KEY, curId); } catch (e) {} }
+      function show(n, fromPush) {
+        curId = n.id || '';
+        $('ntTag').innerHTML = fromPush ? '<i class="fa-solid fa-bell"></i> 받은 알림' : '<i class="fa-solid fa-bullhorn"></i> 진천점 소식';
+        $('ntTitle').textContent = n.heading || '알려드려요';
+        $('ntBody').textContent = n.body;
+        const img = $('ntImg');
+        if (/^https:\/\//.test(n.image || '')) { img.src = n.image; img.style.display = 'block'; img.onerror = () => { img.style.display = 'none'; }; }
+        else { img.removeAttribute('src'); img.style.display = 'none'; }
+        if (!bound) {
+          bound = true;
+          $('ntOk').onclick = close;
+          $('ntAsk').onclick = () => { close(); if (typeof openSms === 'function') openSms(); };
+          $('ntBack').addEventListener('click', (e) => { if (e.target === $('ntBack')) close(); });
+          document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('ntBack').style.display === 'flex') close(); });
+        }
+        $('ntBack').style.display = 'flex';
+      }
+      // ① 알림을 눌러서 연 경우 (#pn=…)
+      function fromHash() {
+        const m = /^#pn=([A-Za-z0-9_-]{4,3000})$/.exec(location.hash || '');
+        if (!m) return false;
+        try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        try {
+          let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
+          const j = JSON.parse(decodeURIComponent(escape(atob(b))));
+          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || '') };
+          if (!n.body) return false;
+          show(n, true);
+          return true;
+        } catch (e) { return false; }
+      }
+      // ② 그냥 연 경우: 전체 공지
+      async function load() {
+        if (fromHash()) return;
+        try {
+          const r = await fetch(FS_BASE + 'card_public/notice?key=' + FS_KEY, { cache: 'no-store' });
+          if (!r.ok) return;
+          const f = (await r.json()).fields || {};
+          const n = { id: val(f, 'id'), heading: val(f, 'heading'), body: val(f, 'body'), image: val(f, 'image'), at: val(f, 'at'), until: val(f, 'until') };
+          const now = Date.now();
+          if (!n.id || !n.body || n.id === seen()) return;
+          if (n.at && new Date(n.at).getTime() > now) return;   // 아직 예약 시간 전
+          if (!n.until || new Date(n.until).getTime() < now) return;   // 기간 지남
+          if ($('ntBack').style.display === 'flex') return;
+          show(n, false);
+        } catch (e) { /* 공지는 없어도 그만 */ }
+      }
+      // 명함이 이미 열려 있을 때 알림을 누르면 주소 끝(#)만 바뀜 → 그때도 보여주기
+      window.addEventListener('hashchange', fromHash);
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(load, 300));
+      else setTimeout(load, 300);
+    })();
+  </script>
+
+  <!-- 📌 맨 아래 고정 배너 -->
+  <div class="bb-wrap" id="bbWrap" style="display:none">
+    <button type="button" class="bb" id="bbBtn" aria-haspopup="dialog">
+      <span class="ic"><i class="fa-solid fa-tv" id="bbIcon"></i></span>
+      <span style="min-width:0"><span class="tt" id="bbTitle">인터넷+TV 가입</span><span class="st" id="bbSub">최대 현금 지원</span></span>
+      <i class="fa-solid fa-chevron-right ar" aria-hidden="true"></i>
+    </button>
+  </div>
+  <div class="bs-back" id="bsBack" role="dialog" aria-modal="true" aria-labelledby="bsTitle">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="bsTitle" style="flex:1">인터넷+TV 가입 상담</h3><button type="button" id="bsClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p class="sub" id="bsSub">원하시는 상품을 고르면 혜택을 계산해서 연락드릴게요.</p>
+      <span class="lab">원하는 상품</span>
+      <div class="opts" id="bsProd"></div>
+      <span class="lab">지금 쓰는 인터넷</span>
+      <div class="opts" id="bsNow"></div>
+      <span class="lab">원하는 통신사</span>
+      <div class="opts" id="bsWant"></div>
+      <span class="lab">문의사항</span>
+      <div class="opts opts2" id="bsMemoMode"></div>
+      <div id="bsMemoWrap" style="display:none">
+        <textarea id="bsMemo" maxlength="255" rows="4" placeholder="원하는 속도(500M·1G), TV 채널, 설치 희망일, 지금 약정 끝나는 때 등 자세할수록 혜택 계산에 도움이 돼요."></textarea>
+        <div class="cnt"><b id="bsMemoN">0</b> / 255자</div>
+      </div>
+      <div id="bsWho">
+        <span class="lab">연락받을 번호</span>
+        <input type="tel" id="bsTel" inputmode="tel" placeholder="010-0000-0000" autocomplete="tel">
+        <span class="lab">이름 <span style="font-weight:500;color:var(--text-sub)">(선택)</span></span>
+        <input type="text" id="bsName" placeholder="예) 홍길동" autocomplete="name">
+        <label class="agree"><input type="checkbox" id="bsAgree" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"> 상담 연락을 위해 이름·번호를 매장 담당자에게 보내는 데 동의해요. (상담 후 보관하지 않아요)</label>
+      </div>
+      <p class="err" id="bsErr" role="alert"></p>
+      <button type="button" class="go" id="bsGo"><i class="fa-solid fa-paper-plane"></i> 상담 신청하기</button>
+      <a class="tel" href="tel:01044443353"><i class="fa-solid fa-phone"></i> 바로 전화로 상담하기</a>
+      <p id="bsDone" style="display:none;text-align:center;font-weight:700;color:#3730a3;padding:14px 0"></p>
+    </div>
+  </div>
+
+  <!-- [V3.7] 📇 매장 QR 고객 등록 (?reg=1) -->
+  <div class="bs-back" id="regBack" role="dialog" aria-modal="true" aria-labelledby="regTitle" style="z-index:1150">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="regTitle" style="flex:1">📇 LGU+ 진천점 고객 등록</h3><button type="button" id="regClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <div id="regForm">
+        <p class="sub">이름과 번호만 넣으면 등록 끝! 등록하면 혜택 알림과 견적을 고객님 정보로 바로 받아요.</p>
+        <span class="lab">이름</span>
+        <input type="text" id="regName" autocomplete="name" maxlength="20" placeholder="예) 홍길동">
+        <span class="lab">휴대폰 번호</span>
+        <input type="tel" id="regTel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000">
+        <label class="agree"><input type="checkbox" id="regAgree" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"> 고객 관리와 상담 연락을 위해 이름·번호를 LGU+ 진천점에 등록하는 데 동의해요.</label>
+        <p class="err" id="regErr" role="alert"></p>
+        <button type="button" class="go" id="regGo" style="background:linear-gradient(110deg,#e6007e,#a8005b)"><i class="fa-solid fa-user-check"></i> 등록하기</button>
+      </div>
+      <div id="regDone" style="display:none;text-align:center;padding:6px 0 2px">
+        <p style="font-size:40px;line-height:1;margin:6px 0">🎉</p>
+        <p id="regDoneMsg" style="font-size:17px;font-weight:800;color:var(--text-main);line-height:1.5;word-break:keep-all"></p>
+        <p class="sub" style="margin:6px 0 4px">혜택 알림을 켜두면 행사·사은품 소식을 바로 알려드려요.</p>
+        <button type="button" class="go" id="regPush" style="background:#334155"><i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기</button>
+        <button type="button" id="regSave" style="width:100%;height:50px;border:2px solid #e2e8f0;border-radius:16px;background:#fff;font:inherit;font-size:15px;font-weight:800;color:var(--text-main);margin-top:10px;cursor:pointer"><i class="fa-solid fa-address-card"></i> 명함 저장</button>
+      </div>
+      <div id="regAlready" style="display:none">
+        <p id="regAlreadyMsg" style="font-size:16px;font-weight:700;color:var(--text-main);line-height:1.5;margin:8px 0;word-break:keep-all"></p>
+        <button type="button" class="go" id="regOk" style="background:linear-gradient(110deg,#e6007e,#a8005b)">확인</button>
+        <button type="button" id="regOther" style="width:100%;border:0;background:none;font:inherit;font-size:13px;font-weight:700;color:var(--text-sub);margin-top:10px;padding:8px;cursor:pointer;text-decoration:underline">다른 분 번호로 새로 등록할게요</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    /* [V3.7] 📇 매장 QR(?reg=1)로 고객이 직접 등록
+       · 명함이 명함번호를 만들어 이 폰에 연결 → 강CRM이 같은 번호로 새 고객을 자동 등록 (이미 있는 번호면 직원이 확인 후 연결)
+       · 저장은 '명함 견적요청'과 같은 칸(card_requests)에 '🆕 QR 고객 등록'으로 · 직원 폰 푸시는 안 보냄 (매장에서 직원과 함께 등록) */
+    (function () {
+      if (window.KCRM_STAFF) return;
+      const $ = (id) => document.getElementById(id);
+      let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+      if (q.get('reg') !== '1') return;
+      const mgr = String(q.get('m') || '').replace(/[<>\n\r]/g, '').trim().slice(0, 20);
+      try { q.delete('reg'); q.delete('m'); const qs = q.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+      const ID_CHARS = 'abcdefghijkmnpqrstuvwxyz23456789';   // 강CRM 명함번호와 같은 글자
+      const newId = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a, b => ID_CHARS[b % ID_CHARS.length]).join(''); };
+      const mask = (n) => { n = String(n || '').trim(); if (n.length < 2) return n; return n.length === 2 ? n[0] + '○' : n[0] + '○'.repeat(n.length - 2) + n[n.length - 1]; };
+      const show = (which) => { ['regForm', 'regDone', 'regAlready'].forEach(id => { $(id).style.display = id === which ? 'block' : 'none'; }); $('regBack').style.display = 'flex'; };
+      const close = () => { $('regBack').style.display = 'none'; };
+      function open() {
+        const mine = getCrmId();
+        if (mine) {
+          let who = ''; try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+          $('regAlreadyMsg').textContent = `이 폰은 이미 ${who ? who + ' 고객님으로' : '고객으로'} 등록돼 있어요 😊`;
+          show('regAlready');
+        } else show('regForm');
+      }
+      $('regClose').onclick = close;
+      $('regOk').onclick = close;
+      $('regOther').onclick = () => show('regForm');
+      $('regBack').addEventListener('click', (e) => { if (e.target === $('regBack')) close(); });
+      $('regPush').onclick = () => { close(); requestNotificationPermission(); };
+      $('regSave').onclick = () => downloadVCard();
+      ['regName', 'regTel', 'regAgree'].forEach(id => $(id).addEventListener('input', () => { $('regErr').textContent = ''; }));
+      $('regGo').onclick = async () => {
+        const name = $('regName').value.trim().slice(0, 20), tel = $('regTel').value.replace(/\D/g, '');
+        if (!name) { $('regErr').textContent = '이름을 넣어주세요.'; $('regName').focus(); return; }
+        if (!/^01\d{8,9}$/.test(tel)) { $('regErr').textContent = '휴대폰 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; $('regTel').focus(); return; }
+        if (!$('regAgree').checked) { $('regErr').textContent = '등록하려면 동의에 체크해 주세요.'; return; }
+        const cid = newId();
+        const data = { kind: 'ask', cid, name, phone: tel, agree: 'Y', summary: `🆕 QR 고객 등록 · ${name}`,
+          detail: ['🆕 매장 QR로 고객 직접 등록', `명함번호: ${cid}`, `이름: ${name}`, mgr && `담당: ${mgr}`].filter(Boolean).join('\n'), at: new Date().toISOString() };
+        const fields = {}; Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]) }; });
+        $('regGo').disabled = true; $('regGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록하는 중…';
+        const res = await cardSaveRequest(fields);
+        $('regGo').disabled = false; $('regGo').innerHTML = '<i class="fa-solid fa-user-check"></i> 등록하기';
+        if (res !== 'ok') { $('regErr').textContent = `등록하지 못했어요 (${res === 'net' ? '인터넷 연결' : '오류 ' + res}). 직원에게 말씀해 주세요.`; return; }
+        // 이 폰을 새 명함번호로 연결
+        try {
+          localStorage.setItem('kcrm_cid', cid); localStorage.setItem('kcrm_who', mask(name));
+          localStorage.removeItem('kcrm_cid_pending'); localStorage.removeItem('kcrm_ref');
+        } catch (e) {}
+        try { showWelcomeBack(); } catch (e) {}
+        try { if (typeof qtContactUi === 'function') qtContactUi(); const k = $('pcKnown'), n = $('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
+        $('regDoneMsg').textContent = `${mask(name)} 고객님, 등록됐어요!`;
+        show('regDone');
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(open, 400)); else setTimeout(open, 400);
+    })();
+  </script>
+
+  <!-- [V2.9] 📤 명함 공유하기 (휴대폰 공유창이 없을 때) -->
+  <div class="bs-back" id="shBack" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="shTitle" style="flex:1">📤 명함 공유하기</h3><button type="button" id="shClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p class="sub" id="shSub">가족·지인에게 이 명함을 보내주세요.</p>
+      <div class="sh-url" id="shUrl"></div>
+      <a class="sh-btn pri" id="shSms" href="#"><i class="fa-solid fa-comment-sms"></i> 문자로 보내기</a>
+      <button type="button" class="sh-btn" id="shCopy"><i class="fa-regular fa-copy"></i> 링크 복사하기</button>
+      <p class="sub" style="text-align:center;margin-top:10px">카카오톡은 링크를 복사해서 대화창에 붙여넣어 주세요.</p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const el = (id) => document.getElementById(id);
+      const close = () => { el('shBack').style.display = 'none'; };
+      el('shClose').onclick = close;
+      el('shBack').addEventListener('click', (e) => { if (e.target === el('shBack')) close(); });
+      el('shCopy').onclick = async () => {
+        const ok = await copyTextAsync(el('shUrl').textContent);
+        el('shCopy').innerHTML = ok ? '<i class="fa-solid fa-check"></i> 복사했어요! 카톡·문자에 붙여넣기' : '복사가 안 돼요. 위 주소를 길게 눌러 복사해 주세요';
+      };
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
+
+  <!-- [V2.5] 명함 본인 확인 (지인에게 받은 링크로 열면 원래 고객으로 연결되지 않게) -->
+  <div class="bs-back" id="ownBack" role="dialog" aria-modal="true" aria-labelledby="ownTitle" style="z-index:1200">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="ownTitle" style="flex:1">📇 명함 확인</h3><button type="button" id="ownLater" aria-label="나중에" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p id="ownMsg" style="font-size:17px;font-weight:700;color:var(--text-main);line-height:1.5;margin:10px 0 4px;word-break:keep-all"></p>
+      <p class="sub" id="ownSub" style="margin-bottom:6px">본인이면 혜택 알림과 상담이 고객님 정보로 바로 연결돼요.</p>
+      <button type="button" class="go" id="ownYes" style="background:linear-gradient(110deg,#e6007e,#a8005b)"></button>
+      <button type="button" id="ownNo" style="width:100%;height:52px;border:2px solid #e2e8f0;border-radius:16px;background:#fff;font:inherit;font-size:16px;font-weight:800;color:var(--text-main);margin-top:10px;cursor:pointer">아니요, 지인에게 받았어요</button>
+    </div>
+  </div>
+  <script>
+    /* [V2.5] 📇 명함 본인 확인
+       · 강CRM이 보낸 개인 링크(?c=명함번호)를 이 폰에서 처음 열면 "강○숙 고객님 본인이세요?"로 한 번 물어봄
+       · 네 → 이 폰을 그 고객으로 연결 (알림·상담이 고객 정보로) · 아니요 → 새 손님으로 (상담요청에 '지인 소개'로 표시)
+       · 가린 이름은 강CRM이 card_who에 넣어둠 (없으면 "직접 받은 명함인가요?"로 물어봄) */
+    let ownCb = [], ownWho = '';
+    function fetchOwnerName(cid) {
+      return new Promise(function (resolve) {
+        let done = false; const fin = function (v) { if (!done) { done = true; resolve(v); } };
+        setTimeout(function () { fin(''); }, 2500);
+        try {
+          fetch(FS_BASE + 'card_who/' + encodeURIComponent(cid) + '?key=' + FS_KEY, { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (j) { fin(j && j.fields && j.fields.n ? String(j.fields.n.stringValue || '').slice(0, 12) : ''); })
+            .catch(function () { fin(''); });
+        } catch (e) { fin(''); }
+      });
+    }
+    function showWelcomeBack() {
+      const el = document.getElementById('welcomeBack');
+      if (!el) return;
+      let who = '';
+      try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+      if (who) el.textContent = who + ' 고객님, 다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂';
+      el.style.display = 'block';
+    }
+    function ownerAnswer(ans) {
+      const cid = getPendingId();
+      if (cid && ans === 'yes') {
+        localStorage.setItem('kcrm_cid', cid);
+        localStorage.removeItem('kcrm_cid_pending'); localStorage.removeItem('kcrm_ref');
+        if (ownWho) localStorage.setItem('kcrm_who', ownWho); else localStorage.removeItem('kcrm_who');
+        // 아이폰 사파리: '홈 화면에 추가'한 앱이 다시 묻지 않게 주소에 '방금 확인함' 표시 (1시간)
+        if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + (window.KCRM_TEAM && window.KCRM_TEAM_S ? '&s=' + window.KCRM_TEAM_S : '') + location.hash); } catch (e) {} }   // [V3.8] 공용 명함은 보낸 직원(s)도 남김
+        showWelcomeBack();
+        try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
+        try { if (typeof qtContactUi === 'function') qtContactUi(); } catch (e) {}
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
+      } else if (cid && ans === 'no') {
+        let notList = [];
+        try { notList = JSON.parse(localStorage.getItem('kcrm_not') || '[]'); } catch (e) {}
+        if (notList.indexOf(cid) < 0) notList.push(cid);
+        localStorage.setItem('kcrm_not', JSON.stringify(notList.slice(-20)));
+        localStorage.removeItem('kcrm_cid_pending');
+        if (!getCrmId()) localStorage.setItem('kcrm_ref', cid);
+        // 주소에서 남의 명함번호 지우기 (이 폰에서 홈 화면에 추가해도 따라가지 않게)
+        try { const q = new URLSearchParams(location.search); q.delete('c'); q.delete('ok'); const qs = q.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+      }
+      document.getElementById('ownBack').style.display = 'none';
+      const cbs = ownCb; ownCb = [];
+      cbs.forEach(function (f) { try { f(ans); } catch (e) { console.error(e); } });
+    }
+    function showOwnerSheet(cb) {
+      const cid = getPendingId();
+      if (!cid) { if (cb) cb('none'); return; }
+      if (cb) ownCb.push(cb);
+      const back = document.getElementById('ownBack');
+      if (back.style.display === 'flex') return;
+      const render = function () {
+        document.getElementById('ownMsg').innerHTML = ownWho
+          ? '<b style="color:#e6007e">' + ownWho.replace(/[<>&"]/g, '') + '</b> 고객님께 보내드린 명함이에요.<br>본인이 맞으세요?'
+          : 'LGU+ 진천점에서 고객님께 문자로 직접 보내드린 명함인가요?';
+        const nm = ownWho.replace(/[<>&"]/g, ''), lc = nm.charCodeAt(nm.length - 1);
+        const josa = lc >= 0xAC00 && lc <= 0xD7A3 && (lc - 0xAC00) % 28 === 0 ? '예요' : '이에요';   // 받침 없으면 '예요' (강○희예요)
+        document.getElementById('ownYes').textContent = ownWho ? '네, 제가 ' + nm + josa : '네, 제가 받았어요';
+      };
+      ownWho = '';
+      render();
+      back.style.display = 'flex';
+      fetchOwnerName(cid).then(function (n) { if (getPendingId() === cid && n) { ownWho = n; render(); } });
+    }
+    document.getElementById('ownYes').onclick = function () { ownerAnswer('yes'); };
+    document.getElementById('ownNo').onclick = function () { ownerAnswer('no'); };
+    document.getElementById('ownLater').onclick = function () { ownerAnswer('later'); };
+    document.getElementById('ownBack').addEventListener('click', function (e) { if (e.target === document.getElementById('ownBack')) ownerAnswer('later'); });
+  </script>
+
+  <script>
+    /* 📌 맨 아래 고정 배너 + 상담 신청 창 */
+    (function () {
+      if (window.KCRM_STAFF) return;
+      const $ = (id) => document.getElementById(id);
+      const B = { prod: '인터넷+TV', now: '모름', want: '추천해 주세요', memoMode: 'later' };
+      const BS_MEMO = [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']];
+      function opts(id, key, list, wide) {
+        const box = $(id); box.innerHTML = '';
+        list.forEach(item => {
+          const [label, v] = Array.isArray(item) ? item : [item, item];
+          const b = document.createElement('button'); b.type = 'button';
+          b.className = 'opt' + (B[key] === v ? ' on' : '') + (wide && wide.includes(v) ? ' wide' : '');
+          b.setAttribute('aria-pressed', B[key] === v ? 'true' : 'false');
+          b.textContent = label;
+          b.onclick = () => { B[key] = v; opts(id, key, list, wide); if (key === 'memoMode') memoUi(true); };
+          box.appendChild(b);
+        });
+      }
+      function memoUi(focus) {
+        const on = B.memoMode === 'now';
+        $('bsMemoWrap').style.display = on ? 'block' : 'none';
+        if (on && focus) setTimeout(() => $('bsMemo').focus(), 50);
+      }
+      $('bsMemo').addEventListener('input', () => { $('bsMemoN').textContent = String($('bsMemo').value.length); });
+      function conf() {
+        const d = (typeof PC !== 'undefined' && PC.data && PC.data.banner) || {};
+        return { on: d.on !== false, title: d.title || '인터넷+TV 가입', sub: d.sub || '최대 현금 지원', icon: d.icon || 'fa-tv' };
+      }
+      function show() {
+        const c = conf();
+        $('bbWrap').style.display = c.on ? 'flex' : 'none';
+        document.body.classList.toggle('has-bb', c.on);
+        $('bbTitle').textContent = c.title; $('bbSub').textContent = c.sub;
+        $('bbIcon').className = 'fa-solid ' + (/^fa-[a-z0-9-]+$/.test(c.icon) ? c.icon : 'fa-tv');
+      }
+      function openSheet() {
+        const c = conf();
+        $('bsTitle').textContent = c.title + ' 상담';
+        opts('bsProd', 'prod', ['인터넷', '인터넷+TV', 'TV만']);
+        opts('bsNow', 'now', ['SK', 'KT', 'LG', '케이블', '없음', '모름']);
+        opts('bsWant', 'want', ['SK', 'KT', 'LG', '추천해 주세요'], ['추천해 주세요']);
+        opts('bsMemoMode', 'memoMode', BS_MEMO);
+        memoUi(false);
+        $('bsWho').style.display = getCrmId() ? 'none' : 'block';
+        $('bsErr').textContent = ''; $('bsDone').style.display = 'none'; $('bsGo').style.display = 'block'; $('bsGo').disabled = false;
+        $('bsBack').style.display = 'flex';
+      }
+      function closeSheet() { $('bsBack').style.display = 'none'; }
+      $('bbBtn').onclick = openSheet;
+      $('bsClose').onclick = closeSheet;
+      $('bsBack').addEventListener('click', (e) => { if (e.target === $('bsBack')) closeSheet(); });
+      $('bsGo').onclick = async () => {
+        if (getPendingId()) { showOwnerSheet(function (ans) { if (ans === 'later') return; $('bsWho').style.display = getCrmId() ? 'none' : 'block'; if (ans === 'yes') $('bsGo').click(); }); return; }
+        const extra = {};
+        if (!getCrmId()) {
+          const tel = $('bsTel').value.replace(/\D/g, '');
+          if (!/^01\d{8,9}$/.test(tel)) { $('bsErr').textContent = '연락받을 번호를 정확히 넣어주세요.'; $('bsTel').focus(); return; }
+          if (!$('bsAgree').checked) { $('bsErr').textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+          Object.assign(extra, { phone: tel, name: $('bsName').value.trim().slice(0, 20), agree: 'Y' });
+        }
+        const want = B.want === '추천해 주세요' ? '추천' : B.want;
+        const memo = B.memoMode === 'now' ? $('bsMemo').value.trim().slice(0, 255) : '';
+        const summary = `🏠 ${B.prod} 가입 상담 · 지금 ${B.now} → ${want}${memo ? ' · 문의 있음' : ''}`;
+        const lines = [
+          `희망: ${B.prod} 가입`,
+          `지금 쓰는 인터넷: ${B.now}`,
+          `원하는 통신사: ${B.want}`,
+          `문의: ${memo || '상담 때 이야기할게요'}`,
+          `(명함 아래 배너 '${conf().title}'에서 신청)`
+        ];
+        Object.assign(extra, { summary, detail: lines.join('\n') });
+        $('bsGo').disabled = true; $('bsGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+        const res = await pcSend('ask', extra);
+        $('bsGo').innerHTML = '<i class="fa-solid fa-paper-plane"></i> 상담 신청하기';
+        if (res === 'ok') {
+          $('bsErr').textContent = '';
+          cardAlertStaff(cardWho(extra), summary);
+          $('bsGo').style.display = 'none';
+          $('bsDone').innerHTML = '상담 신청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.';
+          $('bsDone').style.display = 'block';
+        } else {
+          $('bsGo').disabled = false;
+          $('bsErr').textContent = `신청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+          cardAlertStaff(cardWho(extra), summary, true);   // 저장은 안 됐어도 직원 폰에는 알림
+          const cid = getCrmId();
+          smsTo([`[명함배너${cid ? '/' + cid : ''}] ${summary}`, ...lines.slice(0, 4)].join('\n'));
+        }
+      };
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
+      // 지원금 정보가 도착하면 강CRM 설정(문구·켜고 끄기) 반영
+      show();
+      let tries = 0; const t = setInterval(() => { if ((typeof PC !== 'undefined' && PC.data) || ++tries > 40) { clearInterval(t); show(); } }, 250);
+    })();
+  </script>
+  <script>
+    /* [V3.8] 👥 직원 공용 명함 (/team/ · window.KCRM_TEAM)
+       · 주소 끝 s=직원번호 → 강CRM '직원 공용 명함' 설정(card_public/team)의 그 직원 이름·직함·번호·사진으로 보여줌
+       · 직원번호가 없거나, 총관리자가 그 직원을 '매장 정보로 보이기'(퇴사 등)로 바꿨으면 → 매장 이름 · 대표번호
+       · 대표 명함(/)에서는 아무것도 안 함 */
+    (function () {
+      if (!window.KCRM_TEAM) return;
+      let s = '';
+      try {
+        const q = new URLSearchParams(location.search).get('s') || '';
+        if (/^[a-z0-9]{3,12}$/.test(q)) { s = q; localStorage.setItem('kcrm_team_s', q); }
+        else s = localStorage.getItem('kcrm_team_s') || '';
+      } catch (e) {}
+      window.KCRM_TEAM_S = /^[a-z0-9]{3,12}$/.test(s) ? s : '';
+      const DEF = { name: 'LGU+ 진천점', phone: '01044443353', hours: '10:00 - 20:00 (연중무휴)' };
+      const dg = (p) => String(p || '').replace(/\D/g, '');
+      const fmt = (p) => { const d = dg(p); if (/^02/.test(d)) return d.replace(/^(02)(\d{3,4})(\d{4})$/, '$1-$2-$3'); return d.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3'); };
+      const ICON = '/card-icon-maskable-512.png?v=2';
+      function apply(store, prof) {
+        window.KCRM_TEAM_P = prof || null;
+        const phone = dg(prof && prof.phone) || dg(store.phone) || DEF.phone;
+        const who = prof ? `${prof.name}${prof.title ? ' ' + prof.title : ''}` : store.name;
+        PHONE = phone;
+        CARD_P = { name: prof ? prof.name : store.name, title: prof ? (prof.title || '') : '', role: prof ? (prof.role || '') : '', phone, store: store.name, who,
+          vcfName: (who + '_' + store.name).replace(/[^\w가-힣+]+/g, '_'), note: `${store.name} 휴대폰·인터넷 상담` };
+        const $ = (sel) => document.querySelector(sel);
+        const set = (sel, t) => { const el = $(sel); if (el) el.textContent = t; };
+        set('.brand-title', store.name);
+        set('.profile-name', who);
+        const img = document.getElementById('profileImg');
+        if (img) { img.src = (prof && prof.photo) || ICON; img.alt = who + ' 사진'; }
+        const items = document.querySelectorAll('.info-box .info-item');
+        if (items[0]) { items[0].querySelector('.label').textContent = prof ? '직통전화' : '대표전화'; items[0].querySelector('.value').textContent = fmt(phone); }
+        if (items[1]) items[1].querySelector('.value').textContent = store.name;
+        if (items[2]) items[2].querySelector('.value').textContent = store.hours || DEF.hours;
+        if (store.intro) { const ib = $('.intro-box'); if (ib) ib.textContent = store.intro; }
+        document.querySelectorAll('a[href^="tel:"]').forEach(a => { a.href = 'tel:' + phone; });
+        const agree = (id, t) => { const el = document.getElementById(id); if (el && el.parentNode) { const lb = el.parentNode; [...lb.childNodes].forEach(n => { if (n.nodeType === 3) lb.removeChild(n); }); lb.appendChild(document.createTextNode(t)); } };
+        const to = prof ? who + '에게' : who + '에';   // 매장이면 '진천점에'
+        agree('qtAgree', `견적 안내를 위해 이름·연락처와 고른 조건을 ${to} 보내는 데 동의해요`);
+        agree('pcAgree', `상담을 위해 이름·연락처와 계산한 조건을 ${to} 보내는 데 동의해요`);
+        document.title = `${who === store.name ? '' : who + ' · '}${store.name} 명함`;
+      }
+      apply(DEF, null);   // 불러오기 전엔 매장 정보 (대표 이름이 잠깐 보이지 않게)
+      fetch(FS_BASE + 'card_public/team?key=' + FS_KEY, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .then(j => {
+          let d = null; try { d = j && j.fields && j.fields.json ? JSON.parse(j.fields.json.stringValue) : null; } catch (e) { d = null; }
+          const store = Object.assign({}, DEF), raw = (d && d.store) || {};
+          Object.keys(raw).forEach(k => { if (String(raw[k] || '').trim()) store[k] = String(raw[k]).trim(); });   // 강CRM에서 비워둔 칸은 기본값으로
+          if (!dg(store.phone)) store.phone = DEF.phone;
+          const p = d && d.staff && window.KCRM_TEAM_S ? d.staff[window.KCRM_TEAM_S] : null;
+          apply(store, p && p.name && p.active !== false ? p : null);
+        })
+        .catch(() => {});
+    })();
+  </script>
+</body>
+</html>
