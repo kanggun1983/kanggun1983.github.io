@@ -891,6 +891,7 @@
     function pcFd(d) { return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${PC_W[d.getDay()]})`; }
 
     // 강CRM에서 올린 지원금(Firestore) → 없으면 저장소의 subsidy.json
+    let pcFsExtra = null;   // 강CRM 설정(상담 알림 서버·배너·알뜰유심) — 지원금표가 준비 안 됐어도 따로 씀
     async function pcFetchData() {
       try {
         const r = await fetch(FS_BASE + 'card_public/phonecalc?key=' + FS_KEY, { cache: 'no-store' });
@@ -899,13 +900,39 @@
           const txt = j && j.fields && j.fields.json && j.fields.json.stringValue;
           if (txt) {
             const d = JSON.parse(txt);
+            pcFsExtra = d;
             if (Object.values(d.carriers || {}).some(c => c.ready && !c.hidden && c.models && c.models.length)) return d;
           }
         }
       } catch (e) {}
       const r2 = await fetch('/subsidy.json?t=' + Date.now(), { cache: 'no-store' });
       if (!r2.ok) throw new Error('no data');
-      return r2.json();
+      const base = await r2.json();
+      // [V2.7] 예전엔 지원금표를 파일로 대신 쓰면 '상담 알림 서버' 주소까지 빠져서 직원 폰 푸시가 안 갔음 → 강CRM 설정은 그대로 붙임
+      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
+      return base;
+    }
+    // 📣 직원 폰 푸시 (상담 알림 서버) — 저장이 실패해도 보냄 · 문자앱으로 넘어가도 끊기지 않게 keepalive
+    function cardAlertStaff(who, summary, failed) {
+      const A = (PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert);
+      if (!A || !A.url) return;
+      try {
+        fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+          body: JSON.stringify({ who: String(who || '고객').slice(0, 20), summary: ((failed ? '⚠️ 강CRM 저장 실패·문자 확인 · ' : '') + String(summary || '')).slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
+      } catch (e) {}
+    }
+    // card_requests 저장 (인터넷이 잠깐 끊겼거나 서버가 잠깐 안 되면 한 번 더)
+    async function cardSaveRequest(fields, keepalive) {
+      for (let i = 0; i < 2; i++) {
+        try {
+          const r = await fetch(FS_BASE + 'card_requests?key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive });
+          if (r.ok) return 'ok';
+          if (r.status < 500 && r.status !== 429) return String(r.status);   // 규칙 거절 등은 다시 해도 같음
+          if (i === 1) return String(r.status);
+        } catch (e) { if (i === 1) return 'net'; }
+        await new Promise(res => setTimeout(res, 1500));
+      }
+      return 'net';
     }
     // 예전 형식(keep {type,v} · lim {'5G','LTE'})도 같은 모양으로
     function pcNormalize(d) {
@@ -1240,23 +1267,11 @@
       if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로 표시
       const fields = {};
       Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
-      try {
-        const r = await fetch(FS_BASE + 'card_requests?key=' + FS_KEY, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive
-        });
-        return r.ok ? 'ok' : String(r.status);
-      } catch (e) { return 'net'; }
+      return cardSaveRequest(fields, keepalive);
     }
     // 강CRM을 닫아놔도 직원 폰에 알림 (강CRM에서 '상담 알림 서버'를 연결했을 때만)
-    function pcAlertStaff(extra) {
-      const A = PC.data && PC.data.alert;
-      if (!A || !A.url) return;
-      const who = (extra && extra.name) || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객'));
-      try {
-        fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ who: who.slice(0, 20), summary: pcSummary().slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
-      } catch (e) {}
-    }
+    function cardWho(extra) { return (extra && extra.name) || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객')); }
+    function pcAlertStaff(extra, failed) { cardAlertStaff(cardWho(extra), pcSummary(), failed); }
     function pcSmsFallback() {
       const cid = getCrmId();
       smsTo([`[폰값계산${cid ? '/' + cid : ''}] 상담 요청드려요`, ...pcLines()].join('\n'));
@@ -1286,6 +1301,7 @@
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 이 조건으로 상담 받기';
         err.textContent = `상담 요청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+        pcAlertStaff(extra, true);   // 저장은 안 됐어도 직원 폰에는 알림
         pcSmsFallback();
       }
     }
@@ -1418,10 +1434,7 @@
       if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로
       const fields = {};
       Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
-      try {
-        const r = await fetch(FS_BASE + 'card_requests?key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
-        return r.ok ? 'ok' : String(r.status);
-      } catch (e) { return 'net'; }
+      return cardSaveRequest(fields);
     }
     async function qtRequest() {
       const err = pcEl('qtErr'), btn = pcEl('qtGo');
@@ -1459,8 +1472,7 @@
       const res = await qtSend(extra);
       if (res === 'ok') {
         QT.sent = true;
-        const A = PC.data && PC.data.alert;
-        if (A && A.url) { try { fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: (extra.name || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객'))).slice(0, 20), summary: summary.slice(0, 80), crm: A.crm || '' }) }).catch(() => {}); } catch (e) {} }
+        cardAlertStaff(cardWho(extra), summary);
         btn.style.display = 'none';
         const done = pcEl('qtDone');
         done.innerHTML = '견적 요청을 보냈어요! 🙌<br>영업시간(10:00~20:00)에 가장 좋은 조건으로 연락드릴게요.<br><a href="#" id="qtSmsAlso">급하시면 문자로도 보내기</a>';
@@ -1469,6 +1481,7 @@
       } else {
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 무료 견적 받기';
         err.textContent = `견적 요청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+        cardAlertStaff(cardWho(extra), summary, true);   // 저장은 안 됐어도 직원 폰에는 알림
         const cid = getCrmId(); smsTo([`[견적요청${cid ? '/' + cid : ''}]`, ...lines.slice(1)].join('\n'));
       }
     }
@@ -1763,14 +1776,14 @@
         $('bsGo').innerHTML = '<i class="fa-solid fa-paper-plane"></i> 상담 신청하기';
         if (res === 'ok') {
           $('bsErr').textContent = '';
-          const A = PC.data && PC.data.alert;
-          if (A && A.url) { try { fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: (extra.name || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객'))).slice(0, 20), summary, crm: A.crm || '' }) }).catch(() => {}); } catch (e) {} }
+          cardAlertStaff(cardWho(extra), summary);
           $('bsGo').style.display = 'none';
           $('bsDone').innerHTML = '상담 신청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.';
           $('bsDone').style.display = 'block';
         } else {
           $('bsGo').disabled = false;
-          $('bsErr').textContent = '신청을 바로 못 보내서 문자로 보내드릴게요.';
+          $('bsErr').textContent = `신청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+          cardAlertStaff(cardWho(extra), summary, true);   // 저장은 안 됐어도 직원 폰에는 알림
           const cid = getCrmId();
           smsTo([`[명함배너${cid ? '/' + cid : ''}] ${summary}`].join('\n'));
         }
