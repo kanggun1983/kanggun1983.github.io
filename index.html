@@ -737,7 +737,7 @@
             <p class="pc-privacy">고른 조건은 견적을 위해 담당자에게만 전달돼요.</p>
           </div>
 
-          <button type="button" class="qt-more" id="pcToggle" aria-expanded="false" aria-controls="pcHolder"><i class="fa-solid fa-calculator"></i> 월 납부액 직접 계산해 보기 · 알뜰유심 추천 <i class="fa-solid fa-chevron-down qt-chev"></i></button>
+          <button type="button" class="qt-more" id="pcToggle" aria-expanded="false" aria-controls="pcHolder" style="display:none"><i class="fa-solid fa-calculator"></i> 월 납부액 직접 계산해 보기 · 알뜰유심 추천 <i class="fa-solid fa-chevron-down qt-chev"></i></button>
         </div>
         <div id="pcHolder">
         <p class="pc-intro">몇 번만 눌러 보시면 매달 내실 금액을 바로 확인할 수 있어요.</p>
@@ -991,7 +991,7 @@
       if (!r2.ok) throw new Error('no data');
       const base = await r2.json();
       // [V2.7] 예전엔 지원금표를 파일로 대신 쓰면 '상담 알림 서버' 주소까지 빠져서 직원 폰 푸시가 안 갔음 → 강CRM 설정은 그대로 붙임
-      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
+      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
       return base;
     }
     // 📣 직원 폰 푸시 (상담 알림 서버) — 저장이 실패해도 보냄 · 문자앱으로 넘어가도 끊기지 않게 keepalive
@@ -1432,7 +1432,8 @@
       const car = cars.find(k => norm(k) === norm(q.car) && D.carriers[k].ready && !D.carriers[k].hidden);
       if (car) S.car = car;
       const notes = [];
-      if (q.car && !car) notes.push(`${q.car} 지원금표가 없어서 ${S.car}로 계산`);
+      if (q.car === '알뜰폰') notes.push('알뜰폰 희망 · 폰값은 통신사 기준으로 계산 (알뜰유심 요금제는 [알뜰유심 가입]에서 추천)');
+      else if (q.car && !car) notes.push(`${q.car} 지원금표가 없어서 ${S.car}로 계산`);
       const C = D.carriers[S.car];
       let found = false;
       if (C && Array.isArray(C.models) && q.model) {
@@ -1587,7 +1588,8 @@
     const qtCarNorm = (c) => String(c || '').replace(/\s+/g, '').replace('LGU+', 'LGU+').toUpperCase();
     function qtRoute() {
       if (!QT.now || QT.car === '추천') return '';
-      if (QT.now === '새 번호') return '신규가입';
+      if (QT.now === '새 번호') return QT.car === '알뜰폰' ? '알뜰폰 신규가입' : '신규가입';
+      if (QT.car === '알뜰폰' && QT.now === '알뜰폰') return '알뜰폰끼리 이동 (상담)';
       if (QT.now !== '알뜰폰' && qtCarNorm(QT.now) === qtCarNorm(QT.car)) return '기기변경';
       return `${QT.now} → ${QT.car} 번호이동`;
     }
@@ -1632,7 +1634,7 @@
       const cars = Object.keys((PC.data && PC.data.carriers) || {}).length ? Object.keys(PC.data.carriers) : ['LG U+', 'KT', 'SKT'];
       const order = ['LG U+', 'KT', 'SKT'];
       cars.sort((a, b) => (order.indexOf(a) + 1 || 9) - (order.indexOf(b) + 1 || 9));
-      qtChips('qtCar', [...cars.map(c => [c, c]), ['추천해 주세요', '추천']], 'car');
+      qtChips('qtCar', [...cars.map(c => [c, c]), ['알뜰폰', '알뜰폰'], ['추천해 주세요', '추천']], 'car');
       pcEl('qtRoute').textContent = qtRoute() ? '가입 유형: ' + qtRoute() : '';
       qtChips('qtIns', [['36개월 할부', '36개월 할부'], ['24개월 할부', '24개월 할부'], ['12개월 할부', '12개월 할부'], ['일시불', '일시불'], ['상담이 필요해요', '할부 상담 필요']], 'ins');
       qtChips('qtFee', [['3만원 이하', '3만원 이하'], ['3~5만원', '3~5만원'], ['5~7만원', '5~7만원'], ['7~10만원', '7~10만원'], ['10만원 이상', '10만원 이상']], 'fee');
@@ -1656,6 +1658,10 @@
       ['qtTel', 'qtAgree', 'qtModelText'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('qtErr').textContent = ''; }));
       const tg = pcEl('pcToggle');
       tg.onclick = () => { const h = pcEl('pcHolder'), open = !h.classList.contains('open'); h.classList.toggle('open', open); tg.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) setTimeout(() => h.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); };
+      // [V3.3] '월 납부액 직접 계산해 보기 · 알뜰유심 추천'은 강CRM 총관리자가 켜고 끔 (customerCalc: false면 숨김)
+      const calcOn = !!PC.data && PC.data.customerCalc !== false;
+      tg.style.display = calcOn ? '' : 'none';
+      if (!calcOn) { pcEl('pcHolder').classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }
       qtRender();
     }
     // 고른 조건 → 요약·내용 (견적요청 보내기와 '견적 보다 나감' 기록에 같이 씀)
