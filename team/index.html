@@ -515,6 +515,22 @@
     .pc-agree input { accent-color: var(--lgu-pink); width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
     .pc-done { margin-top: 14px; background: #ecfdf5; color: #065f46; border-radius: 14px; padding: 14px; font-size: 14px; font-weight: 700; line-height: 1.6; text-align: center; word-break: keep-all; }
     .pc-done a { display: inline-block; margin-top: 6px; font-size: 12.5px; color: #047857; }
+    /* [V4.0] ⏱ 연락 약속 시간 · 💬 카톡 · 📄 받은 견적 */
+    .qt-reply { margin: 14px 0 0; text-align: center; font-size: 13px; font-weight: 700; color: #475569; word-break: keep-all; }
+    .qt-reply b { color: var(--lgu-pink); }
+    .qt-kakao { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; height: 46px; border-radius: 14px; background: #fee500; color: #191919; font-size: 14.5px; font-weight: 800; text-decoration: none; }
+    .pc-done .qt-kakao { margin: 10px auto 0; max-width: 260px; color: #191919; font-size: 14px; }
+    .mq-teaser { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 14px; padding: 12px 14px; border-radius: 14px; background: #fdf2f8; border: 1px solid #fbcfe8; color: #9d174d; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; width: 100%; }
+    .mq-box { margin: 0 0 16px; border-radius: 18px; border: 2px solid #f9a8d4; background: #fff; overflow: hidden; }
+    .mq-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 12px 14px; background: #fdf2f8; font-size: 15px; font-weight: 800; color: #9d174d; }
+    .mq-head span { font-size: 12.5px; font-weight: 700; color: #be185d; }
+    .mq-text { margin: 0; padding: 12px 14px; white-space: pre-wrap; word-break: keep-all; font-family: inherit; font-size: 13.5px; line-height: 1.65; color: var(--text-main); max-height: 340px; overflow: auto; }
+    .mq-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; padding: 0 12px 12px; }
+    .mq-btns a { display: flex; align-items: center; justify-content: center; gap: 4px; height: 46px; border-radius: 12px; font-size: 13px; font-weight: 800; text-decoration: none; }
+    .mq-book { grid-column: 1 / -1; background: var(--lgu-pink); color: #fff; font-size: 15px !important; height: 50px !important; }
+    .mq-kakao { background: #fee500; color: #191919; }
+    .mq-call { background: #f1f5f9; color: #0f172a; border: 1px solid #e2e8f0; }
+    .mq-note { margin: 0; padding: 0 14px 12px; font-size: 11.5px; color: #64748b; }
     .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
 
     /* 📌 맨 아래 고정 배너 (인터넷+TV 등 · 강CRM에서 문구·켜고 끄기) */
@@ -596,6 +612,7 @@
     <div class="content-area">
       <!-- 탭 1: 프로필 -->
       <div id="tab-profile" class="tab-content active">
+        <button type="button" id="mqTeaser" class="mq-teaser" style="display:none" onclick="openMyQuote()"></button>
         <!-- 강CRM 개인 링크로 들어온 기존 고객에게만 표시 -->
         <div id="welcomeBack" class="welcome-back">다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂</div>
 
@@ -688,6 +705,7 @@
 
       <!-- 탭 3: 견적요청 (고객) · 직원(강CRM)은 예전 폰값계산 그대로 -->
       <div id="tab-calc" class="tab-content">
+        <div id="myQuote" style="display:none"></div>
         <div id="qtBody">
           <p class="pc-intro">원하시는 조건만 골라주세요. 담당자가 <b style="color:var(--text-main)">가장 좋은 조건으로 견적</b>을 보내드려요.</p>
 
@@ -768,7 +786,9 @@
               <label class="pc-agree"><input type="checkbox" id="qtAgree">견적 안내를 위해 이름·연락처와 고른 조건을 LGU+ 진천점에 보내는 데 동의해요</label>
             </div>
             <div class="pc-warn" id="qtErr" role="alert"></div>
+            <p class="qt-reply" id="qtReplyHint"></p>
             <button class="btn-vcard qt-go" id="qtGo" onclick="qtRequest()"><i class="fa-solid fa-paper-plane"></i> 무료 견적 받기</button>
+            <a class="qt-kakao" id="qtKakao" href="https://pf.kakao.com/_hxkKzX/chat" target="_blank" rel="noopener"><i class="fa-solid fa-comment"></i> 카톡으로 바로 물어보기</a>
             <div id="qtDone" class="pc-done" style="display:none;" role="status"></div>
             <p class="pc-privacy">고른 조건은 견적을 위해 담당자에게만 전달돼요.</p>
           </div>
@@ -1036,8 +1056,84 @@
       if (!r2.ok) throw new Error('no data');
       const base = await r2.json();
       // [V2.7] 예전엔 지원금표를 파일로 대신 쓰면 '상담 알림 서버' 주소까지 빠져서 직원 폰 푸시가 안 갔음 → 강CRM 설정은 그대로 붙임
-      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
+      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc', 'reply', 'kakao', 'showDist'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
       return base;
+    }
+    /* [V4.0] ⏱ 연락 약속 시간 · 💬 카톡 상담 (강CRM 설정 → 명함 폰값계산 → 연락 약속 시간 · 카톡 주소) */
+    const KAKAO_DEFAULT = 'https://pf.kakao.com/_hxkKzX/chat';
+    const BOOK_URL = 'https://m.booking.naver.com/booking/6/bizes/1588564?theme=place&entry=pll&lang=ko';
+    function cardCfg() { return (typeof PC !== 'undefined' && PC.data) || pcFsExtra || {}; }
+    function cardReply() {
+      const R = cardCfg().reply || {}, n = (v, d) => (v === undefined || v === null || v === '' || !isFinite(Number(v))) ? d : Number(v);
+      return { min: Math.max(5, n(R.min, 30)), open: n(R.open, 10), close: n(R.close, 20) };
+    }
+    function cardKakao() { const k = String(cardCfg().kakao || ''); return /^https:\/\/[a-z.]*kakao\.com\//.test(k) ? k : KAKAO_DEFAULT; }
+    const minTxt = (m) => m >= 60 ? (m % 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m / 60}시간`) : `${m}분`;
+    const hourTxt = (h) => h < 12 ? `오전 ${h}시` : (h === 12 ? '낮 12시' : `오후 ${h - 12}시`);
+    function replyState() {
+      const R = cardReply(), h = new Date().getHours();
+      if (h < R.open) return { open: false, text: `🌙 지금은 영업 전이에요 · <b>오늘 ${hourTxt(R.open)}</b>부터 바로 연락드릴게요`, promise: `오늘 ${hourTxt(R.open)}부터 가장 먼저 연락드릴게요.` };
+      if (h >= R.close) return { open: false, text: `🌙 오늘 영업이 끝났어요 · <b>내일 ${hourTxt(R.open)}</b>부터 바로 연락드릴게요`, promise: `내일 ${hourTxt(R.open)}부터 가장 먼저 연락드릴게요.` };
+      return { open: true, text: `⏱ 영업시간엔 보통 <b>${minTxt(R.min)} 안에</b> 연락드려요`, promise: `${minTxt(R.min)} 안에 가장 좋은 조건으로 연락드릴게요.` };
+    }
+    function refreshReplyUi() {
+      const h = document.getElementById('qtReplyHint'); if (h) h.innerHTML = replyState().text;
+      document.querySelectorAll('.qt-kakao').forEach(a => { a.href = cardKakao(); });
+    }
+    setInterval(refreshReplyUi, 60000);
+
+    /* [V4.0] 📄 받은 견적 — 강CRM에서 [견적 다시 보기 링크]와 같이 보낸 견적 (card_quotes/명함번호 · 본인 확인된 폰만) */
+    let myQuoteData = null;
+    async function loadMyQuote() {
+      const cid = getCrmId();
+      if (!cid || window.KCRM_STAFF) return;
+      try {
+        const r = await fetch(FS_BASE + 'card_quotes/' + encodeURIComponent(cid) + '?key=' + FS_KEY, { cache: 'no-store' });
+        if (!r.ok) return;
+        const j = await r.json(), f = (j && j.fields) || {}, g = (k) => (f[k] && f[k].stringValue) || '';
+        const at = Date.parse(g('at'));
+        if (!g('text') || !isFinite(at) || Date.now() - at > 45 * 86400e3) return;
+        myQuoteData = { text: g('text'), by: g('by'), store: g('store'), summary: g('summary'), at };
+        renderMyQuote();
+      } catch (e) {}
+    }
+    function renderMyQuote() {
+      const q = myQuoteData; if (!q) return;
+      const d = new Date(q.at), md = `${d.getMonth() + 1}/${d.getDate()}`;
+      const box = document.getElementById('myQuote');
+      box.innerHTML = `<div class="mq-box"><div class="mq-head">📄 ${md} 받은 견적<span></span></div><pre class="mq-text"></pre>
+        <div class="mq-btns"><a class="mq-book" href="${BOOK_URL}" target="_blank" rel="noopener"><i class="fa-solid fa-calendar-check"></i> 이 조건으로 방문 예약</a>
+        <a class="mq-kakao qt-kakao-link" href="${cardKakao()}" target="_blank" rel="noopener"><i class="fa-solid fa-comment"></i> 카톡 문의</a>
+        <a class="mq-call" href="tel:${typeof PHONE !== 'undefined' ? PHONE : '01044443353'}"><i class="fa-solid fa-phone"></i> 전화</a>
+        <a class="mq-call" href="#" onclick="openSms(); return false;"><i class="fa-solid fa-comment-dots"></i> 문자</a></div>
+        <p class="mq-note">금액은 보낸 날 기준이라 지원금·정책에 따라 바뀔 수 있어요. 방문 전에 한 번 더 확인해 드릴게요.</p></div>`;
+      box.querySelector('.mq-head span').textContent = q.by ? `${q.by}` : '';
+      box.querySelector('.mq-text').textContent = q.text;
+      box.style.display = 'block';
+      const t = document.getElementById('mqTeaser');
+      t.innerHTML = `<span>📄 ${md}에 보내드린 견적이 있어요</span><span>보기 ›</span>`;
+      t.style.display = 'flex';
+      const bk = box.querySelector('.mq-book'); if (bk) bk.addEventListener('click', () => logMyQuote('book'));
+      // 화면에 실제로 보였을 때 한 번 '견적 확인함' 기록 (담당 직원이 다시 연락하기 좋은 때)
+      try {
+        if (window.IntersectionObserver) { const io = new IntersectionObserver((es) => { if (es.some(e => e.isIntersecting)) { io.disconnect(); logMyQuote('view'); } }, { threshold: 0.4 }); io.observe(box); }
+      } catch (e) {}
+    }
+    // [V4.0] 받은 견적을 열어봄 · [방문 예약]을 누름 → 강CRM '명함견적'에 👀 관심 기록 (견적 하나당 한 번씩)
+    function logMyQuote(kind) {
+      const q = myQuoteData, cid = getCrmId();
+      if (!q || !cid || window.KCRM_STAFF) return;
+      const key = 'kcrm_mq_' + kind;
+      try { if (localStorage.getItem(key) === String(q.at)) return; localStorage.setItem(key, String(q.at)); } catch (e) {}
+      const d = new Date(q.at), md = `${d.getMonth() + 1}/${d.getDate()}`;
+      const what = kind === 'book' ? '받은 견적 보고 [방문 예약] 누름' : '받은 견적 확인함';
+      const summary = `👀 ${what}${q.summary ? ' · ' + q.summary : ''}`.slice(0, 200);
+      try { qtSend({ kind: 'calc', summary, detail: `👀 ${what}\n${md}에 ${q.by || '매장'}이(가) 보낸 견적` }, kind === 'book'); } catch (e) {}
+      try { cardInterestPush(summary); } catch (e) {}
+    }
+    function openMyQuote() {
+      const b = document.getElementById('calcTabBtn'); if (b) switchTab({ currentTarget: b }, 'calc');
+      const box = document.getElementById('myQuote'); if (box) setTimeout(() => box.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
     }
     // 📣 직원 폰 푸시 (상담 알림 서버) — 저장이 실패해도 보냄 · 문자앱으로 넘어가도 끊기지 않게 keepalive
     function cardAlertStaff(who, summary, failed) {
@@ -1840,7 +1936,8 @@
         cardAlertStaff(cardWho(extra), summary);
         btn.style.display = 'none';
         const done = pcEl('qtDone');
-        done.innerHTML = '견적 요청을 보냈어요! 🙌<br>영업시간(10:00~20:00)에 가장 좋은 조건으로 연락드릴게요.<br><a href="#" id="qtSmsAlso">급하시면 문자로도 보내기</a>';
+        done.innerHTML = `견적 요청을 보냈어요! 🙌<br>${replyState().promise}<a class="qt-kakao" href="${cardKakao()}" target="_blank" rel="noopener"><i class="fa-solid fa-comment"></i> 카톡으로 바로 물어보기</a><br><a href="#" id="qtSmsAlso">급하시면 문자로도 보내기</a>`;
+        { const k = document.getElementById('qtKakao'); if (k) k.style.display = 'none'; const h = document.getElementById('qtReplyHint'); if (h) h.style.display = 'none'; }
         done.style.display = 'block';
         pcEl('qtSmsAlso').onclick = (e) => { e.preventDefault(); const cid = getCrmId(); smsTo([`[견적요청${cid ? '/' + cid : ''}]`, ...lines.slice(1)].join('\n')); };
       } else {
@@ -1856,7 +1953,8 @@
         const b = document.querySelectorAll('.tab-btn')[2];
         if (b) switchTab({ currentTarget: b }, 'calc');
       }
-      pcLoad().then(qtInit, qtInit);   // 지원금표(기종 목록)를 불러온 뒤 견적요청 양식 채우기
+      pcLoad().then(qtInit, qtInit).then(refreshReplyUi, refreshReplyUi);   // 지원금표(기종 목록)를 불러온 뒤 견적요청 양식 채우기 · ⏱ 연락 약속 시간
+      refreshReplyUi(); loadMyQuote();   // [V4.0] 📄 받은 견적
       if (window.KCRM_STAFF) { const tb = document.getElementById('calcTabBtn'); if (tb) tb.textContent = '폰값계산'; }
       if (getCrmId()) showWelcomeBack();
       if (getPendingId()) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인
@@ -2169,6 +2267,7 @@
         // 아이폰 사파리: '홈 화면에 추가'한 앱이 다시 묻지 않게 주소에 '방금 확인함' 표시 (1시간)
         if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + (window.KCRM_TEAM && window.KCRM_TEAM_S ? '&s=' + window.KCRM_TEAM_S : '') + location.hash); } catch (e) {} }   // [V3.8] 공용 명함은 보낸 직원(s)도 남김
         showWelcomeBack();
+        try { loadMyQuote(); } catch (e) {}   // [V4.0] 본인 확인 뒤 받은 견적 보이기
         try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
         try { if (typeof qtContactUi === 'function') qtContactUi(); } catch (e) {}
         window.OneSignalDeferred = window.OneSignalDeferred || [];
@@ -2291,7 +2390,7 @@
           $('bsErr').textContent = '';
           cardAlertStaff(cardWho(extra), summary);
           $('bsGo').style.display = 'none';
-          $('bsDone').innerHTML = '상담 신청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.';
+          $('bsDone').innerHTML = `상담 신청을 보냈어요.<br>${replyState().promise}<br><a class="qt-kakao" href="${cardKakao()}" target="_blank" rel="noopener" style="max-width:260px;margin:10px auto 0"><i class="fa-solid fa-comment"></i> 카톡으로 바로 물어보기</a>`;
           $('bsDone').style.display = 'block';
         } else {
           $('bsGo').disabled = false;
