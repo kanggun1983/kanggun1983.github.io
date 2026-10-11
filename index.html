@@ -922,10 +922,12 @@
       } catch (e) {}
     }
     // card_requests 저장 (인터넷이 잠깐 끊겼거나 서버가 잠깐 안 되면 한 번 더)
+    // [V2.8] 문서 번호(영문·숫자 20자)를 명함이 직접 만들어서 저장 — 서버가 정해주는 번호가 보안 규칙의 '20자 번호' 검사에 안 맞으면 저장이 거절됐음
+    function cardDocId() { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', b = new Uint8Array(20); crypto.getRandomValues(b); return Array.from(b, x => A[x % A.length]).join(''); }
     async function cardSaveRequest(fields, keepalive) {
       for (let i = 0; i < 2; i++) {
         try {
-          const r = await fetch(FS_BASE + 'card_requests?key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive });
+          const r = await fetch(FS_BASE + 'card_requests?documentId=' + cardDocId() + '&key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive });
           if (r.ok) return 'ok';
           if (r.status < 500 && r.status !== 429) return String(r.status);   // 규칙 거절 등은 다시 해도 같음
           if (i === 1) return String(r.status);
