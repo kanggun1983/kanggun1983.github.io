@@ -424,6 +424,7 @@
     .qt-count { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 4px; }
     .qt-count b { color: var(--lgu-pink); font-weight: 700; }
     .qt-go { margin-top: 14px !important; }
+    .qt-trade-note { font-size: 12.5px; font-weight: 700; color: #b91c1c; margin-top: 6px; }
     .qt-more { width: 100%; margin: 18px 0 4px; padding: 13px 12px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
     .qt-more .qt-chev { margin-left: 4px; transition: transform .2s; }
     .qt-more[aria-expanded="true"] .qt-chev { transform: rotate(180deg); }
@@ -700,6 +701,12 @@
             <div class="qt-lb">원하는 할인 방식</div>
             <p class="qt-help">공통 지원금은 기기값을 할인받고, 선택 약정은 매달 요금의 25%를 할인받아요.</p>
             <div class="qt-chips" id="qtDisc" role="radiogroup" aria-label="원하는 할인 방식"></div>
+            <div class="qt-lb">지금 쓰는 폰 보상(반납) <span class="qt-opt">(선택)</span></div>
+            <div class="qt-chips" id="qtTrade" role="radiogroup" aria-label="지금 쓰는 폰 보상"></div>
+            <div id="qtTradeWrap" style="display:none">
+              <input class="pc-in" id="qtTradePhone" maxlength="30" placeholder="지금 쓰는 폰 (예: 갤럭시 S22)" style="margin-top:10px" aria-label="지금 쓰는 폰">
+              <div class="qt-trade-note">보상금은 담당자가 폰 상태를 보고 안내해 드려요</div>
+            </div>
           </div>
 
           <div class="qt-box">
@@ -1319,7 +1326,14 @@
         model: md.name, gen: md.gen, car: S.car, route: t.label, plan: C.plans[S.p].name, fee, chgName: chgPlan.name, chgFee: chgPlan.fee,
         noChg, avgOn, disc: S.d, isG: S.d === '공통지원', sup, price: md.price, dev: cur.dev, m: cur.m, n, cash: cur.cash,
         f1: cur.f1, f2: cur.f2, mon: cur.mon, tot: cur.tot, keepMonths: Math.round(cur.keep.months), cdLabel: pcFd(cur.keep.cd),
-        date: C.date || '', dist, trade: !!(pcEl('pcTrade') && pcEl('pcTrade').checked), pen, LIM, why
+        date: C.date || '', dist, trade: !!(pcEl('pcTrade') && pcEl('pcTrade').checked), pen, LIM, why,
+        // 비교 견적용: 두 할인 방식 모두
+        cmp: {
+          best,
+          g: { sup, dev: g.dev, m: g.m, f1: g.f1, f2: g.f2, mon: g.mon, tot: g.tot, keepMonths: Math.round(g.keep.months), cdLabel: pcFd(g.keep.cd) },
+          s: { dev: s.dev, m: s.m, f1: s.f1, f2: s.f2, mon: s.mon, tot: s.tot, keepMonths: Math.round(s.keep.months), cdLabel: pcFd(s.keep.cd) },
+          penG: !noChg && LIM > 0 && chgPlan.fee < LIM
+        }
       };
       PC.last = {
         car: S.car, route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
@@ -1362,9 +1376,45 @@
       L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
       return L.join('\n');
     }
+    // 📊 비교 견적: 공통지원 · 선택약정을 나란히 (강CRM '견적 보내기'에서 켜고 끔)
+    function pcQuoteCompareText() {
+      const q = PC.quote;
+      if (!q || !q.cmp) return pcQuoteText();
+      const X = q.cmp, L = [];
+      const noDate = (t) => String(t || '').replace(/\s*\(.\)$/, '');
+      L.push(`📱 ${q.model}`);
+      L.push(`· 가입: ${/→/.test(q.route) ? q.route.replace('통신사이동', '번호이동') : q.car + ' ' + q.route}`);
+      L.push(`· 요금제: ${q.plan} (월 ${won(q.fee)})${q.avgOn ? ` → 유지 기간 뒤 ${q.chgName}` : ''}`);
+      L.push(`· ${q.cash ? '현금개통' : `할부 ${q.n}개월`} · 출고가 ${won(q.price)}`);
+      const part = (no, key, title, o) => {
+        const first = (q.cash ? 0 : o.m) + o.f1, after = (q.cash ? 0 : o.m) + o.f2;
+        L.push('');
+        L.push(`${no} ${title}${X.best === key ? ' 👍 추천' : ''}`);
+        L.push(q.cash ? `· 기기값 현금 ${won(o.dev)}` : `· 할부원금 ${won(o.dev)} → 월 ${won(o.m)}`);
+        if (q.avgOn) {
+          L.push(`· 처음 ${o.keepMonths}개월 월 ${won(first)}`);
+          L.push(`· ${noDate(o.cdLabel)}부터 월 ${won(after)}`);
+          L.push(`· 2년 평균 월 ${won(o.mon)}`);
+        } else {
+          L.push(`· 2년 동안 월 ${won(first)}`);
+        }
+      };
+      part('①', '공통지원', `공통지원금 (기기값 ${X.g.sup ? won(X.g.sup) + ' ' : ''}할인)`, X.g);
+      part('②', '선택약정', '선택약정 (요금 25% 할인)', X.s);
+      const diff = Math.abs(X.g.tot - X.s.tot);
+      L.push('');
+      const totLb = (!q.cash && q.n === 36) ? '총 부담액(할부 36개월 포함)' : '2년 총액';
+      L.push(diff < 1000 ? `👉 ${totLb}은 두 방식이 거의 같아요` : `👉 ${totLb}으로 ${X.best === '공통지원' ? '공통지원금' : '선택약정'}이 약 ${won(Math.round(diff / 1000) * 1000)} 더 저렴해요`);
+      if (!q.cash && q.n === 36) L.push('※ 36개월 할부는 25개월째부터 월 할부금만 1년 더 나가요.');
+      L.push(q.cash ? '※ 현금개통 기준이에요.' : '※ 할부수수료(연 5.9%) 포함이에요.');
+      if (X.penG) L.push(`※ 공통지원금을 받으면 ${won(q.LIM)} 미만 요금제로 낮출 때 위약금이 있어요.`);
+      if (q.dist || q.trade) L.push(`※ ${[q.dist && '유통망지원금', q.trade && '기존 폰 보상'].filter(Boolean).join('·')}은 상담 때 더 챙겨드려요.`);
+      L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
+      return L.join('\n');
+    }
     function pcSendQuote() {
       if (!PC.quote) { alert('기종과 요금제를 먼저 골라주세요.'); return; }
-      const msg = { type: 'kcrm-quote', text: pcQuoteText(), summary: pcSummary(), model: PC.quote.model, car: PC.quote.car, mon: Math.round(PC.quote.mon) };
+      const msg = { type: 'kcrm-quote', text: pcQuoteText(), textCompare: pcQuoteCompareText(), summary: pcSummary(), model: PC.quote.model, car: PC.quote.car, mon: Math.round(PC.quote.mon) };
       if (window.parent && window.parent !== window) { window.parent.postMessage(msg, '*'); return; }
       alert(copyText(msg.text) ? '견적 문구를 복사했어요. 문자나 카톡에 붙여넣어 주세요.' : msg.text);
     }
@@ -1397,6 +1447,9 @@
       if (/36/.test(q.ins || '')) S.ins = 36; else if (/24/.test(q.ins || '')) S.ins = 24; else if (/일시불/.test(q.ins || '')) S.ins = 0;
       else if (/12/.test(q.ins || '')) notes.push('할부 12개월은 계산기에 없어서 24개월로 계산');
       if (/공통/.test(q.disc || '')) S.d = '공통지원'; else if (/선택/.test(q.disc || '')) S.d = '선택약정';
+      if (q.trade && pcEl('pcTrade')) pcEl('pcTrade').checked = true;   // 고객이 기기 보상 원함
+      if (q.tradePhone && pcEl('pcCurPhone')) pcEl('pcCurPhone').value = String(q.tradePhone).slice(0, 30);
+      if (q.trade) notes.push('기기 보상 원함' + (q.tradePhone ? ` (${String(q.tradePhone).slice(0, 30)})` : ''));
       const who = String(q.who || '').slice(0, 20);
       pcEl('pcQuoteFor').textContent = `👤 ${who ? who + ' 고객' : '고객'} 견적요청 조건으로 채웠어요` + (notes.length ? ` · ${notes.join(' · ')}` : '') + '. 요금제를 고르고 보내세요.';
     }
@@ -1501,8 +1554,8 @@
        · 강CRM에는 예전처럼 '상담요청'으로 들어가요 (요약 맨 앞 📱 견적요청)
        · 월 납부액 계산기는 아래 [월 납부액 직접 계산해 보기]로 그대로 쓸 수 있어요 · 강CRM 안(직원용)은 계산기 그대로
        ===================================================================== */
-    const QT = { brand: '', model: '', cap: '', color: '', now: '', car: '추천', ins: '24개월 할부', fee: '', disc: '상담이 필요해요', memoMode: 'later', sent: false, groups: [], noData: false };
-    const QT_OPTIONAL = new Set(['color', 'fee']);
+    const QT = { brand: '', model: '', cap: '', color: '', now: '', car: '추천', ins: '24개월 할부', fee: '', disc: '상담이 필요해요', trade: '', memoMode: 'later', sent: false, groups: [], noData: false };
+    const QT_OPTIONAL = new Set(['color', 'fee', 'trade']);
     const qtBrandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
     const QT_CAP_RE = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;   // 'iPhone 17 256GB (New)'처럼 용량이 가운데 있어도
     function qtCapBytes(c) { const m = /(\d+(?:\.\d+)?)\s*(GB|TB|G|T)/i.exec(c || ''); return m ? parseFloat(m[1]) * (/t/i.test(m[2]) ? 1024 : 1) : 0; }
@@ -1584,6 +1637,8 @@
       qtChips('qtIns', [['36개월 할부', '36개월 할부'], ['24개월 할부', '24개월 할부'], ['12개월 할부', '12개월 할부'], ['일시불', '일시불'], ['상담이 필요해요', '할부 상담 필요']], 'ins');
       qtChips('qtFee', [['3만원 이하', '3만원 이하'], ['3~5만원', '3~5만원'], ['5~7만원', '5~7만원'], ['7~10만원', '7~10만원'], ['10만원 이상', '10만원 이상']], 'fee');
       qtChips('qtDisc', [['공통 지원금', '공통 지원금'], ['선택 약정', '선택 약정'], ['상담이 필요해요', '상담이 필요해요']], 'disc');
+      qtChips('qtTrade', [['네, 보상 받고 싶어요', 'yes'], ['아니요', 'no']], 'trade');
+      pcEl('qtTradeWrap').style.display = QT.trade === 'yes' ? 'block' : 'none';
       qtChips('qtMemoMode', [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']], 'memoMode');
       pcEl('qtMemoWrap').style.display = QT.memoMode === 'now' ? 'block' : 'none';
       qtContactUi();
@@ -1596,6 +1651,7 @@
       fill('qtRegion', '선택해 주세요', ['대구 달서구', '대구 (다른 구)', '경북', '그 밖 지역']);
       pcEl('qtModel').onchange = (e) => { QT.model = e.target.value; QT.cap = ''; qtTouch(); qtRender(); };
       ['qtWhen', 'qtRegion'].forEach(id => pcEl(id).addEventListener('change', qtTouch));
+      pcEl('qtTradePhone').addEventListener('change', qtTouch);
       pcEl('qtMemo').oninput = (e) => { pcEl('qtMemoN').textContent = String(e.target.value.length); };
       ['qtTel', 'qtAgree', 'qtModelText'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('qtErr').textContent = ''; }));
       const tg = pcEl('pcToggle');
@@ -1608,7 +1664,8 @@
       const title = [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
       const route = qtRoute(), when = pcEl('qtWhen').value, region = pcEl('qtRegion').value, memo = pcEl('qtMemo').value.trim();
       const carTxt = QT.car === '추천' ? '추천' : QT.car;
-      const core = `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}`;
+      const tradePhone = QT.trade === 'yes' ? pcEl('qtTradePhone').value.trim().slice(0, 30) : '';
+      const core = `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}${QT.trade === 'yes' ? ' · 기기 보상' : ''}`;
       const lines = [
         '📱 견적요청',
         `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
@@ -1618,6 +1675,7 @@
         `할부: ${QT.ins}`,
         QT.fee && `지금 월 요금: ${QT.fee}`,
         `할인 방식: ${QT.disc}`,
+        QT.trade && `기기 보상: ${QT.trade === 'yes' ? '원해요' + (tradePhone ? ` (지금 폰: ${tradePhone})` : '') : '안 해요'}`,
         `개통 시기: ${when || '-'}`,
         `지역: ${region || '-'}`,
         `문의: ${QT.memoMode === 'now' && memo ? memo : '상담 때 이야기할게요'}`
