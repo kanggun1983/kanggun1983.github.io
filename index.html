@@ -985,6 +985,20 @@
           body: JSON.stringify({ who: String(who || '고객').slice(0, 20), summary: ((failed ? '⚠️ 강CRM 저장 실패·문자 확인 · ' : '') + String(summary || '')).slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
       } catch (e) {}
     }
+    // [V3.0] 👀 관심 고객(등록 고객이 계산만 해보거나 견적을 보다 나감)도 직원 폰 푸시 — 강CRM 총관리자가 켰을 때만
+    //   · 명함을 한 번 열 때 한 번만 · 아침 9시~밤 9시에만 (그 밖엔 강CRM 목록에 기록만)
+    let interestPushed = false;
+    function cardInterestPush(summary) {
+      const A = (PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert);
+      if (!A || !A.url || A.interest !== true || interestPushed || window.KCRM_STAFF) return;
+      let h = new Date().getHours();
+      try { h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }).format(new Date())); } catch (e) {}
+      if (h < 9 || h >= 21) return;
+      interestPushed = true;
+      let who = '';
+      try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+      cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', summary);
+    }
     // card_requests 저장 (인터넷이 잠깐 끊겼거나 서버가 잠깐 안 되면 한 번 더)
     // [V2.8] 문서 번호(영문·숫자 20자)를 명함이 직접 만들어서 저장 — 서버가 정해주는 번호가 보안 규칙의 '20자 번호' 검사에 안 맞으면 저장이 거절됐음
     function cardDocId() { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', b = new Uint8Array(20); crypto.getRandomValues(b); return Array.from(b, x => A[x % A.length]).join(''); }
@@ -1380,6 +1394,7 @@
       PC.touched = false;
       PC.logs++;
       pcSend('calc', null, !!leaving);
+      cardInterestPush('👀 계산만 해봄 · ' + pcSummary());
     }
     function pcScheduleLog() {
       clearTimeout(pcLogTimer);
@@ -1420,7 +1435,7 @@
         const b = document.createElement('button');
         b.type = 'button'; b.className = 'qt-chip' + (QT[key] === val ? ' on' : ''); b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', QT[key] === val ? 'true' : 'false');
         b.textContent = label;
-        b.onclick = () => { QT[key] = (QT[key] === val && QT_OPTIONAL.has(key)) ? '' : val; qtRender(); };
+        b.onclick = () => { QT[key] = (QT[key] === val && QT_OPTIONAL.has(key)) ? '' : val; if (key !== 'memoMode') qtTouch(); qtRender(); };
         el.appendChild(b);
       });
     }
@@ -1450,7 +1465,7 @@
         bEl.innerHTML = '';
         if (brands.length > 1) brands.forEach(b => {
           const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = b; btn.className = QT.brand === b ? 'on' : ''; btn.setAttribute('aria-pressed', QT.brand === b ? 'true' : 'false');
-          btn.onclick = () => { if (QT.brand === b) return; QT.brand = b; QT.model = ''; QT.cap = ''; qtRender(); };
+          btn.onclick = () => { if (QT.brand === b) return; QT.brand = b; QT.model = ''; QT.cap = ''; qtTouch(); qtRender(); };
           bEl.appendChild(btn);
         });
         const list = QT.groups.filter(g => brands.length < 2 || g.brand === QT.brand);
@@ -1487,39 +1502,21 @@
       const fill = (id, ph, items) => { const el = pcEl(id); el.innerHTML = ''; el.add(new Option(ph, '')); items.forEach(t => el.add(new Option(t, t))); };
       fill('qtWhen', '선택해 주세요', ['최대한 빨리', '이번 주 안', '다음 주', '이번 달 안', '다음 달 이후', '아직 알아보는 중']);
       fill('qtRegion', '선택해 주세요', ['대구 달서구', '대구 (다른 구)', '경북', '그 밖 지역']);
-      pcEl('qtModel').onchange = (e) => { QT.model = e.target.value; QT.cap = ''; qtRender(); };
+      pcEl('qtModel').onchange = (e) => { QT.model = e.target.value; QT.cap = ''; qtTouch(); qtRender(); };
+      ['qtWhen', 'qtRegion'].forEach(id => pcEl(id).addEventListener('change', qtTouch));
       pcEl('qtMemo').oninput = (e) => { pcEl('qtMemoN').textContent = String(e.target.value.length); };
       ['qtTel', 'qtAgree', 'qtModelText'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('qtErr').textContent = ''; }));
       const tg = pcEl('pcToggle');
       tg.onclick = () => { const h = pcEl('pcHolder'), open = !h.classList.contains('open'); h.classList.toggle('open', open); tg.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) setTimeout(() => h.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); };
       qtRender();
     }
-    async function qtSend(extra) {
-      const data = { kind: 'ask', cid: getCrmId() || '', name: '', phone: '', agree: '', summary: '', detail: '', at: new Date().toISOString(), ...extra };
-      const ref = getRefId();
-      if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로
-      const fields = {};
-      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
-      return cardSaveRequest(fields);
-    }
-    async function qtRequest() {
-      const err = pcEl('qtErr'), btn = pcEl('qtGo');
-      err.textContent = '';
-      if (QT.sent || window.KCRM_STAFF) return;
-      if (getPendingId()) { showOwnerSheet(function (ans) { qtContactUi(); if (ans === 'yes') qtRequest(); }); return; }
+    // 고른 조건 → 요약·내용 (견적요청 보내기와 '견적 보다 나감' 기록에 같이 씀)
+    function qtBuild() {
       const model = QT.noData ? pcEl('qtModelText').value.trim().slice(0, 40) : QT.model;
-      if (!model) { err.textContent = '원하시는 기종을 골라주세요.'; return; }
-      const extra = {};
-      if (!getCrmId()) {
-        const tel = pcEl('qtTel').value.replace(/\D/g, '');
-        if (!/^01\d{8,9}$/.test(tel)) { err.textContent = '견적 받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; pcEl('qtTel').focus(); return; }
-        if (!pcEl('qtAgree').checked) { err.textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
-        Object.assign(extra, { phone: tel, name: pcEl('qtName').value.trim().slice(0, 20), agree: 'Y' });
-      }
       const title = [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
       const route = qtRoute(), when = pcEl('qtWhen').value, region = pcEl('qtRegion').value, memo = pcEl('qtMemo').value.trim();
       const carTxt = QT.car === '추천' ? '추천' : QT.car;
-      const summary = `📱 견적요청 · ${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}`;
+      const core = `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}`;
       const lines = [
         '📱 견적요청',
         `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
@@ -1533,11 +1530,60 @@
         `지역: ${region || '-'}`,
         `문의: ${QT.memoMode === 'now' && memo ? memo : '상담 때 이야기할게요'}`
       ].filter(Boolean);
+      return { model, title, core, lines };
+    }
+    /* [V3.0] 👀 견적 보다 나감 — 등록 고객(개인 링크)이 견적요청 화면에서 조건을 고르다 [무료 견적 받기]를 안 누르면
+       · 고르고 20초 동안 그대로 두거나 화면을 떠날 때 강CRM '명함견적'에 기록 (한 번 열 때 최대 2번 · 적던 문의 글은 안 남김)
+       · 총관리자가 '관심 고객도 직원 폰 푸시'를 켰으면 직원 폰에도 알림 */
+    let qtLogTimer = null;
+    function qtLogView(leaving) {
+      clearTimeout(qtLogTimer);
+      if (window.KCRM_STAFF || !getCrmId() || !QT.touched || QT.sent || (QT.logs || 0) >= 2) return;
+      const B = qtBuild();
+      if (!B.model) return;
+      QT.touched = false; QT.logs = (QT.logs || 0) + 1;
+      const summary = `👀 견적 보다 나감 · ${B.core}`;
+      const lines = ['👀 견적 보다 나감 (견적요청 화면에서 고르다 안 보냄)', ...B.lines.slice(1).filter(l => !/^문의: /.test(l))];
+      qtSend({ kind: 'calc', summary, detail: lines.join('\n') }, !!leaving);
+      cardInterestPush(summary);
+    }
+    function qtTouch() {
+      if (window.KCRM_STAFF || QT.sent) return;
+      QT.touched = true;
+      clearTimeout(qtLogTimer);
+      if (getCrmId()) qtLogTimer = setTimeout(() => qtLogView(false), 20000);
+    }
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') qtLogView(false); });
+    window.addEventListener('pagehide', () => qtLogView(true));
+    async function qtSend(extra, keepalive) {
+      const data = { kind: 'ask', cid: getCrmId() || '', name: '', phone: '', agree: '', summary: '', detail: '', at: new Date().toISOString(), ...extra };
+      const ref = getRefId();
+      if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로
+      const fields = {};
+      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
+      return cardSaveRequest(fields, keepalive);
+    }
+    async function qtRequest() {
+      const err = pcEl('qtErr'), btn = pcEl('qtGo');
+      err.textContent = '';
+      if (QT.sent || window.KCRM_STAFF) return;
+      if (getPendingId()) { showOwnerSheet(function (ans) { qtContactUi(); if (ans === 'yes') qtRequest(); }); return; }
+      const B = qtBuild();
+      if (!B.model) { err.textContent = '원하시는 기종을 골라주세요.'; return; }
+      const extra = {};
+      if (!getCrmId()) {
+        const tel = pcEl('qtTel').value.replace(/\D/g, '');
+        if (!/^01\d{8,9}$/.test(tel)) { err.textContent = '견적 받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; pcEl('qtTel').focus(); return; }
+        if (!pcEl('qtAgree').checked) { err.textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+        Object.assign(extra, { phone: tel, name: pcEl('qtName').value.trim().slice(0, 20), agree: 'Y' });
+      }
+      const summary = `📱 견적요청 · ${B.core}`;
+      const lines = B.lines;
       Object.assign(extra, { summary, detail: lines.join('\n') });
       btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
       const res = await qtSend(extra);
       if (res === 'ok') {
-        QT.sent = true;
+        QT.sent = true; clearTimeout(qtLogTimer);
         cardAlertStaff(cardWho(extra), summary);
         btn.style.display = 'none';
         const done = pcEl('qtDone');
