@@ -41,7 +41,8 @@
         var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
         var okp = /^\d{10,14}$/.test(params.get('ok') || '') ? '&ok=' + params.get('ok') : '';   // 방금 본인 확인한 표시도 같이 넘김
         var r0 = params.get('r') || '';   // [V2.9] 공유받은 명함(?r=)도 같이 넘김
-        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (/^#pn=/.test(location.hash) ? location.hash : '');
+        var rg = params.get('reg') === '1' ? 'reg=1' + (params.get('m') ? '&m=' + encodeURIComponent(String(params.get('m')).slice(0, 20)) : '') : '';   // [V3.7] 매장 QR 고객 등록
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (rg ? ((/^[A-Za-z0-9_-]{2,40}$/.test(cid) || /^[A-Za-z0-9_-]{2,40}$/.test(r0)) ? '&' : '?') + rg : '') + (/^#pn=/.test(location.hash) ? location.hash : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
           window.KCRM_LEAVING = true;
@@ -1994,6 +1995,94 @@
       <p id="bsDone" style="display:none;text-align:center;font-weight:700;color:#3730a3;padding:14px 0"></p>
     </div>
   </div>
+
+  <!-- [V3.7] 📇 매장 QR 고객 등록 (?reg=1) -->
+  <div class="bs-back" id="regBack" role="dialog" aria-modal="true" aria-labelledby="regTitle" style="z-index:1150">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="regTitle" style="flex:1">📇 LGU+ 진천점 고객 등록</h3><button type="button" id="regClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <div id="regForm">
+        <p class="sub">이름과 번호만 넣으면 등록 끝! 등록하면 혜택 알림과 견적을 고객님 정보로 바로 받아요.</p>
+        <span class="lab">이름</span>
+        <input type="text" id="regName" autocomplete="name" maxlength="20" placeholder="예) 홍길동">
+        <span class="lab">휴대폰 번호</span>
+        <input type="tel" id="regTel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000">
+        <label class="agree"><input type="checkbox" id="regAgree" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"> 고객 관리와 상담 연락을 위해 이름·번호를 LGU+ 진천점에 등록하는 데 동의해요.</label>
+        <p class="err" id="regErr" role="alert"></p>
+        <button type="button" class="go" id="regGo" style="background:linear-gradient(110deg,#e6007e,#a8005b)"><i class="fa-solid fa-user-check"></i> 등록하기</button>
+      </div>
+      <div id="regDone" style="display:none;text-align:center;padding:6px 0 2px">
+        <p style="font-size:40px;line-height:1;margin:6px 0">🎉</p>
+        <p id="regDoneMsg" style="font-size:17px;font-weight:800;color:var(--text-main);line-height:1.5;word-break:keep-all"></p>
+        <p class="sub" style="margin:6px 0 4px">혜택 알림을 켜두면 행사·사은품 소식을 바로 알려드려요.</p>
+        <button type="button" class="go" id="regPush" style="background:#334155"><i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기</button>
+        <button type="button" id="regSave" style="width:100%;height:50px;border:2px solid #e2e8f0;border-radius:16px;background:#fff;font:inherit;font-size:15px;font-weight:800;color:var(--text-main);margin-top:10px;cursor:pointer"><i class="fa-solid fa-address-card"></i> 명함 저장</button>
+      </div>
+      <div id="regAlready" style="display:none">
+        <p id="regAlreadyMsg" style="font-size:16px;font-weight:700;color:var(--text-main);line-height:1.5;margin:8px 0;word-break:keep-all"></p>
+        <button type="button" class="go" id="regOk" style="background:linear-gradient(110deg,#e6007e,#a8005b)">확인</button>
+        <button type="button" id="regOther" style="width:100%;border:0;background:none;font:inherit;font-size:13px;font-weight:700;color:var(--text-sub);margin-top:10px;padding:8px;cursor:pointer;text-decoration:underline">다른 분 번호로 새로 등록할게요</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    /* [V3.7] 📇 매장 QR(?reg=1)로 고객이 직접 등록
+       · 명함이 명함번호를 만들어 이 폰에 연결 → 강CRM이 같은 번호로 새 고객을 자동 등록 (이미 있는 번호면 직원이 확인 후 연결)
+       · 저장은 '명함 견적요청'과 같은 칸(card_requests)에 '🆕 QR 고객 등록'으로 · 직원 폰 푸시는 안 보냄 (매장에서 직원과 함께 등록) */
+    (function () {
+      if (window.KCRM_STAFF) return;
+      const $ = (id) => document.getElementById(id);
+      let q; try { q = new URLSearchParams(location.search); } catch (e) { return; }
+      if (q.get('reg') !== '1') return;
+      const mgr = String(q.get('m') || '').replace(/[<>\n\r]/g, '').trim().slice(0, 20);
+      try { q.delete('reg'); q.delete('m'); const qs = q.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+      const ID_CHARS = 'abcdefghijkmnpqrstuvwxyz23456789';   // 강CRM 명함번호와 같은 글자
+      const newId = () => { const a = new Uint8Array(6); crypto.getRandomValues(a); return Array.from(a, b => ID_CHARS[b % ID_CHARS.length]).join(''); };
+      const mask = (n) => { n = String(n || '').trim(); if (n.length < 2) return n; return n.length === 2 ? n[0] + '○' : n[0] + '○'.repeat(n.length - 2) + n[n.length - 1]; };
+      const show = (which) => { ['regForm', 'regDone', 'regAlready'].forEach(id => { $(id).style.display = id === which ? 'block' : 'none'; }); $('regBack').style.display = 'flex'; };
+      const close = () => { $('regBack').style.display = 'none'; };
+      function open() {
+        const mine = getCrmId();
+        if (mine) {
+          let who = ''; try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+          $('regAlreadyMsg').textContent = `이 폰은 이미 ${who ? who + ' 고객님으로' : '고객으로'} 등록돼 있어요 😊`;
+          show('regAlready');
+        } else show('regForm');
+      }
+      $('regClose').onclick = close;
+      $('regOk').onclick = close;
+      $('regOther').onclick = () => show('regForm');
+      $('regBack').addEventListener('click', (e) => { if (e.target === $('regBack')) close(); });
+      $('regPush').onclick = () => { close(); requestNotificationPermission(); };
+      $('regSave').onclick = () => downloadVCard();
+      ['regName', 'regTel', 'regAgree'].forEach(id => $(id).addEventListener('input', () => { $('regErr').textContent = ''; }));
+      $('regGo').onclick = async () => {
+        const name = $('regName').value.trim().slice(0, 20), tel = $('regTel').value.replace(/\D/g, '');
+        if (!name) { $('regErr').textContent = '이름을 넣어주세요.'; $('regName').focus(); return; }
+        if (!/^01\d{8,9}$/.test(tel)) { $('regErr').textContent = '휴대폰 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; $('regTel').focus(); return; }
+        if (!$('regAgree').checked) { $('regErr').textContent = '등록하려면 동의에 체크해 주세요.'; return; }
+        const cid = newId();
+        const data = { kind: 'ask', cid, name, phone: tel, agree: 'Y', summary: `🆕 QR 고객 등록 · ${name}`,
+          detail: ['🆕 매장 QR로 고객 직접 등록', `명함번호: ${cid}`, `이름: ${name}`, mgr && `담당: ${mgr}`].filter(Boolean).join('\n'), at: new Date().toISOString() };
+        const fields = {}; Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]) }; });
+        $('regGo').disabled = true; $('regGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 등록하는 중…';
+        const res = await cardSaveRequest(fields);
+        $('regGo').disabled = false; $('regGo').innerHTML = '<i class="fa-solid fa-user-check"></i> 등록하기';
+        if (res !== 'ok') { $('regErr').textContent = `등록하지 못했어요 (${res === 'net' ? '인터넷 연결' : '오류 ' + res}). 직원에게 말씀해 주세요.`; return; }
+        // 이 폰을 새 명함번호로 연결
+        try {
+          localStorage.setItem('kcrm_cid', cid); localStorage.setItem('kcrm_who', mask(name));
+          localStorage.removeItem('kcrm_cid_pending'); localStorage.removeItem('kcrm_ref');
+        } catch (e) {}
+        try { showWelcomeBack(); } catch (e) {}
+        try { if (typeof qtContactUi === 'function') qtContactUi(); const k = $('pcKnown'), n = $('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
+        $('regDoneMsg').textContent = `${mask(name)} 고객님, 등록됐어요!`;
+        show('regDone');
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(open, 400)); else setTimeout(open, 400);
+    })();
+  </script>
 
   <!-- [V2.9] 📤 명함 공유하기 (휴대폰 공유창이 없을 때) -->
   <div class="bs-back" id="shBack" role="dialog" aria-modal="true" aria-labelledby="shTitle">
