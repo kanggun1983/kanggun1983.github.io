@@ -425,7 +425,10 @@
     .qt-count b { color: var(--lgu-pink); font-weight: 700; }
     .qt-go { margin-top: 14px !important; }
     .qt-off { opacity: .38; filter: grayscale(1); pointer-events: none; }
-    .qt-fix { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; background: #fdf2f8; border-radius: 14px; padding: 10px 12px; }
+    .qt-mv-note { font-size: 13px; font-weight: 600; color: var(--lgu-dark); background: #fdf2f8; border-radius: 12px; padding: 10px 12px; margin: 10px 0 4px; line-height: 1.5; word-break: keep-all; }
+    .qt-fix { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-top: 12px; background: #fdf2f8; border: 1px solid #fbcfe8; border-radius: 14px; padding: 12px 14px; }
+    .qt-fix-h { flex-basis: 100%; font-size: 14px; font-weight: 700; color: var(--lgu-dark); line-height: 1.45; word-break: keep-all; }
+    .qt-fix-l { flex-basis: 100%; margin: 2px 0 0; padding-left: 18px; font-size: 13px; font-weight: 600; color: var(--lgu-dark); line-height: 1.6; word-break: keep-all; }
     .qt-fix-chip { cursor: default; flex-shrink: 0; display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border-radius: 9999px; }
     .qt-fix-t { flex: 1; min-width: 160px; font-size: 12.5px; font-weight: 600; color: var(--lgu-dark); line-height: 1.45; word-break: keep-all; }
     .qt-trade-note { font-size: 12.5px; font-weight: 700; color: #b91c1c; margin-top: 6px; }
@@ -438,7 +441,7 @@
     body.kc-staff #pcHolder { display: block !important; }
     .pc-staff-send { display: none; }
     body.kc-staff .pc-staff-send { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 640px; margin: 0 auto; background: #fff; padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 16px rgba(15,23,42,.12); }
-    body.kc-staff #pcKeep { margin-bottom: 150px; }   /* 아래 고정 버튼에 가리지 않게 */
+    body.kc-staff #pcKeep, body.kc-staff #pcMvno { margin-bottom: 150px; }   /* 아래 고정 버튼에 가리지 않게 */
     body.kc-staff .pc-staff-send .btn-vcard { margin: 0; }
     .pc-quote-for { font-size: 13px; font-weight: 700; color: var(--lgu-dark); background: #fde8f3; border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; line-height: 1.45; word-break: keep-all; }
     .pc-quote-for:empty { display: none; }
@@ -682,14 +685,17 @@
           <p class="pc-intro">원하시는 조건만 골라주세요. 담당자가 <b style="color:var(--text-main)">가장 좋은 조건으로 견적</b>을 보내드려요.</p>
 
           <div class="qt-box">
-            <div class="qt-lb">휴대폰 기종<span class="pc-brand" id="qtBrand" role="group" aria-label="제조사"></span></div>
-            <select class="pc-sel" id="qtModel" aria-label="휴대폰 기종"></select>
-            <input class="pc-in" id="qtModelText" placeholder="원하시는 기종 (예: 갤럭시 S26)" style="display:none">
-            <div class="qt-price" id="qtPrice"></div>
-            <div class="qt-lb2">용량</div>
-            <div class="qt-chips" id="qtCap" role="radiogroup" aria-label="용량"></div>
-            <div class="qt-lb2">색상 <span class="qt-opt">(선택)</span></div>
-            <div class="qt-chips" id="qtColor" role="radiogroup" aria-label="색상"></div>
+            <div class="qt-mv-note" id="qtMvPhoneNote" style="display:none">📶 알뜰폰은 지금 쓰는 폰을 그대로 써서 기종은 안 골라도 돼요</div>
+            <div id="qtPhoneWrap">
+              <div class="qt-lb">휴대폰 기종<span class="pc-brand" id="qtBrand" role="group" aria-label="제조사"></span></div>
+              <select class="pc-sel" id="qtModel" aria-label="휴대폰 기종"></select>
+              <input class="pc-in" id="qtModelText" placeholder="원하시는 기종 (예: 갤럭시 S26)" style="display:none">
+              <div class="qt-price" id="qtPrice"></div>
+              <div class="qt-lb2">용량</div>
+              <div class="qt-chips" id="qtCap" role="radiogroup" aria-label="용량"></div>
+              <div class="qt-lb2">색상 <span class="qt-opt">(선택)</span></div>
+              <div class="qt-chips" id="qtColor" role="radiogroup" aria-label="색상"></div>
+            </div>
           </div>
 
           <div class="qt-box">
@@ -701,7 +707,14 @@
             <div id="qtMvnoBox" style="display:none">
               <div class="qt-lb2">알뜰폰 통신망</div>
               <div class="qt-chips" id="qtNet" role="radiogroup" aria-label="알뜰폰 통신망"></div>
-              <div class="qt-fix"><span class="qt-chip on qt-fix-chip">약정 7개월 (고정)</span><span class="qt-fix-t">알뜰폰은 약정 7개월로 고정이라 기기값 할부·할인 방식은 고르지 않아도 돼요</span></div>
+              <div class="qt-fix">
+                <div class="qt-fix-h">📶 알뜰폰은 <b>유심만 바꾸고 지금 쓰는 폰을 그대로</b> 써요</div>
+                <span class="qt-chip on qt-fix-chip">약정 7개월 (고정)</span>
+                <ul class="qt-fix-l">
+                  <li>위의 <b>휴대폰 기종</b>은 안 골라도 돼요</li>
+                  <li>아래 <b>기기값 할부 · 할인 방식 · 기기 보상</b>도 안 골라도 돼요</li>
+                </ul>
+              </div>
             </div>
             <div class="qt-route" id="qtRoute"></div>
             <div id="qtInsWrap">
@@ -715,11 +728,13 @@
               <p class="qt-help">공통 지원금은 기기값을 할인받고, 선택 약정은 매달 요금의 25%를 할인받아요.</p>
               <div class="qt-chips" id="qtDisc" role="radiogroup" aria-label="원하는 할인 방식"></div>
             </div>
-            <div class="qt-lb">지금 쓰는 폰 보상(반납) <span class="qt-opt">(선택)</span></div>
-            <div class="qt-chips" id="qtTrade" role="radiogroup" aria-label="지금 쓰는 폰 보상"></div>
-            <div id="qtTradeWrap" style="display:none">
-              <input class="pc-in" id="qtTradePhone" maxlength="30" placeholder="지금 쓰는 폰 (예: 갤럭시 S22)" style="margin-top:10px" aria-label="지금 쓰는 폰">
-              <div class="qt-trade-note">보상금은 담당자가 폰 상태를 보고 안내해 드려요</div>
+            <div id="qtTradeBox">
+              <div class="qt-lb">지금 쓰는 폰 보상(반납) <span class="qt-opt">(선택)</span></div>
+              <div class="qt-chips" id="qtTrade" role="radiogroup" aria-label="지금 쓰는 폰 보상"></div>
+              <div id="qtTradeWrap" style="display:none">
+                <input class="pc-in" id="qtTradePhone" maxlength="30" placeholder="지금 쓰는 폰 (예: 갤럭시 S22)" style="margin-top:10px" aria-label="지금 쓰는 폰">
+                <div class="qt-trade-note">보상금은 담당자가 폰 상태를 보고 안내해 드려요</div>
+              </div>
             </div>
           </div>
 
@@ -817,6 +832,11 @@
             <div class="pc-sub">지금 쓰는 휴대폰 (그대로 쓰실 폰)</div>
             <input class="pc-in" id="pcMvnoPhone" placeholder="예) 아이폰 13">
             <div class="pc-empty">지금 폰은 그대로, 유심만 바꾸면 끝이에요. 사용량에 맞는 가장 저렴한 요금제를 찾아서 알려드릴게요.</div>
+            <!-- [V3.5] 강CRM(직원용)에서만: 알뜰유심 요금제 견적 보내기 -->
+            <div class="pc-staff-send" id="pcStaffSendMv">
+              <div class="pc-quote-for" id="pcQuoteForMv"></div>
+              <button type="button" class="btn-vcard" onclick="pcSendQuote()"><i class="fa-solid fa-paper-plane"></i> 이 견적 고객에게 보내기</button>
+            </div>
           </div>
 
           <div class="pc-contact">
@@ -1426,7 +1446,36 @@
       L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
       return L.join('\n');
     }
+    // 📶 알뜰유심 견적 (고른 요금제 하나 / 비교는 추천 요금제 모두)
+    function pcMvQuoteText(all) {
+      const S = PC.st, { fit } = pcMvnoList();
+      if (!fit.length) return '';
+      const pick = fit.find(p => S.mplan === p.brand + '|' + p.name) || fit[0];
+      const plans = all ? fit : [pick];
+      const L = [`📶 알뜰유심 ${all ? '추천 요금제' : '요금 견적'} (${S.net} · 데이터 ${S.use})`];
+      plans.forEach((p, i) => {
+        L.push('');
+        L.push(`${all ? '①②③④'[i] + ' ' : ''}${p.name} (${p.brand})${all && p === pick ? ' 👍 추천' : ''}`);
+        L.push(`· 월 ${won(p.price)}${p.base > p.price ? ` (정상 ${won(p.base)})` : ''}`);
+        const spec = [p.data && '데이터 ' + p.data, p.qos && '소진 후 ' + p.qos, p.voice && '통화 ' + p.voice].filter(Boolean).join(' · ');
+        if (spec) L.push('· ' + spec);
+        if (p.bonus) L.push('· 결합 시 ' + p.bonus);
+      });
+      L.push('');
+      L.push('· 약정 7개월');
+      L.push('※ 지금 쓰는 폰 그대로, 유심만 바꾸면 돼요.');
+      if (plans[0].date) L.push(`※ ${plans[0].date} 기준 요금이라 바뀔 수 있어요.`);
+      return L.join('\n');
+    }
     function pcSendQuote() {
+      if (PC.st.what === 'mvno') {
+        const one = pcMvQuoteText(false);
+        if (!one) { alert('이 조건에 맞는 알뜰유심 요금제가 없어요. 통신망이나 데이터 사용량을 바꿔 보세요.'); return; }
+        const { fit } = pcMvnoList(), pk = fit.find(p => PC.st.mplan === p.brand + '|' + p.name) || fit[0];
+        const msgMv = { type: 'kcrm-quote', kind: 'mvno', text: one, textCompare: pcMvQuoteText(true), summary: `알뜰유심 ${PC.st.net} · ${pk.name} 월 ${won(pk.price)}` };
+        if (window.parent && window.parent !== window) { window.parent.postMessage(msgMv, '*'); return; }
+        alert(copyText(one) ? '견적 문구를 복사했어요.' : one); return;
+      }
       if (!PC.quote) { alert('기종과 요금제를 먼저 골라주세요.'); return; }
       const msg = { type: 'kcrm-quote', text: pcQuoteText(), textCompare: pcQuoteCompareText(), summary: pcSummary(), model: PC.quote.model, car: PC.quote.car, mon: Math.round(PC.quote.mon) };
       if (window.parent && window.parent !== window) { window.parent.postMessage(msg, '*'); return; }
@@ -1446,7 +1495,11 @@
       const car = cars.find(k => norm(k) === norm(q.car) && D.carriers[k].ready && !D.carriers[k].hidden);
       if (car) S.car = car;
       const notes = [];
-      if (/^알뜰폰/.test(q.car || '')) { const nt = (/(SK|KT|LG)망/.exec(q.car) || [])[0]; notes.push(`알뜰폰${nt ? '(' + nt + ')' : ''} 희망 · 약정 7개월 · 폰값은 통신사 기준으로 계산 (알뜰유심 요금제는 [알뜰유심 가입]에서 추천)`); }
+      if (/^알뜰폰/.test(q.car || '')) {
+        const nt = (/(SK|KT|LG)망/.exec(q.car) || [])[0];
+        S.what = 'mvno'; if (nt) S.net = nt; S.mplan = '';   // 유심만 → 알뜰유심 추천 화면
+        notes.push(`알뜰폰${nt ? '(' + nt + ')' : ''} 유심 희망 · 약정 7개월 · 데이터 사용량을 고르고 요금제를 눌러 보내세요`);
+      }
       else if (q.car && !car) notes.push(`${q.car} 지원금표가 없어서 ${S.car}로 계산`);
       const C = D.carriers[S.car];
       let found = false;
@@ -1466,7 +1519,9 @@
       if (q.tradePhone && pcEl('pcCurPhone')) pcEl('pcCurPhone').value = String(q.tradePhone).slice(0, 30);
       if (q.trade) notes.push('기기 보상 원함' + (q.tradePhone ? ` (${String(q.tradePhone).slice(0, 30)})` : ''));
       const who = String(q.who || '').slice(0, 20);
-      pcEl('pcQuoteFor').textContent = `👤 ${who ? who + ' 고객' : '고객'} 견적요청 조건으로 채웠어요` + (notes.length ? ` · ${notes.join(' · ')}` : '') + '. 요금제를 고르고 보내세요.';
+      const forTxt = `👤 ${who ? who + ' 고객' : '고객'} 견적요청 조건으로 채웠어요` + (notes.length ? ` · ${notes.join(' · ')}` : '') + (S.what === 'mvno' ? '.' : '. 요금제를 고르고 보내세요.');
+      pcEl('pcQuoteFor').textContent = forTxt;
+      if (pcEl('pcQuoteForMv')) pcEl('pcQuoteForMv').textContent = forTxt;
     }
 
     /* 상담 요청 → 강CRM '명함상담'으로 바로 전달 (안 되면 문자앱으로) */
@@ -1660,10 +1715,11 @@
       qtChips('qtIns', [['36개월 할부', '36개월 할부'], ['24개월 할부', '24개월 할부'], ['12개월 할부', '12개월 할부'], ['일시불', '일시불'], ['상담이 필요해요', '할부 상담 필요']], 'ins');
       qtChips('qtFee', [['3만원 이하', '3만원 이하'], ['3~5만원', '3~5만원'], ['5~7만원', '5~7만원'], ['7~10만원', '7~10만원'], ['10만원 이상', '10만원 이상']], 'fee');
       qtChips('qtDisc', [['공통 지원금', '공통 지원금'], ['선택 약정', '선택 약정'], ['상담이 필요해요', '상담이 필요해요']], 'disc');
-      // 알뜰폰: 할부·할인 방식은 잠금 (약정 7개월 고정)
-      ['qtInsWrap', 'qtDiscWrap'].forEach(id => { const w = pcEl(id); w.classList.toggle('qt-off', mv); w.setAttribute('aria-disabled', mv ? 'true' : 'false'); w.querySelectorAll('button').forEach(b => { b.disabled = mv; }); });
+      pcEl('qtMvPhoneNote').style.display = mv ? 'block' : 'none';
       qtChips('qtTrade', [['네, 보상 받고 싶어요', 'yes'], ['아니요', 'no']], 'trade');
       pcEl('qtTradeWrap').style.display = QT.trade === 'yes' ? 'block' : 'none';
+      // 원하는 통신사가 알뜰폰일 때만: 기종·할부·할인 방식·기기 보상 잠금 (유심만 · 약정 7개월 고정)
+      ['qtPhoneWrap', 'qtInsWrap', 'qtDiscWrap', 'qtTradeBox'].forEach(id => { const w = pcEl(id); w.classList.toggle('qt-off', mv); w.setAttribute('aria-disabled', mv ? 'true' : 'false'); w.querySelectorAll('button, select, input').forEach(b => { b.disabled = mv; }); if (mv) w.querySelectorAll('.on').forEach(b => b.classList.remove('on')); });   // 잠긴 칸은 골라진 것처럼 안 보이게
       qtChips('qtMemoMode', [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']], 'memoMode');
       pcEl('qtMemoWrap').style.display = QT.memoMode === 'now' ? 'block' : 'none';
       qtContactUi();
@@ -1690,27 +1746,28 @@
     // 고른 조건 → 요약·내용 (견적요청 보내기와 '견적 보다 나감' 기록에 같이 씀)
     function qtBuild() {
       const model = QT.noData ? pcEl('qtModelText').value.trim().slice(0, 40) : QT.model;
-      const title = [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
+      const mvSim = QT.car === '알뜰폰';   // 원하는 통신사가 알뜰폰 → 유심만 (지금 폰 그대로)
+      const title = mvSim ? '알뜰폰 유심 (지금 폰 그대로)' : [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
       const route = qtRoute(), when = pcEl('qtWhen').value, region = pcEl('qtRegion').value, memo = pcEl('qtMemo').value.trim();
       const mv = QT.car === '알뜰폰';
       const carTxt = QT.car === '추천' ? '추천' : (mv ? `알뜰폰(${qtNetLabel()})` : QT.car);
       const tradePhone = QT.trade === 'yes' ? pcEl('qtTradePhone').value.trim().slice(0, 30) : '';
-      const core = `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${mv ? QT_MVNO_TERM : `${QT.ins} · ${QT.disc}`}${QT.trade === 'yes' ? ' · 기기 보상' : ''}`;
+      const core = mv ? `알뜰폰 유심 · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT_MVNO_TERM}` : `${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}${QT.trade === 'yes' ? ' · 기기 보상' : ''}`;
       const lines = [
         '📱 견적요청',
-        `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
-        QT.color && `색상: ${QT.color}`,
+        mv ? '상품: 알뜰폰 유심 (지금 쓰는 폰 그대로)' : `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
+        !mv && QT.color && `색상: ${QT.color}`,
         `지금 통신사: ${QT.now || '-'}`,
         `원하는 통신사: ${QT.car === '추천' ? '추천해 주세요' : (mv ? `알뜰폰 · ${QT.net === '추천' ? '통신망 추천해 주세요' : QT.net}` : QT.car)}${route ? ` (${route})` : ''}`,
         mv ? `약정: 7개월 (알뜰폰 고정)` : `할부: ${QT.ins}`,
         QT.fee && `지금 월 요금: ${QT.fee}`,
         !mv && `할인 방식: ${QT.disc}`,
-        QT.trade && `기기 보상: ${QT.trade === 'yes' ? '원해요' + (tradePhone ? ` (지금 폰: ${tradePhone})` : '') : '안 해요'}`,
+        !mv && QT.trade && `기기 보상: ${QT.trade === 'yes' ? '원해요' + (tradePhone ? ` (지금 폰: ${tradePhone})` : '') : '안 해요'}`,
         `개통 시기: ${when || '-'}`,
         `지역: ${region || '-'}`,
         `문의: ${QT.memoMode === 'now' && memo ? memo : '상담 때 이야기할게요'}`
       ].filter(Boolean);
-      return { model, title, core, lines };
+      return { model: mv ? title : model, title, core, lines };
     }
     /* [V3.0] 👀 견적 보다 나감 — 등록 고객(개인 링크)이 견적요청 화면에서 조건을 고르다 [무료 견적 받기]를 안 누르면
        · 고르고 20초 동안 그대로 두거나 화면을 떠날 때 강CRM '명함견적'에 기록 (한 번 열 때 최대 2번 · 적던 문의 글은 안 남김)
