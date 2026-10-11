@@ -41,8 +41,11 @@
         var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
         var okp = /^\d{10,14}$/.test(params.get('ok') || '') ? '&ok=' + params.get('ok') : '';   // 방금 본인 확인한 표시도 같이 넘김
         var r0 = params.get('r') || '';   // [V2.9] 공유받은 명함(?r=)도 같이 넘김
+        var s0 = window.KCRM_TEAM && /^[a-z0-9]{3,12}$/.test(params.get('s') || '') ? params.get('s') : '';   // [V3.8] 직원 공용 명함: 보낸 직원
         var rg = params.get('reg') === '1' ? 'reg=1' + (params.get('m') ? '&m=' + encodeURIComponent(String(params.get('m')).slice(0, 20)) : '') : '';   // [V3.7] 매장 QR 고객 등록
-        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (rg ? ((/^[A-Za-z0-9_-]{2,40}$/.test(cid) || /^[A-Za-z0-9_-]{2,40}$/.test(r0)) ? '&' : '?') + rg : '') + (/^#pn=/.test(location.hash) ? location.hash : '');
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (rg ? ((/^[A-Za-z0-9_-]{2,40}$/.test(cid) || /^[A-Za-z0-9_-]{2,40}$/.test(r0)) ? '&' : '?') + rg : '');
+        if (s0) target += (target.indexOf('?') >= 0 ? '&' : '?') + 's=' + s0;
+        target += (/^#pn=/.test(location.hash) ? location.hash : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
           window.KCRM_LEAVING = true;
@@ -238,6 +241,7 @@
       if (isStaffPhone) return;   // 직원 폰: 직원 등록 그대로 두기
       if (getCrmId()) await linkCrmUser(OneSignal);
       else OneSignal.User.addTag('source', 'namecard');
+      if (window.KCRM_TEAM) { try { OneSignal.User.addTags({ card: 'team', team_s: window.KCRM_TEAM_S || '' }); } catch (e) {} }
     });
 
     function isIOS() {
@@ -253,7 +257,8 @@
     function externalUrl() {
       const mine = getCrmId(), cid = mine || getPendingId();
       // 본인 확인을 마친 번호면 '방금 확인함(ok)'도 같이 → 옮겨간 브라우저에서 다시 묻지 않음
-      return location.origin + location.pathname + (cid ? '?c=' + encodeURIComponent(cid) + (mine ? '&ok=' + Date.now() : '') : '');
+      const sq = window.KCRM_TEAM && window.KCRM_TEAM_S ? 's=' + window.KCRM_TEAM_S : '';
+      return location.origin + location.pathname + (cid ? '?c=' + encodeURIComponent(cid) + (mine ? '&ok=' + Date.now() : '') + (sq ? '&' + sq : '') : (sq ? '?' + sq : ''));
     }
 
     // [추가] 앱 안 브라우저(네이버·인스타·밴드 등)에서 [알림받기]를 누르면 폰 기본 브라우저로 옮겨 열기
@@ -886,7 +891,9 @@
   </div>
 
   <script>
-    const PHONE = '01044443353';
+    let PHONE = '01044443353';
+    // 명함 주인 (대표 명함) — 직원 공용 명함(/team/)은 강CRM에 넣은 직원·매장 정보로 바뀜
+    let CARD_P = { name: '강태훈', title: '과장', role: '모바일 컨설턴트', phone: '01044443353', store: 'LGU+ 진천점', who: '강태훈 과장', vcfName: '강태훈_과장_LGU플러스', note: '정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.' };
 
     function switchTab(evt, tabName) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -900,22 +907,22 @@
       const vcardData = [
         'BEGIN:VCARD',
         'VERSION:3.0',
-        'N:강;태훈;;;과장',
-        'FN:강태훈 과장',
-        'ORG:LGU+ 진천점',
-        'TITLE:모바일 컨설턴트',
-        'TEL;TYPE=CELL:010-4444-3353',
+        CARD_P.name === '강태훈' ? 'N:강;태훈;;;과장' : `N:${CARD_P.name};;;;${CARD_P.title || ''}`,
+        `FN:${CARD_P.who}`,
+        `ORG:${CARD_P.store}`,
+        CARD_P.role ? `TITLE:${CARD_P.role}` : '',
+        `TEL;TYPE=${/^01/.test(CARD_P.phone) ? 'CELL' : 'WORK'}:${String(CARD_P.phone).replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, '$1-$2-$3')}`,
         'ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호\\,114호;;;;대한민국',
-        'URL:https://kanggun1983.github.io/',
-        'NOTE:정확한 분석과 명확한 가이드로 최적의 통신 솔루션을 약속드립니다.',
+        `URL:${location.origin}${location.pathname.replace(/index\.html$/, '')}`,
+        `NOTE:${CARD_P.note}`,
         'END:VCARD'
-      ].join('\r\n');
+      ].filter(Boolean).join('\r\n');
 
       const blob = new Blob([vcardData], { type: 'text/vcard;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = '강태훈_과장_LGU플러스.vcf';
+      link.download = CARD_P.vcfName + '.vcf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -954,15 +961,17 @@
        · 휴대폰 공유창(카톡·문자 등)으로 명함 주소를 보냄 · 공유창이 없는 브라우저는 [문자로 보내기 / 링크 복사] 창
        · 강CRM 고객이 보내면 주소에 ?r=명함번호 → 받은 사람이 견적요청하면 강CRM에 '🤝 ○○ 고객이 받은 명함으로 들어온 지인' */
     function cardShareUrl() {
-      const mine = getCrmId();
-      return location.origin + location.pathname.replace(/index\.html$/, '') + (mine ? '?r=' + encodeURIComponent(mine) : '');
+      const mine = getCrmId(), q = [];
+      if (mine) q.push('r=' + encodeURIComponent(mine));
+      if (window.KCRM_TEAM && window.KCRM_TEAM_S) q.push('s=' + window.KCRM_TEAM_S);   // 공용 명함: 같은 직원 명함으로
+      return location.origin + location.pathname.replace(/index\.html$/, '') + (q.length ? '?' + q.join('&') : '');
     }
-    const SHARE_TEXT = 'LGU+ 진천점 강태훈 과장 명함이에요.\n휴대폰·인터넷 무료 견적 받아보세요 👇';
+    const shareText = () => `${CARD_P.store} ${CARD_P.who === CARD_P.store ? '' : CARD_P.who + ' '}명함이에요.\n휴대폰·인터넷 무료 견적 받아보세요 👇`;
     async function shareCard() {
       if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') shareCard(); }); return; }   // 개인 링크 처음 연 폰: 본인 확인 먼저 (소개 기록이 맞게)
       const url = cardShareUrl();
       if (navigator.share) {
-        try { await navigator.share({ title: '강태훈 과장 디지털 명함 · LGU+ 진천점', text: SHARE_TEXT, url }); return; }
+        try { await navigator.share({ title: `${CARD_P.who} 디지털 명함 · ${CARD_P.store}`, text: shareText(), url }); return; }
         catch (e) { if (e && e.name === 'AbortError') return; }   // 고객이 공유창을 닫음
       }
       openShareSheet(url);
@@ -971,7 +980,7 @@
       const el = (id) => document.getElementById(id);
       el('shUrl').textContent = url;
       el('shSub').textContent = getCrmId() ? '가족·지인에게 보내주세요. 받은 분이 견적을 요청하면 소개해 주신 고객님으로 함께 기록돼요.' : '가족·지인에게 이 명함을 보내주세요.';
-      el('shSms').href = 'sms:' + (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(SHARE_TEXT + '\n' + url);
+      el('shSms').href = 'sms:' + (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(shareText() + '\n' + url);
       el('shCopy').innerHTML = '<i class="fa-regular fa-copy"></i> 링크 복사하기';
       el('shBack').style.display = 'flex';
     }
@@ -1035,7 +1044,8 @@
       if (!A || !A.url) return;
       try {
         fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
-          body: JSON.stringify({ who: String(who || '고객').slice(0, 20), summary: ((failed ? '⚠️ 강CRM 저장 실패·문자 확인 · ' : '') + String(summary || '')).slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
+          body: JSON.stringify({ who: String(who || '고객').slice(0, 20), summary: ((failed ? '⚠️ 강CRM 저장 실패·문자 확인 · ' : '') + String(summary || '')).slice(0, 80), crm: A.crm || '',
+            ...(window.KCRM_TEAM && window.KCRM_TEAM_P ? { to: String(window.KCRM_TEAM_P.key || window.KCRM_TEAM_P.name || '').slice(0, 20) } : {}) }) }).catch(() => {});   // [V3.8] 공용 명함: 보낸 직원 + 대표에게만
       } catch (e) {}
     }
     // [V3.0] 👀 관심 고객(등록 고객이 계산만 해보거나 견적을 보다 나감)도 직원 폰 푸시 — 강CRM 총관리자가 켰을 때만
@@ -1056,6 +1066,10 @@
     // [V2.8] 문서 번호(영문·숫자 20자)를 명함이 직접 만들어서 저장 — 서버가 정해주는 번호가 보안 규칙의 '20자 번호' 검사에 안 맞으면 저장이 거절됐음
     function cardDocId() { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', b = new Uint8Array(20); crypto.getRandomValues(b); return Array.from(b, x => A[x % A.length]).join(''); }
     async function cardSaveRequest(fields, keepalive) {
+      if (window.KCRM_TEAM && fields && fields.detail) {   // [V3.8] 직원 공용 명함에서 온 요청 표시
+        const P = window.KCRM_TEAM_P;
+        fields.detail = { stringValue: (String(fields.detail.stringValue || '') + `\n📇 명함: 공용 · ${P ? P.name : '매장'}${window.KCRM_TEAM_S ? ' (' + window.KCRM_TEAM_S + ')' : ''}`).slice(0, 1500) };
+      }
       for (let i = 0; i < 2; i++) {
         try {
           const r = await fetch(FS_BASE + 'card_requests?documentId=' + cardDocId() + '&key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }), keepalive: !!keepalive });
@@ -2152,7 +2166,7 @@
         localStorage.removeItem('kcrm_cid_pending'); localStorage.removeItem('kcrm_ref');
         if (ownWho) localStorage.setItem('kcrm_who', ownWho); else localStorage.removeItem('kcrm_who');
         // 아이폰 사파리: '홈 화면에 추가'한 앱이 다시 묻지 않게 주소에 '방금 확인함' 표시 (1시간)
-        if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + location.hash); } catch (e) {} }
+        if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + (window.KCRM_TEAM && window.KCRM_TEAM_S ? '&s=' + window.KCRM_TEAM_S : '') + location.hash); } catch (e) {} }   // [V3.8] 공용 명함은 보낸 직원(s)도 남김
         showWelcomeBack();
         try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
         try { if (typeof qtContactUi === 'function') qtContactUi(); } catch (e) {}
@@ -2290,6 +2304,63 @@
       // 지원금 정보가 도착하면 강CRM 설정(문구·켜고 끄기) 반영
       show();
       let tries = 0; const t = setInterval(() => { if ((typeof PC !== 'undefined' && PC.data) || ++tries > 40) { clearInterval(t); show(); } }, 250);
+    })();
+  </script>
+  <script>
+    /* [V3.8] 👥 직원 공용 명함 (/team/ · window.KCRM_TEAM)
+       · 주소 끝 s=직원번호 → 강CRM '직원 공용 명함' 설정(card_public/team)의 그 직원 이름·직함·번호·사진으로 보여줌
+       · 직원번호가 없거나, 총관리자가 그 직원을 '매장 정보로 보이기'(퇴사 등)로 바꿨으면 → 매장 이름 · 대표번호
+       · 대표 명함(/)에서는 아무것도 안 함 */
+    (function () {
+      if (!window.KCRM_TEAM) return;
+      let s = '';
+      try {
+        const q = new URLSearchParams(location.search).get('s') || '';
+        if (/^[a-z0-9]{3,12}$/.test(q)) { s = q; localStorage.setItem('kcrm_team_s', q); }
+        else s = localStorage.getItem('kcrm_team_s') || '';
+      } catch (e) {}
+      window.KCRM_TEAM_S = /^[a-z0-9]{3,12}$/.test(s) ? s : '';
+      const DEF = { name: 'LGU+ 진천점', phone: '01044443353', hours: '10:00 - 20:00 (연중무휴)' };
+      const dg = (p) => String(p || '').replace(/\D/g, '');
+      const fmt = (p) => { const d = dg(p); if (/^02/.test(d)) return d.replace(/^(02)(\d{3,4})(\d{4})$/, '$1-$2-$3'); return d.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3'); };
+      const ICON = '/card-icon-maskable-512.png?v=2';
+      function apply(store, prof) {
+        window.KCRM_TEAM_P = prof || null;
+        const phone = dg(prof && prof.phone) || dg(store.phone) || DEF.phone;
+        const who = prof ? `${prof.name}${prof.title ? ' ' + prof.title : ''}` : store.name;
+        PHONE = phone;
+        CARD_P = { name: prof ? prof.name : store.name, title: prof ? (prof.title || '') : '', role: prof ? (prof.role || '') : '', phone, store: store.name, who,
+          vcfName: (who + '_' + store.name).replace(/[^\w가-힣+]+/g, '_'), note: `${store.name} 휴대폰·인터넷 상담` };
+        const $ = (sel) => document.querySelector(sel);
+        const set = (sel, t) => { const el = $(sel); if (el) el.textContent = t; };
+        set('.brand-title', store.name);
+        set('.profile-name', who);
+        const img = document.getElementById('profileImg');
+        if (img) { img.src = (prof && prof.photo) || ICON; img.alt = who + ' 사진'; }
+        const items = document.querySelectorAll('.info-box .info-item');
+        if (items[0]) { items[0].querySelector('.label').textContent = prof ? '직통전화' : '대표전화'; items[0].querySelector('.value').textContent = fmt(phone); }
+        if (items[1]) items[1].querySelector('.value').textContent = store.name;
+        if (items[2]) items[2].querySelector('.value').textContent = store.hours || DEF.hours;
+        if (store.intro) { const ib = $('.intro-box'); if (ib) ib.textContent = store.intro; }
+        document.querySelectorAll('a[href^="tel:"]').forEach(a => { a.href = 'tel:' + phone; });
+        const agree = (id, t) => { const el = document.getElementById(id); if (el && el.parentNode) { const lb = el.parentNode; [...lb.childNodes].forEach(n => { if (n.nodeType === 3) lb.removeChild(n); }); lb.appendChild(document.createTextNode(t)); } };
+        const to = prof ? who + '에게' : who + '에';   // 매장이면 '진천점에'
+        agree('qtAgree', `견적 안내를 위해 이름·연락처와 고른 조건을 ${to} 보내는 데 동의해요`);
+        agree('pcAgree', `상담을 위해 이름·연락처와 계산한 조건을 ${to} 보내는 데 동의해요`);
+        document.title = `${who === store.name ? '' : who + ' · '}${store.name} 명함`;
+      }
+      apply(DEF, null);   // 불러오기 전엔 매장 정보 (대표 이름이 잠깐 보이지 않게)
+      fetch(FS_BASE + 'card_public/team?key=' + FS_KEY, { cache: 'no-store' })
+        .then(r => r.ok ? r.json() : null)
+        .then(j => {
+          let d = null; try { d = j && j.fields && j.fields.json ? JSON.parse(j.fields.json.stringValue) : null; } catch (e) { d = null; }
+          const store = Object.assign({}, DEF), raw = (d && d.store) || {};
+          Object.keys(raw).forEach(k => { if (String(raw[k] || '').trim()) store[k] = String(raw[k]).trim(); });   // 강CRM에서 비워둔 칸은 기본값으로
+          if (!dg(store.phone)) store.phone = DEF.phone;
+          const p = d && d.staff && window.KCRM_TEAM_S ? d.staff[window.KCRM_TEAM_S] : null;
+          apply(store, p && p.name && p.active !== false ? p : null);
+        })
+        .catch(() => {});
     })();
   </script>
 </body>
