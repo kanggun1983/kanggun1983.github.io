@@ -40,7 +40,8 @@
         var isChrome = /Chrome\/\d/.test(ua) && !/SamsungBrowser|Whale|EdgA|OPR\/|Firefox|YaBrowser|DuckDuckGo/i.test(ua) && !inApp;
         var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
         var okp = /^\d{10,14}$/.test(params.get('ok') || '') ? '&ok=' + params.get('ok') : '';   // 방금 본인 확인한 표시도 같이 넘김
-        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : '') + (/^#pn=/.test(location.hash) ? location.hash : '');
+        var r0 = params.get('r') || '';   // [V2.9] 공유받은 명함(?r=)도 같이 넘김
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (/^#pn=/.test(location.hash) ? location.hash : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
           window.KCRM_LEAVING = true;
@@ -115,6 +116,19 @@
           params.delete('stay');
           const q0 = params.toString();
           history.replaceState(null, '', location.pathname + (q0 ? '?' + q0 : '') + location.hash);
+        }
+        // [V2.9] 고객이 [명함 공유하기]로 보낸 주소(?r=명함번호) → 받은 사람은 새 손님 + '지인 소개'로 (본인 확인 없이)
+        const rid = params.get('r');
+        if (rid !== null) {
+          if (/^[A-Za-z0-9_-]{2,40}$/.test(rid) && !window.KCRM_STAFF && !window.KCRM_LEAVING && !params.get('c')) {
+            const mine0 = localStorage.getItem('kcrm_cid') || '';
+            if (!mine0 && rid !== mine0) localStorage.setItem('kcrm_ref', rid);
+          }
+          if (!window.KCRM_LEAVING) {
+            params.delete('r');
+            const qr = params.toString();
+            history.replaceState(null, '', location.pathname + (qr ? '?' + qr : '') + location.hash);
+          }
         }
         const cid = params.get('c');
         if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF) {
@@ -245,7 +259,15 @@
     //   안드로이드: intent 주소로 바로 열기 → 안 열리면 주소를 복사해두고 안내
     //   아이폰: 앱 안에서는 Safari로 옮길 수 없어서 주소를 복사해두고 안내
     function copyText(text) {
-      try { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text); return true; } } catch (e) {}
+      try { if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(text).catch(function () {}); return true; } } catch (e) {}
+      return copyTextOld(text);
+    }
+    // [V2.9] 복사가 실제로 됐는지 기다려서 알려줌 (안 되면 예전 방식으로 한 번 더)
+    async function copyTextAsync(text) {
+      try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); return true; } } catch (e) {}
+      return copyTextOld(text);
+    }
+    function copyTextOld(text) {
       try {
         const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
         document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); document.body.removeChild(ta); return ok;
@@ -366,6 +388,13 @@
     .btn-vcard { width: 100%; padding: 16px; background: var(--lgu-pink); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(230,0,126,0.35); margin-bottom: 16px; text-decoration: none; }
     .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
     .btn-row .btn-vcard { margin-bottom: 0; font-size: 14px; padding: 14px 8px; box-shadow: none; }
+    .btn-row-main { margin-bottom: 16px; }
+    .btn-row-main .btn-vcard { font-size: 16px; padding: 16px 6px; box-shadow: 0 4px 14px rgba(230,0,126,0.3); white-space: nowrap; }
+    .btn-row-main .btn-share { background: #fff; color: var(--lgu-pink); border: 2px solid var(--lgu-pink); box-shadow: none; padding: 14px 6px; }
+    .btn-row-main .btn-share:active { background: #fde8f3; }
+    .sh-btn { width: 100%; height: 54px; border-radius: 16px; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; border: 2px solid #e2e8f0; background: #fff; color: var(--text-main); text-decoration: none; }
+    .sh-btn.pri { border: 0; background: linear-gradient(110deg, #e6007e, #a8005b); color: #fff; }
+    .sh-url { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; word-break: break-all; margin-top: 4px; }
     .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
     .action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 2px; background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; text-decoration: none; color: var(--text-main); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .action-btn:hover { background: #f1f5f9; }
@@ -488,6 +517,11 @@
     .bs .opts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .bs .opt { height: 46px; border-radius: 12px; border: 2px solid #e2e8f0; background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: var(--text-main); cursor: pointer; }
     .bs .opt.on { border-color: #4f46e5; background: #eef2ff; color: #3730a3; }
+    .bs .opts2 { grid-template-columns: 1fr 1fr; }
+    .bs .opt.wide { grid-column: 1 / -1; }
+    .bs textarea { width: 100%; margin-top: 8px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 15px; line-height: 1.5; resize: none; }
+    .bs .cnt { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .bs .cnt b { color: #4f46e5; font-weight: 700; }
     .bs input[type=text], .bs input[type=tel] { width: 100%; height: 48px; border: 1px solid #cbd5e1; border-radius: 12px; padding: 0 12px; font: inherit; font-size: 16px; }
     .bs .agree { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text-sub); margin-top: 10px; line-height: 1.5; }
     .bs .go { width: 100%; height: 54px; border: 0; border-radius: 16px; background: linear-gradient(110deg, #3b82f6, #4f46e5); color: #fff; font: inherit; font-size: 17px; font-weight: 800; margin-top: 16px; cursor: pointer; }
@@ -562,9 +596,14 @@
           </div>
         </div>
 
-        <button class="btn-vcard" onclick="downloadVCard()">
-          <i class="fa-solid fa-address-card"></i> 명함저장
-        </button>
+        <div class="btn-row btn-row-main">
+          <button class="btn-vcard" onclick="downloadVCard()">
+            <i class="fa-solid fa-address-card"></i> 명함저장
+          </button>
+          <button class="btn-vcard btn-share" onclick="shareCard()">
+            <i class="fa-solid fa-share-nodes"></i> 명함 공유하기
+          </button>
+        </div>
 
         <button class="btn-vcard" style="background: #334155;" onclick="requestNotificationPermission()">
           <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
@@ -671,7 +710,7 @@
           </div>
 
           <div class="qt-box">
-            <div id="qtKnown" class="pc-sub" style="display:none; margin-top:0;">등록된 연락처로 견적을 보내드릴게요.</div>
+            <div id="qtKnown" class="pc-sub" style="display:none; margin-top:16px;"><i class="fa-solid fa-circle-check" style="color:var(--lgu-pink)"></i> 등록된 연락처로 견적을 보내드릴게요.</div>
             <div id="qtNewContact">
               <div class="pc-two">
                 <div><div class="pc-sub" style="margin-top:0;">이름 (선택)</div><input class="pc-in" id="qtName" autocomplete="name" placeholder="예) 홍길동"></div>
@@ -857,6 +896,31 @@
     function smsTo(body) {
       const sep = isIOS() ? '&' : '?';
       location.href = `sms:${PHONE}${sep}body=${encodeURIComponent(body)}`;
+    }
+    /* [V2.9] 📤 명함 공유하기
+       · 휴대폰 공유창(카톡·문자 등)으로 명함 주소를 보냄 · 공유창이 없는 브라우저는 [문자로 보내기 / 링크 복사] 창
+       · 강CRM 고객이 보내면 주소에 ?r=명함번호 → 받은 사람이 견적요청하면 강CRM에 '🤝 ○○ 고객이 받은 명함으로 들어온 지인' */
+    function cardShareUrl() {
+      const mine = getCrmId();
+      return location.origin + location.pathname.replace(/index\.html$/, '') + (mine ? '?r=' + encodeURIComponent(mine) : '');
+    }
+    const SHARE_TEXT = 'LGU+ 진천점 강태훈 과장 명함이에요.\n휴대폰·인터넷 무료 견적 받아보세요 👇';
+    async function shareCard() {
+      if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') shareCard(); }); return; }   // 개인 링크 처음 연 폰: 본인 확인 먼저 (소개 기록이 맞게)
+      const url = cardShareUrl();
+      if (navigator.share) {
+        try { await navigator.share({ title: '강태훈 과장 디지털 명함 · LGU+ 진천점', text: SHARE_TEXT, url }); return; }
+        catch (e) { if (e && e.name === 'AbortError') return; }   // 고객이 공유창을 닫음
+      }
+      openShareSheet(url);
+    }
+    function openShareSheet(url) {
+      const el = (id) => document.getElementById(id);
+      el('shUrl').textContent = url;
+      el('shSub').textContent = getCrmId() ? '가족·지인에게 보내주세요. 받은 분이 견적을 요청하면 소개해 주신 고객님으로 함께 기록돼요.' : '가족·지인에게 이 명함을 보내주세요.';
+      el('shSms').href = 'sms:' + (isIOS() ? '&' : '?') + 'body=' + encodeURIComponent(SHARE_TEXT + '\n' + url);
+      el('shCopy').innerHTML = '<i class="fa-regular fa-copy"></i> 링크 복사하기';
+      el('shBack').style.display = 'flex';
     }
     function openSms() {
       const cid = getCrmId();
@@ -1626,6 +1690,14 @@
       <div class="opts" id="bsProd"></div>
       <span class="lab">지금 쓰는 인터넷</span>
       <div class="opts" id="bsNow"></div>
+      <span class="lab">원하는 통신사</span>
+      <div class="opts" id="bsWant"></div>
+      <span class="lab">문의사항</span>
+      <div class="opts opts2" id="bsMemoMode"></div>
+      <div id="bsMemoWrap" style="display:none">
+        <textarea id="bsMemo" maxlength="255" rows="4" placeholder="원하는 속도(500M·1G), TV 채널, 설치 희망일, 지금 약정 끝나는 때 등 자세할수록 혜택 계산에 도움이 돼요."></textarea>
+        <div class="cnt"><b id="bsMemoN">0</b> / 255자</div>
+      </div>
       <div id="bsWho">
         <span class="lab">연락받을 번호</span>
         <input type="tel" id="bsTel" inputmode="tel" placeholder="010-0000-0000" autocomplete="tel">
@@ -1639,6 +1711,31 @@
       <p id="bsDone" style="display:none;text-align:center;font-weight:700;color:#3730a3;padding:14px 0"></p>
     </div>
   </div>
+
+  <!-- [V2.9] 📤 명함 공유하기 (휴대폰 공유창이 없을 때) -->
+  <div class="bs-back" id="shBack" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="shTitle" style="flex:1">📤 명함 공유하기</h3><button type="button" id="shClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p class="sub" id="shSub">가족·지인에게 이 명함을 보내주세요.</p>
+      <div class="sh-url" id="shUrl"></div>
+      <a class="sh-btn pri" id="shSms" href="#"><i class="fa-solid fa-comment-sms"></i> 문자로 보내기</a>
+      <button type="button" class="sh-btn" id="shCopy"><i class="fa-regular fa-copy"></i> 링크 복사하기</button>
+      <p class="sub" style="text-align:center;margin-top:10px">카카오톡은 링크를 복사해서 대화창에 붙여넣어 주세요.</p>
+    </div>
+  </div>
+  <script>
+    (function () {
+      const el = (id) => document.getElementById(id);
+      const close = () => { el('shBack').style.display = 'none'; };
+      el('shClose').onclick = close;
+      el('shBack').addEventListener('click', (e) => { if (e.target === el('shBack')) close(); });
+      el('shCopy').onclick = async () => {
+        const ok = await copyTextAsync(el('shUrl').textContent);
+        el('shCopy').innerHTML = ok ? '<i class="fa-solid fa-check"></i> 복사했어요! 카톡·문자에 붙여넣기' : '복사가 안 돼요. 위 주소를 길게 눌러 복사해 주세요';
+      };
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    })();
+  </script>
 
   <!-- [V2.5] 명함 본인 확인 (지인에게 받은 링크로 열면 원래 고객으로 연결되지 않게) -->
   <div class="bs-back" id="ownBack" role="dialog" aria-modal="true" aria-labelledby="ownTitle" style="z-index:1200">
@@ -1733,11 +1830,26 @@
     (function () {
       if (window.KCRM_STAFF) return;
       const $ = (id) => document.getElementById(id);
-      const B = { prod: '인터넷+TV', now: '모름' };
-      function opts(id, key, list) {
+      const B = { prod: '인터넷+TV', now: '모름', want: '추천해 주세요', memoMode: 'later' };
+      const BS_MEMO = [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']];
+      function opts(id, key, list, wide) {
         const box = $(id); box.innerHTML = '';
-        list.forEach(v => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt' + (B[key] === v ? ' on' : ''); b.textContent = v; b.onclick = () => { B[key] = v; opts(id, key, list); }; box.appendChild(b); });
+        list.forEach(item => {
+          const [label, v] = Array.isArray(item) ? item : [item, item];
+          const b = document.createElement('button'); b.type = 'button';
+          b.className = 'opt' + (B[key] === v ? ' on' : '') + (wide && wide.includes(v) ? ' wide' : '');
+          b.setAttribute('aria-pressed', B[key] === v ? 'true' : 'false');
+          b.textContent = label;
+          b.onclick = () => { B[key] = v; opts(id, key, list, wide); if (key === 'memoMode') memoUi(true); };
+          box.appendChild(b);
+        });
       }
+      function memoUi(focus) {
+        const on = B.memoMode === 'now';
+        $('bsMemoWrap').style.display = on ? 'block' : 'none';
+        if (on && focus) setTimeout(() => $('bsMemo').focus(), 50);
+      }
+      $('bsMemo').addEventListener('input', () => { $('bsMemoN').textContent = String($('bsMemo').value.length); });
       function conf() {
         const d = (typeof PC !== 'undefined' && PC.data && PC.data.banner) || {};
         return { on: d.on !== false, title: d.title || '인터넷+TV 가입', sub: d.sub || '최대 현금 지원', icon: d.icon || 'fa-tv' };
@@ -1754,6 +1866,9 @@
         $('bsTitle').textContent = c.title + ' 상담';
         opts('bsProd', 'prod', ['인터넷', '인터넷+TV', 'TV만']);
         opts('bsNow', 'now', ['SK', 'KT', 'LG', '케이블', '없음', '모름']);
+        opts('bsWant', 'want', ['SK', 'KT', 'LG', '추천해 주세요'], ['추천해 주세요']);
+        opts('bsMemoMode', 'memoMode', BS_MEMO);
+        memoUi(false);
         $('bsWho').style.display = getCrmId() ? 'none' : 'block';
         $('bsErr').textContent = ''; $('bsDone').style.display = 'none'; $('bsGo').style.display = 'block'; $('bsGo').disabled = false;
         $('bsBack').style.display = 'flex';
@@ -1771,8 +1886,17 @@
           if (!$('bsAgree').checked) { $('bsErr').textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
           Object.assign(extra, { phone: tel, name: $('bsName').value.trim().slice(0, 20), agree: 'Y' });
         }
-        const summary = `🏠 ${B.prod} 가입 상담 · 지금 ${B.now}`;
-        Object.assign(extra, { summary, detail: `희망: ${B.prod} 가입\n지금 쓰는 인터넷: ${B.now}\n(명함 아래 배너 '${conf().title}'에서 신청)` });
+        const want = B.want === '추천해 주세요' ? '추천' : B.want;
+        const memo = B.memoMode === 'now' ? $('bsMemo').value.trim().slice(0, 255) : '';
+        const summary = `🏠 ${B.prod} 가입 상담 · 지금 ${B.now} → ${want}${memo ? ' · 문의 있음' : ''}`;
+        const lines = [
+          `희망: ${B.prod} 가입`,
+          `지금 쓰는 인터넷: ${B.now}`,
+          `원하는 통신사: ${B.want}`,
+          `문의: ${memo || '상담 때 이야기할게요'}`,
+          `(명함 아래 배너 '${conf().title}'에서 신청)`
+        ];
+        Object.assign(extra, { summary, detail: lines.join('\n') });
         $('bsGo').disabled = true; $('bsGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
         const res = await pcSend('ask', extra);
         $('bsGo').innerHTML = '<i class="fa-solid fa-paper-plane"></i> 상담 신청하기';
@@ -1787,7 +1911,7 @@
           $('bsErr').textContent = `신청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
           cardAlertStaff(cardWho(extra), summary, true);   // 저장은 안 됐어도 직원 폰에는 알림
           const cid = getCrmId();
-          smsTo([`[명함배너${cid ? '/' + cid : ''}] ${summary}`].join('\n'));
+          smsTo([`[명함배너${cid ? '/' + cid : ''}] ${summary}`, ...lines.slice(0, 4)].join('\n'));
         }
       };
       document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeSheet(); });
