@@ -378,6 +378,30 @@
     button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
     #chatbase-bubble-button { display: none !important; }
 
+    /* ===== 견적요청 (고객용 간단 양식) ===== */
+    .qt-box { border-top: 8px solid #f1f5f9; margin: 18px -20px 0; padding: 4px 20px 2px; }
+    .qt-box:first-of-type { border-top: none; margin-top: 6px; padding-top: 0; }
+    .qt-lb { font-size: 15px; font-weight: 800; color: var(--text-main); margin: 18px 0 10px; display: flex; align-items: center; gap: 8px; }
+    .qt-lb2 { font-size: 13px; font-weight: 700; color: var(--text-main); margin: 14px 0 8px; }
+    .qt-opt { font-size: 12px; font-weight: 600; color: #94a3b8; }
+    .qt-help { font-size: 12px; color: var(--text-sub); margin: -4px 0 10px; line-height: 1.5; word-break: keep-all; }
+    .qt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .qt-chip { min-height: 42px; padding: 0 15px; border: 1px solid #cbd5e1; border-radius: 9999px; background: #fff; font: inherit; font-size: 14px; font-weight: 600; color: var(--text-main); cursor: pointer; }
+    .qt-chip.on { background: var(--lgu-dark); border-color: var(--lgu-dark); color: #fff; font-weight: 800; }
+    .qt-price { font-size: 13px; color: var(--text-sub); margin-top: 6px; }
+    .qt-price b { color: var(--text-main); }
+    .qt-route { font-size: 13px; font-weight: 800; color: var(--lgu-pink); margin-top: 8px; min-height: 1em; }
+    .qt-ta { margin-top: 10px; resize: none; line-height: 1.5; font: inherit; font-size: 14px; }
+    .qt-count { text-align: right; font-size: 12px; color: #94a3b8; margin-top: 4px; }
+    .qt-count b { color: var(--lgu-pink); font-weight: 700; }
+    .qt-go { margin-top: 14px !important; }
+    .qt-more { width: 100%; margin: 18px 0 4px; padding: 13px 12px; border: 1px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; font: inherit; font-size: 13.5px; font-weight: 700; color: var(--text-sub); cursor: pointer; }
+    .qt-more .qt-chev { margin-left: 4px; transition: transform .2s; }
+    .qt-more[aria-expanded="true"] .qt-chev { transform: rotate(180deg); }
+    #pcHolder { display: none; }
+    #pcHolder.open { display: block; margin-top: 8px; }
+    body.kc-staff #qtBody { display: none !important; }
+    body.kc-staff #pcHolder { display: block !important; }
     /* ===== 폰값계산 탭 ===== */
     .pc-intro { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 4px; word-break: keep-all; }
     .pc-lb { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
@@ -510,7 +534,7 @@
     <div class="tab-menu">
       <button class="tab-btn active" onclick="switchTab(event, 'profile')">프로필</button>
       <button class="tab-btn" onclick="switchTab(event, 'services')">주요 서비스</button>
-      <button class="tab-btn" onclick="switchTab(event, 'calc')">폰값계산</button>
+      <button class="tab-btn" id="calcTabBtn" onclick="switchTab(event, 'calc')">견적요청</button>
       <button class="tab-btn" onclick="switchTab(event, 'location')">오시는 길</button>
     </div>
 
@@ -602,8 +626,68 @@
         </div>
       </div>
 
-      <!-- 탭 3: 폰값계산 -->
+      <!-- 탭 3: 견적요청 (고객) · 직원(강CRM)은 예전 폰값계산 그대로 -->
       <div id="tab-calc" class="tab-content">
+        <div id="qtBody">
+          <p class="pc-intro">원하시는 조건만 골라주세요. 담당자가 <b style="color:var(--text-main)">가장 좋은 조건으로 견적</b>을 보내드려요.</p>
+
+          <div class="qt-box">
+            <div class="qt-lb">휴대폰 기종<span class="pc-brand" id="qtBrand" role="group" aria-label="제조사"></span></div>
+            <select class="pc-sel" id="qtModel" aria-label="휴대폰 기종"></select>
+            <input class="pc-in" id="qtModelText" placeholder="원하시는 기종 (예: 갤럭시 S26)" style="display:none">
+            <div class="qt-price" id="qtPrice"></div>
+            <div class="qt-lb2">용량</div>
+            <div class="qt-chips" id="qtCap" role="radiogroup" aria-label="용량"></div>
+            <div class="qt-lb2">색상 <span class="qt-opt">(선택)</span></div>
+            <div class="qt-chips" id="qtColor" role="radiogroup" aria-label="색상"></div>
+          </div>
+
+          <div class="qt-box">
+            <div class="qt-lb">지금 쓰는 통신사</div>
+            <div class="qt-chips" id="qtNow" role="radiogroup" aria-label="지금 쓰는 통신사"></div>
+            <div class="qt-lb">원하는 통신사</div>
+            <div class="qt-chips" id="qtCar" role="radiogroup" aria-label="원하는 통신사"></div>
+            <div class="qt-route" id="qtRoute"></div>
+            <div class="qt-lb">기기값 할부</div>
+            <div class="qt-chips" id="qtIns" role="radiogroup" aria-label="기기값 할부"></div>
+            <div class="qt-lb">지금 내는 월 요금 <span class="qt-opt">(선택)</span></div>
+            <div class="qt-chips" id="qtFee" role="radiogroup" aria-label="지금 내는 월 요금"></div>
+            <div class="qt-lb">원하는 할인 방식</div>
+            <p class="qt-help">공통 지원금은 기기값을 할인받고, 선택 약정은 매달 요금의 25%를 할인받아요.</p>
+            <div class="qt-chips" id="qtDisc" role="radiogroup" aria-label="원하는 할인 방식"></div>
+          </div>
+
+          <div class="qt-box">
+            <div class="qt-lb">개통 원하시는 때</div>
+            <select class="pc-sel" id="qtWhen" aria-label="개통 원하시는 때"></select>
+            <div class="qt-lb">지역</div>
+            <select class="pc-sel" id="qtRegion" aria-label="지역"></select>
+            <div class="qt-lb">문의사항</div>
+            <div class="qt-chips" id="qtMemoMode" role="radiogroup" aria-label="문의사항"></div>
+            <div id="qtMemoWrap" style="display:none">
+              <textarea class="pc-in qt-ta" id="qtMemo" maxlength="255" rows="4" placeholder="원하는 요금제, 제휴카드, 기기 보상(반납) 등 자세할수록 견적에 도움이 돼요."></textarea>
+              <div class="qt-count"><b id="qtMemoN">0</b> / 255자</div>
+            </div>
+          </div>
+
+          <div class="qt-box">
+            <div id="qtKnown" class="pc-sub" style="display:none; margin-top:0;">등록된 연락처로 견적을 보내드릴게요.</div>
+            <div id="qtNewContact">
+              <div class="pc-two">
+                <div><div class="pc-sub" style="margin-top:0;">이름 (선택)</div><input class="pc-in" id="qtName" autocomplete="name" placeholder="예) 홍길동"></div>
+                <div><div class="pc-sub" style="margin-top:0;">연락받을 번호</div><input class="pc-in" id="qtTel" type="tel" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000"></div>
+              </div>
+              <label class="pc-agree"><input type="checkbox" id="qtAgree">견적 안내를 위해 이름·연락처와 고른 조건을 강태훈 과장에게 보내는 데 동의해요</label>
+            </div>
+            <div class="pc-warn" id="qtErr" role="alert"></div>
+            <button class="btn-vcard qt-go" id="qtGo" onclick="qtRequest()"><i class="fa-solid fa-paper-plane"></i> 무료 견적 받기</button>
+            <div id="qtDone" class="pc-done" style="display:none;" role="status"></div>
+            <p class="pc-privacy">고른 조건은 견적을 위해 담당자에게만 전달돼요.</p>
+          </div>
+
+          <button type="button" class="qt-more" id="pcToggle" aria-expanded="false" aria-controls="pcHolder"><i class="fa-solid fa-calculator"></i> 월 납부액 직접 계산해 보기 · 알뜰유심 추천 <i class="fa-solid fa-chevron-down qt-chev"></i></button>
+        </div>
+        <div id="pcHolder">
         <p class="pc-intro">몇 번만 눌러 보시면 매달 내실 금액을 바로 확인할 수 있어요.</p>
         <div id="pcBody">
           <div class="pc-lb"><b>1</b>지금 쓰는 통신사</div>
@@ -680,6 +764,7 @@
             <div id="pcDone" class="pc-done" style="display:none;" role="status"></div>
             <p class="pc-privacy" id="pcPrivacy">계산한 조건은 상담을 위해 담당자에게만 전달돼요.</p>
           </div>
+        </div>
         </div>
       </div>
 
@@ -1221,13 +1306,180 @@
     document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') pcLogCalc(false); });
     window.addEventListener('pagehide', () => pcLogCalc(true));
 
+
+    /* =====================================================================
+       📱 견적요청 (고객용 간단 양식) — 기종·용량·통신사·할부·할인 방식만 골라서 '무료 견적 받기'
+       · 강CRM에는 예전처럼 '상담요청'으로 들어가요 (요약 맨 앞 📱 견적요청)
+       · 월 납부액 계산기는 아래 [월 납부액 직접 계산해 보기]로 그대로 쓸 수 있어요 · 강CRM 안(직원용)은 계산기 그대로
+       ===================================================================== */
+    const QT = { brand: '', model: '', cap: '', color: '', now: '', car: '추천', ins: '24개월 할부', fee: '', disc: '상담이 필요해요', memoMode: 'later', sent: false, groups: [], noData: false };
+    const QT_OPTIONAL = new Set(['color', 'fee']);
+    const qtBrandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
+    const QT_CAP_RE = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;   // 'iPhone 17 256GB (New)'처럼 용량이 가운데 있어도
+    function qtCapBytes(c) { const m = /(\d+(?:\.\d+)?)\s*(GB|TB|G|T)/i.exec(c || ''); return m ? parseFloat(m[1]) * (/t/i.test(m[2]) ? 1024 : 1) : 0; }
+    function qtBuildGroups() {
+      const D = PC.data, map = new Map();
+      Object.values((D && D.carriers) || {}).forEach(C => {
+        if (!C || !C.ready || C.hidden || !Array.isArray(C.models)) return;
+        C.models.forEach(m => {
+          const nm = String(m.name || '').trim(); if (!nm) return;
+          const cm = QT_CAP_RE.exec(nm), base = cm ? nm.replace(QT_CAP_RE, ' ').replace(/\s+/g, ' ').trim() : nm, cap = cm ? cm[1] + cm[2].toUpperCase() : '';   // 용량 표시가 없는 이름 = 기본 용량
+          if (!map.has(base)) map.set(base, { base, brand: qtBrandOf(nm), caps: new Map() });
+          const g = map.get(base);
+          if (!g.caps.has(cap)) g.caps.set(cap, Number(m.price) || 0);
+        });
+      });
+      QT.groups = [...map.values()].map(g => ({ ...g, caps: [...g.caps.entries()].sort((a, b) => qtCapBytes(a[0]) - qtCapBytes(b[0])) }));   // '' (기본)이 맨 앞
+      QT.noData = !QT.groups.length;
+    }
+    function qtChips(id, items, key) {
+      const el = pcEl(id); if (!el) return; el.innerHTML = '';
+      items.forEach(([label, val]) => {
+        const b = document.createElement('button');
+        b.type = 'button'; b.className = 'qt-chip' + (QT[key] === val ? ' on' : ''); b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', QT[key] === val ? 'true' : 'false');
+        b.textContent = label;
+        b.onclick = () => { QT[key] = (QT[key] === val && QT_OPTIONAL.has(key)) ? '' : val; qtRender(); };
+        el.appendChild(b);
+      });
+    }
+    const qtCarNorm = (c) => String(c || '').replace(/\s+/g, '').replace('LGU+', 'LGU+').toUpperCase();
+    function qtRoute() {
+      if (!QT.now || QT.car === '추천') return '';
+      if (QT.now === '새 번호') return '신규가입';
+      if (QT.now !== '알뜰폰' && qtCarNorm(QT.now) === qtCarNorm(QT.car)) return '기기변경';
+      return `${QT.now} → ${QT.car} 번호이동`;
+    }
+    function qtContactUi() {
+      const known = !!getCrmId();
+      pcEl('qtKnown').style.display = known ? 'block' : 'none';
+      pcEl('qtNewContact').style.display = known ? 'none' : 'block';
+    }
+    function qtRender() {
+      if (window.KCRM_STAFF) return;
+      // 기종
+      const sel = pcEl('qtModel'), txt = pcEl('qtModelText'), bEl = pcEl('qtBrand');
+      if (QT.noData) {
+        sel.style.display = 'none'; txt.style.display = 'block'; bEl.innerHTML = ''; pcEl('qtPrice').textContent = '';
+        pcEl('qtCap').innerHTML = ''; pcEl('qtCap').previousElementSibling.style.display = 'none';
+      } else {
+        sel.style.display = 'block'; txt.style.display = 'none';
+        const brands = ['삼성', '애플', '기타'].filter(b => QT.groups.some(g => g.brand === b));
+        if (!brands.includes(QT.brand)) QT.brand = brands[0];
+        bEl.innerHTML = '';
+        if (brands.length > 1) brands.forEach(b => {
+          const btn = document.createElement('button'); btn.type = 'button'; btn.textContent = b; btn.className = QT.brand === b ? 'on' : ''; btn.setAttribute('aria-pressed', QT.brand === b ? 'true' : 'false');
+          btn.onclick = () => { if (QT.brand === b) return; QT.brand = b; QT.model = ''; QT.cap = ''; qtRender(); };
+          bEl.appendChild(btn);
+        });
+        const list = QT.groups.filter(g => brands.length < 2 || g.brand === QT.brand);
+        if (!list.some(g => g.base === QT.model)) { QT.model = list[0] ? list[0].base : ''; QT.cap = ''; }
+        sel.innerHTML = ''; list.forEach(g => sel.add(new Option(g.base, g.base))); sel.value = QT.model;
+        const g = list.find(x => x.base === QT.model);
+        const caps = g ? g.caps : [];
+        if (!caps.some(c => c[0] === QT.cap)) QT.cap = caps[0] ? caps[0][0] : '';
+        const capLb = pcEl('qtCap').previousElementSibling;
+        const showCaps = caps.length > 1 || (caps[0] && caps[0][0]);
+        capLb.style.display = showCaps ? 'block' : 'none';
+        qtChips('qtCap', showCaps ? caps.map(c => [c[0] ? c[0].replace(/B$/, '') : '기본 용량', c[0]]) : [], 'cap');
+        const price = (caps.find(c => c[0] === QT.cap) || [])[1] || 0;
+        QT.price = price;
+        pcEl('qtPrice').innerHTML = price ? `출고가 <b>${won(price)}</b>` : '';
+      }
+      qtChips('qtColor', [['블랙 계열', '블랙 계열'], ['화이트·실버', '화이트·실버'], ['컬러', '컬러'], ['상담 때 정할게요', '상담 때 정할게요']], 'color');
+      qtChips('qtNow', [['SKT', 'SKT'], ['KT', 'KT'], ['LG U+', 'LG U+'], ['알뜰폰', '알뜰폰'], ['새 번호', '새 번호']], 'now');
+      const cars = Object.keys((PC.data && PC.data.carriers) || {}).length ? Object.keys(PC.data.carriers) : ['LG U+', 'KT', 'SKT'];
+      const order = ['LG U+', 'KT', 'SKT'];
+      cars.sort((a, b) => (order.indexOf(a) + 1 || 9) - (order.indexOf(b) + 1 || 9));
+      qtChips('qtCar', [...cars.map(c => [c, c]), ['추천해 주세요', '추천']], 'car');
+      pcEl('qtRoute').textContent = qtRoute() ? '가입 유형: ' + qtRoute() : '';
+      qtChips('qtIns', [['36개월 할부', '36개월 할부'], ['24개월 할부', '24개월 할부'], ['12개월 할부', '12개월 할부'], ['일시불', '일시불'], ['상담이 필요해요', '할부 상담 필요']], 'ins');
+      qtChips('qtFee', [['3만원 이하', '3만원 이하'], ['3~5만원', '3~5만원'], ['5~7만원', '5~7만원'], ['7~10만원', '7~10만원'], ['10만원 이상', '10만원 이상']], 'fee');
+      qtChips('qtDisc', [['공통 지원금', '공통 지원금'], ['선택 약정', '선택 약정'], ['상담이 필요해요', '상담이 필요해요']], 'disc');
+      qtChips('qtMemoMode', [['상담 때 이야기할게요', 'later'], ['지금 적을게요', 'now']], 'memoMode');
+      pcEl('qtMemoWrap').style.display = QT.memoMode === 'now' ? 'block' : 'none';
+      qtContactUi();
+    }
+    function qtInit() {
+      if (window.KCRM_STAFF) return;
+      qtBuildGroups();
+      const fill = (id, ph, items) => { const el = pcEl(id); el.innerHTML = ''; el.add(new Option(ph, '')); items.forEach(t => el.add(new Option(t, t))); };
+      fill('qtWhen', '선택해 주세요', ['최대한 빨리', '이번 주 안', '다음 주', '이번 달 안', '다음 달 이후', '아직 알아보는 중']);
+      fill('qtRegion', '선택해 주세요', ['대구 달서구', '대구 (다른 구)', '경북', '그 밖 지역']);
+      pcEl('qtModel').onchange = (e) => { QT.model = e.target.value; QT.cap = ''; qtRender(); };
+      pcEl('qtMemo').oninput = (e) => { pcEl('qtMemoN').textContent = String(e.target.value.length); };
+      ['qtTel', 'qtAgree', 'qtModelText'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('qtErr').textContent = ''; }));
+      const tg = pcEl('pcToggle');
+      tg.onclick = () => { const h = pcEl('pcHolder'), open = !h.classList.contains('open'); h.classList.toggle('open', open); tg.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open) setTimeout(() => h.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50); };
+      qtRender();
+    }
+    async function qtSend(extra) {
+      const data = { kind: 'ask', cid: getCrmId() || '', name: '', phone: '', agree: '', summary: '', detail: '', at: new Date().toISOString(), ...extra };
+      const ref = getRefId();
+      if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로
+      const fields = {};
+      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
+      try {
+        const r = await fetch(FS_BASE + 'card_requests?key=' + FS_KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fields }) });
+        return r.ok ? 'ok' : String(r.status);
+      } catch (e) { return 'net'; }
+    }
+    async function qtRequest() {
+      const err = pcEl('qtErr'), btn = pcEl('qtGo');
+      err.textContent = '';
+      if (QT.sent || window.KCRM_STAFF) return;
+      if (getPendingId()) { showOwnerSheet(function (ans) { qtContactUi(); if (ans === 'yes') qtRequest(); }); return; }
+      const model = QT.noData ? pcEl('qtModelText').value.trim().slice(0, 40) : QT.model;
+      if (!model) { err.textContent = '원하시는 기종을 골라주세요.'; return; }
+      const extra = {};
+      if (!getCrmId()) {
+        const tel = pcEl('qtTel').value.replace(/\D/g, '');
+        if (!/^01\d{8,9}$/.test(tel)) { err.textContent = '견적 받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; pcEl('qtTel').focus(); return; }
+        if (!pcEl('qtAgree').checked) { err.textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+        Object.assign(extra, { phone: tel, name: pcEl('qtName').value.trim().slice(0, 20), agree: 'Y' });
+      }
+      const title = [model, QT.cap || (QT.noData ? '' : '(기본 용량)')].filter(Boolean).join(' ');
+      const route = qtRoute(), when = pcEl('qtWhen').value, region = pcEl('qtRegion').value, memo = pcEl('qtMemo').value.trim();
+      const carTxt = QT.car === '추천' ? '추천' : QT.car;
+      const summary = `📱 견적요청 · ${title} · ${QT.now || '통신사 미선택'} → ${carTxt} · ${QT.ins} · ${QT.disc}`;
+      const lines = [
+        '📱 견적요청',
+        `기종: ${title}${QT.price ? ` (출고가 ${won(QT.price)})` : ''}`,
+        QT.color && `색상: ${QT.color}`,
+        `지금 통신사: ${QT.now || '-'}`,
+        `원하는 통신사: ${QT.car === '추천' ? '추천해 주세요' : QT.car}${route ? ` (${route})` : ''}`,
+        `할부: ${QT.ins}`,
+        QT.fee && `지금 월 요금: ${QT.fee}`,
+        `할인 방식: ${QT.disc}`,
+        `개통 시기: ${when || '-'}`,
+        `지역: ${region || '-'}`,
+        `문의: ${QT.memoMode === 'now' && memo ? memo : '상담 때 이야기할게요'}`
+      ].filter(Boolean);
+      Object.assign(extra, { summary, detail: lines.join('\n') });
+      btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+      const res = await qtSend(extra);
+      if (res === 'ok') {
+        QT.sent = true;
+        const A = PC.data && PC.data.alert;
+        if (A && A.url) { try { fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: (extra.name || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객'))).slice(0, 20), summary: summary.slice(0, 80), crm: A.crm || '' }) }).catch(() => {}); } catch (e) {} }
+        btn.style.display = 'none';
+        const done = pcEl('qtDone');
+        done.innerHTML = '견적 요청을 보냈어요! 🙌<br>영업시간(10:00~20:00)에 가장 좋은 조건으로 연락드릴게요.<br><a href="#" id="qtSmsAlso">급하시면 문자로도 보내기</a>';
+        done.style.display = 'block';
+        pcEl('qtSmsAlso').onclick = (e) => { e.preventDefault(); const cid = getCrmId(); smsTo([`[견적요청${cid ? '/' + cid : ''}]`, ...lines.slice(1)].join('\n')); };
+      } else {
+        btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 무료 견적 받기';
+        err.textContent = `견적 요청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+        const cid = getCrmId(); smsTo([`[견적요청${cid ? '/' + cid : ''}]`, ...lines.slice(1)].join('\n'));
+      }
+    }
     document.addEventListener('DOMContentLoaded', function () {
       if (window.KCRM_STAFF) {
         document.body.classList.add('kc-staff');
         const b = document.querySelectorAll('.tab-btn')[2];
         if (b) switchTab({ currentTarget: b }, 'calc');
       }
-      pcLoad();
+      pcLoad().then(qtInit, qtInit);   // 지원금표(기종 목록)를 불러온 뒤 견적요청 양식 채우기
+      if (window.KCRM_STAFF) { const tb = document.getElementById('calcTabBtn'); if (tb) tb.textContent = '폰값계산'; }
       if (getCrmId()) showWelcomeBack();
       if (getPendingId()) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인
       if (deferredInstall && !isStandalone()) showInstallButton(true);
@@ -1419,6 +1671,7 @@
         if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + location.hash); } catch (e) {} }
         showWelcomeBack();
         try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
+        try { if (typeof qtContactUi === 'function') qtContactUi(); } catch (e) {}
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
       } else if (cid && ans === 'no') {
