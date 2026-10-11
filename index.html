@@ -431,6 +431,12 @@
     #pcHolder.open { display: block; margin-top: 8px; }
     body.kc-staff #qtBody { display: none !important; }
     body.kc-staff #pcHolder { display: block !important; }
+    .pc-staff-send { display: none; }
+    body.kc-staff .pc-staff-send { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 640px; margin: 0 auto; background: #fff; padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 16px rgba(15,23,42,.12); }
+    body.kc-staff #pcKeep { margin-bottom: 150px; }   /* 아래 고정 버튼에 가리지 않게 */
+    body.kc-staff .pc-staff-send .btn-vcard { margin: 0; }
+    .pc-quote-for { font-size: 13px; font-weight: 700; color: var(--lgu-dark); background: #fde8f3; border-radius: 10px; padding: 8px 12px; margin-bottom: 8px; line-height: 1.45; word-break: keep-all; }
+    .pc-quote-for:empty { display: none; }
     /* ===== 폰값계산 탭 ===== */
     .pc-intro { font-size: 13px; color: var(--text-sub); line-height: 1.6; margin-bottom: 4px; word-break: keep-all; }
     .pc-lb { font-size: 14px; font-weight: 800; color: var(--text-main); margin: 20px 0 8px; display: flex; align-items: center; gap: 8px; }
@@ -772,6 +778,11 @@
                 <div class="pc-note" id="pcNote"></div>
               </div>
               <div class="pc-keep ok" id="pcKeep"></div>
+              <!-- [V3.1] 강CRM(직원용)에서만: 계산한 견적을 고객에게 문자로 -->
+              <div class="pc-staff-send" id="pcStaffSend">
+                <div class="pc-quote-for" id="pcQuoteFor"></div>
+                <button type="button" class="btn-vcard" id="pcQuoteBtn" onclick="pcSendQuote()"><i class="fa-solid fa-paper-plane"></i> 이 견적 고객에게 보내기</button>
+              </div>
             </div>
           </div>
 
@@ -1111,6 +1122,7 @@
       pcEl('pcKnown').style.display = known ? 'block' : 'none';
       pcEl('pcNewContact').style.display = known ? 'none' : 'block';
       ['pcTel', 'pcAgree'].forEach(id => pcEl(id).addEventListener('input', () => { pcEl('pcErr').textContent = ''; }));
+      if (PC_PREFILL) pcApplyPrefill(PC_PREFILL);
       pcRender();
     }
 
@@ -1139,7 +1151,7 @@
       pcEl('pcNotReady').style.display = ready ? 'none' : 'block';
       if (!ready) {
         pcEl('pcNotReady').textContent = `${S.car} 지원금은 지금 업데이트 중이에요. 원하시는 기종과 요금제를 상담으로 남겨주시면 바로 계산해 드릴게요.`;
-        PC.last = null;
+        PC.last = null; PC.quote = null;
         return;
       }
 
@@ -1302,11 +1314,91 @@
         (noChg ? `<div>요금제를 바꾸지 않으면 2년 내내 월 <strong>${won(cur.mon)}</strong></div>`
                : `<div>변경 후 월 납부: <strong>${won(after)}</strong> (${pcEsc(chgPlan.name)})</div>`);
 
+      // [V3.1] 견적 문자용 (강CRM에서 고객에게 보내기)
+      PC.quote = {
+        model: md.name, gen: md.gen, car: S.car, route: t.label, plan: C.plans[S.p].name, fee, chgName: chgPlan.name, chgFee: chgPlan.fee,
+        noChg, avgOn, disc: S.d, isG: S.d === '공통지원', sup, price: md.price, dev: cur.dev, m: cur.m, n, cash: cur.cash,
+        f1: cur.f1, f2: cur.f2, mon: cur.mon, tot: cur.tot, keepMonths: Math.round(cur.keep.months), cdLabel: pcFd(cur.keep.cd),
+        date: C.date || '', dist, trade: !!(pcEl('pcTrade') && pcEl('pcTrade').checked), pen, LIM, why
+      };
       PC.last = {
         car: S.car, route: t.label, model: md.name, plan: C.plans[S.p].name, disc: S.d,
         ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, avg: avgOn, dist, distOn,
         date: pcYmd(od), chg: noChg ? '그대로 유지' : chgPlan.name, cd: pcYmd(cd)
       };
+    }
+
+    /* [V3.1] 📤 견적 보내기 (강CRM 직원용 계산기)
+       · 계산한 견적을 고객용 문자 문구로 만들어 강CRM으로 넘김 → 강CRM이 받는 사람 확인 후 문자앱으로
+       · 강CRM이 '견적요청'에서 열면 주소의 q= 로 고객이 고른 조건(지금 통신사·원하는 통신사·기종·용량·할부·할인)을 미리 채움 */
+    function pcQuoteText() {
+      const q = PC.quote;
+      if (!q) return '';
+      const L = [];
+      L.push(`📱 ${q.model}`);
+      L.push(`· 가입: ${/→/.test(q.route) ? q.route.replace('통신사이동', '번호이동') : q.car + ' ' + q.route}`);
+      L.push(`· 요금제: ${q.plan} (월 ${won(q.fee)})${q.avgOn ? ` → ${q.keepMonths}개월 뒤 ${q.chgName}` : ''}`);
+      L.push(`· 할인: ${q.isG ? '공통지원금 (기기값 할인)' : '선택약정 (요금 25% 할인)'} · ${q.cash ? '현금개통' : `할부 ${q.n}개월`}`);
+      L.push('');
+      L.push('[기기값]');
+      L.push(`· 출고가 ${won(q.price)}`);
+      if (q.isG && q.sup) L.push(`· 공통지원금 -${won(q.sup)}`);
+      L.push(q.cash ? `· 현금 납부 ${won(q.dev)}` : `· 할부원금 ${won(q.dev)} → 월 ${won(q.m)}`);
+      L.push('');
+      L.push('[월 납부]');
+      const first = (q.cash ? 0 : q.m) + q.f1, after = (q.cash ? 0 : q.m) + q.f2;
+      if (q.avgOn) {
+        L.push(`· 처음 ${q.keepMonths}개월: 월 ${won(first)}`);
+        L.push(`· ${q.cdLabel.replace(/\s*\(.\)$/, '')}부터: 월 ${won(after)}`);
+        L.push(`· 2년 평균: 월 ${won(q.mon)}`);
+      } else {
+        L.push(`· 2년 동안: 월 ${won(first)}`);
+      }
+      if (!q.cash && q.n === 36) L.push(`· 36개월 할부라 25개월째부터는 월 할부금 ${won(q.m)}만 1년 더`);
+      L.push('');
+      L.push(q.cash ? '※ 현금개통 기준이에요.' : '※ 할부수수료(연 5.9%) 포함이에요.');
+      if (q.pen) L.push(`※ ${q.why}을 받으면 ${won(q.LIM)} 미만 요금제로 낮출 때 위약금이 있어요.`);
+      if (q.dist || q.trade) L.push(`※ ${[q.dist && '유통망지원금', q.trade && '기존 폰 보상'].filter(Boolean).join('·')}은 상담 때 더 챙겨드려요.`);
+      L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
+      return L.join('\n');
+    }
+    function pcSendQuote() {
+      if (!PC.quote) { alert('기종과 요금제를 먼저 골라주세요.'); return; }
+      const msg = { type: 'kcrm-quote', text: pcQuoteText(), summary: pcSummary(), model: PC.quote.model, car: PC.quote.car, mon: Math.round(PC.quote.mon) };
+      if (window.parent && window.parent !== window) { window.parent.postMessage(msg, '*'); return; }
+      alert(copyText(msg.text) ? '견적 문구를 복사했어요. 문자나 카톡에 붙여넣어 주세요.' : msg.text);
+    }
+    // 강CRM이 넘긴 견적요청 조건 (직원용에서만)
+    const PC_PREFILL = (function () {
+      try { const v = new URLSearchParams(location.search).get('q'); return v && window.KCRM_STAFF ? JSON.parse(v) : null; } catch (e) { return null; }
+    })();
+    function pcApplyPrefill(q) {
+      const S = PC.st, D = PC.data;
+      if (!q || !D) return;
+      const norm = (x) => String(x || '').replace(/\s+/g, '').toUpperCase();
+      const nowMap = { 'SKT': 'SKT', 'KT': 'KT', 'LGU+': 'LG U+', '알뜰폰': '알뜰폰', '새번호': 'none' };
+      if (nowMap[norm(q.now)]) S.now = nowMap[norm(q.now)];
+      const cars = Object.keys(D.carriers || {});
+      const car = cars.find(k => norm(k) === norm(q.car) && D.carriers[k].ready && !D.carriers[k].hidden);
+      if (car) S.car = car;
+      const notes = [];
+      if (q.car && !car) notes.push(`${q.car} 지원금표가 없어서 ${S.car}로 계산`);
+      const C = D.carriers[S.car];
+      let found = false;
+      if (C && Array.isArray(C.models) && q.model) {
+        const capRe = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;
+        const split = (nm) => { const m = capRe.exec(nm); return { base: norm(m ? nm.replace(capRe, ' ') : nm), cap: m ? (m[1] + m[2]).toUpperCase() : '' }; };
+        const want = { base: norm(q.model), cap: String(q.cap || '').toUpperCase() };
+        let idx = C.models.findIndex(m => { const x = split(m.name); return x.base === want.base && x.cap === want.cap; });
+        if (idx < 0) idx = C.models.findIndex(m => split(m.name).base === want.base);
+        if (idx >= 0) { S.m = idx; S.brand = ''; S.c = null; found = true; }
+      }
+      if (q.model && !found) notes.push(`'${q.model}${q.cap ? ' ' + q.cap : ''}'을 표에서 못 찾아 직접 골라주세요`);
+      if (/36/.test(q.ins || '')) S.ins = 36; else if (/24/.test(q.ins || '')) S.ins = 24; else if (/일시불/.test(q.ins || '')) S.ins = 0;
+      else if (/12/.test(q.ins || '')) notes.push('할부 12개월은 계산기에 없어서 24개월로 계산');
+      if (/공통/.test(q.disc || '')) S.d = '공통지원'; else if (/선택/.test(q.disc || '')) S.d = '선택약정';
+      const who = String(q.who || '').slice(0, 20);
+      pcEl('pcQuoteFor').textContent = `👤 ${who ? who + ' 고객' : '고객'} 견적요청 조건으로 채웠어요` + (notes.length ? ` · ${notes.join(' · ')}` : '') + '. 요금제를 고르고 보내세요.';
     }
 
     /* 상담 요청 → 강CRM '명함상담'으로 바로 전달 (안 되면 문자앱으로) */
