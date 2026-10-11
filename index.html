@@ -39,7 +39,8 @@
         var inApp = /KAKAOTALK|NAVER|Instagram|FBAN|FBAV|Line\/|DaumApps|BAND\/|everytimeapp|; wv\)/i.test(ua);
         var isChrome = /Chrome\/\d/.test(ua) && !/SamsungBrowser|Whale|EdgA|OPR\/|Firefox|YaBrowser|DuckDuckGo/i.test(ua) && !inApp;
         var cid = params.get('c') || localStorage.getItem('kcrm_cid') || '';
-        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) : '') + (/^#pn=/.test(location.hash) ? location.hash : '');
+        var okp = /^\d{10,14}$/.test(params.get('ok') || '') ? '&ok=' + params.get('ok') : '';   // 방금 본인 확인한 표시도 같이 넘김
+        var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : '') + (/^#pn=/.test(location.hash) ? location.hash : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
           window.KCRM_LEAVING = true;
@@ -116,12 +117,28 @@
           history.replaceState(null, '', location.pathname + (q0 ? '?' + q0 : '') + location.hash);
         }
         const cid = params.get('c');
-        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) {
-          localStorage.setItem('kcrm_cid', cid);
-          // 주소창에서 명함번호 지우기 (고객이 명함을 '공유'해도 번호가 남에게 넘어가 알림이 섞이지 않게)
-          //   카톡 → 크롬으로 옮길 때는 [알림받기]가 번호를 직접 넘겨줌 (externalUrl)
-          //   [수정] 아이폰 사파리는 남겨둠 → '홈 화면에 추가'한 앱이 이 주소로 시작해서 고객번호를 앎
-          if (!window.KCRM_IOS_KEEP_C) params.delete('c');
+        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF) {
+          // [V2.5] 명함 링크를 받은 지인이 열어도 원래 고객으로 연결되지 않게: 이 폰에서 처음 여는 번호면 '본인 확인' 뒤에 연결
+          //   · 이미 이 폰에 연결된 같은 번호 → 그대로
+          //   · 방금(10분 안 · 홈 화면 앱은 1시간 안) 본인 확인한 주소(ok=) → 바로 연결 (사파리 → 홈 화면 앱, 앱 안 브라우저 → 크롬)
+          //   · 예전에 '아니요(지인에게 받음)'라고 한 번호 → 연결 안 함 (소개로만 기록)
+          //   · 그 밖 → 확인 대기 (화면이 뜨면 "강○숙 고객님 본인이세요?")
+          const mine = localStorage.getItem('kcrm_cid') || '';
+          let notList = [];
+          try { notList = JSON.parse(localStorage.getItem('kcrm_not') || '[]'); } catch (e) {}
+          const okTs = Number(params.get('ok') || 0);
+          const standalone0 = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+          const age = Date.now() - okTs;
+          const freshOk = okTs > 0 && age > -5 * 60 * 1000 && age < (standalone0 ? 60 : 10) * 60 * 1000;
+          if (window.KCRM_LEAVING) { /* 크롬·사파리로 옮겨가는 창: 아무것도 저장 안 함 */ }
+          else if (cid === mine) { localStorage.removeItem('kcrm_cid_pending'); }
+          else if (freshOk) { localStorage.setItem('kcrm_cid', cid); localStorage.removeItem('kcrm_cid_pending'); }
+          else if (notList.indexOf(cid) >= 0) { if (!mine) localStorage.setItem('kcrm_ref', cid); }
+          else localStorage.setItem('kcrm_cid_pending', cid);
+          // 주소창 정리: 확인 표시(ok)는 항상 지움 · 명함번호도 지움 (아이폰 사파리는 '홈 화면에 추가'용으로 내 번호·확인 대기일 때만 남김)
+          params.delete('ok');
+          const keepC = window.KCRM_IOS_KEEP_C && notList.indexOf(cid) < 0;
+          if (!keepC) params.delete('c');
           const q = params.toString();
           history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
         }
@@ -169,6 +186,16 @@
       if (window.KCRM_STAFF) return null;
       try { return localStorage.getItem('kcrm_cid'); } catch (e) { return null; }
     }
+    // [V2.5] 본인 확인을 기다리는 명함번호 (이 폰에서 처음 연 개인 링크)
+    function getPendingId() {
+      if (window.KCRM_STAFF) return null;
+      try { const p = localStorage.getItem('kcrm_cid_pending'); return p && p !== localStorage.getItem('kcrm_cid') ? p : null; } catch (e) { return null; }
+    }
+    // [V2.5] 지인에게 받은 명함으로 들어온 경우 그 명함번호 (상담요청에 '소개'로 붙임)
+    function getRefId() {
+      if (window.KCRM_STAFF || getCrmId()) return null;
+      try { return localStorage.getItem('kcrm_ref'); } catch (e) { return null; }
+    }
 
     // 강CRM 명함번호를 OneSignal external_id로 연결 (같은 고객의 여러 알림을 한 사람으로 묶음)
     async function linkCrmUser(OneSignal) {
@@ -209,8 +236,9 @@
 
     // [수정] 다른 브라우저로 옮길 때 쓸 주소 (명함번호 포함)
     function externalUrl() {
-      const cid = getCrmId();
-      return location.origin + location.pathname + (cid ? '?c=' + encodeURIComponent(cid) : '');
+      const mine = getCrmId(), cid = mine || getPendingId();
+      // 본인 확인을 마친 번호면 '방금 확인함(ok)'도 같이 → 옮겨간 브라우저에서 다시 묻지 않음
+      return location.origin + location.pathname + (cid ? '?c=' + encodeURIComponent(cid) + (mine ? '&ok=' + Date.now() : '') : '');
     }
 
     // [추가] 앱 안 브라우저(네이버·인스타·밴드 등)에서 [알림받기]를 누르면 폰 기본 브라우저로 옮겨 열기
@@ -243,6 +271,8 @@
 
     /* ===== 알림 권한 요청 ===== */
     function requestNotificationPermission() {
+      // [V2.5] 처음 여는 개인 링크면 본인인지 먼저 (지인 폰이 원래 고객 알림으로 연결되지 않게) · 답한 버튼 안에서 바로 이어서 진행
+      if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') requestNotificationPermission(); }); return; }
       const inApp = getInAppType();
       if (inApp === 'kakao') {
         // 카카오톡은 외부 브라우저로 자동 전환 (명함번호도 같이 넘김) → 넘긴 뒤 카톡 안 브라우저는 닫기
@@ -1121,6 +1151,8 @@
     async function pcSend(kind, extra, keepalive) {
       if (window.KCRM_STAFF) return false;
       const data = { kind, cid: getCrmId() || '', name: '', phone: '', agree: '', summary: pcSummary(), detail: pcLines().join('\n'), at: new Date().toISOString(), ...(extra || {}) };
+      const ref = getRefId();
+      if (!data.cid && ref) data.detail = '🤝 소개 명함: ' + ref + '\n' + data.detail;   // 지인에게 받은 명함 → 강CRM에 '소개'로 표시
       const fields = {};
       Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
       try {
@@ -1134,7 +1166,7 @@
     function pcAlertStaff(extra) {
       const A = PC.data && PC.data.alert;
       if (!A || !A.url) return;
-      const who = (extra && extra.name) || (getCrmId() ? '등록 고객' : '새 고객');
+      const who = (extra && extra.name) || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객'));
       try {
         fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ who: who.slice(0, 20), summary: pcSummary().slice(0, 80), crm: A.crm || '' }) }).catch(() => {});
@@ -1147,6 +1179,7 @@
     async function pcRequest() {
       const err = pcEl('pcErr'), btn = pcEl('pcAsk');
       err.textContent = '';
+      if (getPendingId()) { showOwnerSheet(function (ans) { if (ans !== 'later') pcRequest(); }); return; }
       const extra = {};
       if (!getCrmId()) {
         const tel = pcEl('pcTel').value.replace(/\D/g, '');
@@ -1195,7 +1228,8 @@
         if (b) switchTab({ currentTarget: b }, 'calc');
       }
       pcLoad();
-      if (getCrmId()) document.getElementById('welcomeBack').style.display = 'block';
+      if (getCrmId()) showWelcomeBack();
+      if (getPendingId()) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인
       if (deferredInstall && !isStandalone()) showInstallButton(true);
     });
 
@@ -1339,6 +1373,93 @@
     </div>
   </div>
 
+  <!-- [V2.5] 명함 본인 확인 (지인에게 받은 링크로 열면 원래 고객으로 연결되지 않게) -->
+  <div class="bs-back" id="ownBack" role="dialog" aria-modal="true" aria-labelledby="ownTitle" style="z-index:1200">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="ownTitle" style="flex:1">📇 명함 확인</h3><button type="button" id="ownLater" aria-label="나중에" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p id="ownMsg" style="font-size:17px;font-weight:700;color:var(--text-main);line-height:1.5;margin:10px 0 4px;word-break:keep-all"></p>
+      <p class="sub" id="ownSub" style="margin-bottom:6px">본인이면 혜택 알림과 상담이 고객님 정보로 바로 연결돼요.</p>
+      <button type="button" class="go" id="ownYes" style="background:linear-gradient(110deg,#e6007e,#a8005b)"></button>
+      <button type="button" id="ownNo" style="width:100%;height:52px;border:2px solid #e2e8f0;border-radius:16px;background:#fff;font:inherit;font-size:16px;font-weight:800;color:var(--text-main);margin-top:10px;cursor:pointer">아니요, 지인에게 받았어요</button>
+    </div>
+  </div>
+  <script>
+    /* [V2.5] 📇 명함 본인 확인
+       · 강CRM이 보낸 개인 링크(?c=명함번호)를 이 폰에서 처음 열면 "강○숙 고객님 본인이세요?"로 한 번 물어봄
+       · 네 → 이 폰을 그 고객으로 연결 (알림·상담이 고객 정보로) · 아니요 → 새 손님으로 (상담요청에 '지인 소개'로 표시)
+       · 가린 이름은 강CRM이 card_who에 넣어둠 (없으면 "직접 받은 명함인가요?"로 물어봄) */
+    let ownCb = [], ownWho = '';
+    function fetchOwnerName(cid) {
+      return new Promise(function (resolve) {
+        let done = false; const fin = function (v) { if (!done) { done = true; resolve(v); } };
+        setTimeout(function () { fin(''); }, 2500);
+        try {
+          fetch(FS_BASE + 'card_who/' + encodeURIComponent(cid) + '?key=' + FS_KEY, { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (j) { fin(j && j.fields && j.fields.n ? String(j.fields.n.stringValue || '').slice(0, 12) : ''); })
+            .catch(function () { fin(''); });
+        } catch (e) { fin(''); }
+      });
+    }
+    function showWelcomeBack() {
+      const el = document.getElementById('welcomeBack');
+      if (!el) return;
+      let who = '';
+      try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+      if (who) el.textContent = who + ' 고객님, 다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂';
+      el.style.display = 'block';
+    }
+    function ownerAnswer(ans) {
+      const cid = getPendingId();
+      if (cid && ans === 'yes') {
+        localStorage.setItem('kcrm_cid', cid);
+        localStorage.removeItem('kcrm_cid_pending'); localStorage.removeItem('kcrm_ref');
+        if (ownWho) localStorage.setItem('kcrm_who', ownWho); else localStorage.removeItem('kcrm_who');
+        // 아이폰 사파리: '홈 화면에 추가'한 앱이 다시 묻지 않게 주소에 '방금 확인함' 표시 (1시간)
+        if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + location.hash); } catch (e) {} }
+        showWelcomeBack();
+        try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
+      } else if (cid && ans === 'no') {
+        let notList = [];
+        try { notList = JSON.parse(localStorage.getItem('kcrm_not') || '[]'); } catch (e) {}
+        if (notList.indexOf(cid) < 0) notList.push(cid);
+        localStorage.setItem('kcrm_not', JSON.stringify(notList.slice(-20)));
+        localStorage.removeItem('kcrm_cid_pending');
+        if (!getCrmId()) localStorage.setItem('kcrm_ref', cid);
+        // 주소에서 남의 명함번호 지우기 (이 폰에서 홈 화면에 추가해도 따라가지 않게)
+        try { const q = new URLSearchParams(location.search); q.delete('c'); q.delete('ok'); const qs = q.toString(); history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+      }
+      document.getElementById('ownBack').style.display = 'none';
+      const cbs = ownCb; ownCb = [];
+      cbs.forEach(function (f) { try { f(ans); } catch (e) { console.error(e); } });
+    }
+    function showOwnerSheet(cb) {
+      const cid = getPendingId();
+      if (!cid) { if (cb) cb('none'); return; }
+      if (cb) ownCb.push(cb);
+      const back = document.getElementById('ownBack');
+      if (back.style.display === 'flex') return;
+      const render = function () {
+        document.getElementById('ownMsg').innerHTML = ownWho
+          ? '<b style="color:#e6007e">' + ownWho.replace(/[<>&"]/g, '') + '</b> 고객님께 보내드린 명함이에요.<br>본인이 맞으세요?'
+          : 'LGU+ 진천점에서 고객님께 문자로 직접 보내드린 명함인가요?';
+        const nm = ownWho.replace(/[<>&"]/g, ''), lc = nm.charCodeAt(nm.length - 1);
+        const josa = lc >= 0xAC00 && lc <= 0xD7A3 && (lc - 0xAC00) % 28 === 0 ? '예요' : '이에요';   // 받침 없으면 '예요' (강○희예요)
+        document.getElementById('ownYes').textContent = ownWho ? '네, 제가 ' + nm + josa : '네, 제가 받았어요';
+      };
+      ownWho = '';
+      render();
+      back.style.display = 'flex';
+      fetchOwnerName(cid).then(function (n) { if (getPendingId() === cid && n) { ownWho = n; render(); } });
+    }
+    document.getElementById('ownYes').onclick = function () { ownerAnswer('yes'); };
+    document.getElementById('ownNo').onclick = function () { ownerAnswer('no'); };
+    document.getElementById('ownLater').onclick = function () { ownerAnswer('later'); };
+    document.getElementById('ownBack').addEventListener('click', function (e) { if (e.target === document.getElementById('ownBack')) ownerAnswer('later'); });
+  </script>
+
   <script>
     /* 📌 맨 아래 고정 배너 + 상담 신청 창 */
     (function () {
@@ -1374,6 +1495,7 @@
       $('bsClose').onclick = closeSheet;
       $('bsBack').addEventListener('click', (e) => { if (e.target === $('bsBack')) closeSheet(); });
       $('bsGo').onclick = async () => {
+        if (getPendingId()) { showOwnerSheet(function (ans) { if (ans === 'later') return; $('bsWho').style.display = getCrmId() ? 'none' : 'block'; if (ans === 'yes') $('bsGo').click(); }); return; }
         const extra = {};
         if (!getCrmId()) {
           const tel = $('bsTel').value.replace(/\D/g, '');
@@ -1389,7 +1511,7 @@
         if (res === 'ok') {
           $('bsErr').textContent = '';
           const A = PC.data && PC.data.alert;
-          if (A && A.url) { try { fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: (extra.name || (getCrmId() ? '등록 고객' : '새 고객')).slice(0, 20), summary, crm: A.crm || '' }) }).catch(() => {}); } catch (e) {} }
+          if (A && A.url) { try { fetch(A.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ who: (extra.name || (getCrmId() ? '등록 고객' : (getRefId() ? '새 고객(지인 소개)' : '새 고객'))).slice(0, 20), summary, crm: A.crm || '' }) }).catch(() => {}); } catch (e) {} }
           $('bsGo').style.display = 'none';
           $('bsDone').innerHTML = '상담 신청을 보냈어요.<br>영업시간(10:00~20:00)에 바로 연락드릴게요.';
           $('bsDone').style.display = 'block';
