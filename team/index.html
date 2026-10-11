@@ -914,7 +914,7 @@
         CARD_P.role ? `TITLE:${CARD_P.role}` : '',
         `TEL;TYPE=${/^01/.test(CARD_P.phone) ? 'CELL' : 'WORK'}:${String(CARD_P.phone).replace(/^(\d{2,3})(\d{3,4})(\d{4})$/, '$1-$2-$3')}`,
         'ADR;TYPE=WORK:;;대구광역시 달서구 월배로 80 대성스카이렉스 1층 401동 113호\\,114호;;;;대한민국',
-        `URL:${location.origin}${location.pathname.replace(/index\.html$/, '')}`,
+        `URL:${location.origin}${location.pathname.replace(/index\.html$/, '')}${window.KCRM_TEAM && window.KCRM_TEAM_S ? '?s=' + window.KCRM_TEAM_S : ''}`,   // [V3.9] 공용 명함은 보낸 직원(s)까지 저장
         `NOTE:${CARD_P.note}`,
         'END:VCARD'
       ].filter(Boolean).join('\r\n');
