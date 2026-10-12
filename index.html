@@ -625,6 +625,18 @@
     .nt .ph .tip { margin-top: 10px; background: #fdf2f8; color: #9d174d; border-radius: 10px; padding: 9px 11px; font-size: 13.5px; font-weight: 800; line-height: 1.45; word-break: keep-all; }
     .nt .ph .note { font-size: 11.5px; color: #64748b; margin-top: 8px; line-height: 1.45; white-space: normal; }
     .nt .qtbtn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 52px; margin-top: 12px; border-radius: 14px; border: 2px solid var(--lgu-pink); background: #fff; color: var(--lgu-pink); font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
+    .nt .qtbtn.pri { border: 0; background: linear-gradient(110deg, #e6007e, #a8005b); color: #fff; }   /* [V4.5] 🤝 명함 소개하기 */
+    .nt .lad .cnt { font-size: 14px; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; }
+    .nt .lad .cnt b { color: var(--lgu-pink); font-weight: 900; font-size: 16px; }
+    .nt .lad ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+    .nt .lad li { display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 12px; background: #fff; border: 1px solid #e2e8f0; font-size: 14.5px; }
+    .nt .lad li .n { width: 40px; flex-shrink: 0; font-weight: 900; color: #64748b; }
+    .nt .lad li .g { flex: 1; min-width: 0; font-weight: 800; color: var(--text-main); word-break: keep-all; }
+    .nt .lad li .s { flex-shrink: 0; font-size: 12px; font-weight: 800; color: #94a3b8; }
+    .nt .lad li.ok { background: #f0fdf4; border-color: #bbf7d0; }
+    .nt .lad li.ok .n, .nt .lad li.ok .s { color: #15803d; }
+    .nt .lad li.next { border: 2px solid var(--lgu-pink); background: #fdf2f8; }
+    .nt .lad li.next .n, .nt .lad li.next .s { color: var(--lgu-pink); }
     .nt .rvbtn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 52px; margin-top: 14px; border-radius: 14px; border: 2px solid #f59e0b; background: #fffbeb; color: #92400e; font: inherit; font-size: 16px; font-weight: 800; text-decoration: none; cursor: pointer; }   /* [V4.3] ⭐ 리뷰 쓰기 (개통 안부 푸시) */
     /* 강CRM 안 직원용: 계산기만 */
     body.kc-staff { background: #fff; padding: 0 !important; }
@@ -1108,7 +1120,7 @@
       if (!r2.ok) throw new Error('no data');
       const base = await r2.json();
       // [V2.7] 예전엔 지원금표를 파일로 대신 쓰면 '상담 알림 서버' 주소까지 빠져서 직원 폰 푸시가 안 갔음 → 강CRM 설정은 그대로 붙임
-      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc', 'reply', 'kakao', 'kakaoOn', 'showDist', 'visitBookOn', 'restock', 'myPhoneOn', 'refOn', 'refReward', 'reviewUrl'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
+      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc', 'reply', 'kakao', 'kakaoOn', 'showDist', 'visitBookOn', 'restock', 'myPhoneOn', 'refOn', 'refReward', 'reviewUrl', 'refTiers', 'refBasis'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
       return base;
     }
     /* [V4.0] ⏱ 연락 약속 시간 · 💬 카톡 상담 (강CRM 설정 → 명함 폰값계산 → 연락 약속 시간 · 카톡 주소) */
@@ -2098,10 +2110,19 @@
       let phTok = 0;
       function setPhone(on, fromPush) {
         const box = $('ntPh'), b = $('ntQt'), tk = ++phTok;
-        box.style.display = 'none'; box.innerHTML = ''; b.style.display = on ? 'flex' : 'none';
+        box.style.display = 'none'; box.innerHTML = ''; box.className = 'ph'; b.style.display = on ? 'flex' : 'none';
+        b.className = 'qtbtn'; b.innerHTML = '<i class="fa-solid fa-mobile-screen-button"></i> 바꿀 폰 견적 받아보기';
         if (!on) return;
         if (typeof window.cxPhoneHtml === 'function') window.cxPhoneHtml().then(h => { if (tk === phTok && h) { box.innerHTML = h; box.style.display = 'block'; } }).catch(() => {});
         b.onclick = () => { close(); if (typeof window.cxQuote === 'function') window.cxQuote(fromPush ? '📱 내 폰 정보 알림 보고 견적 받아보기 누름' : ''); };
+      }
+      /* [V4.5] 🤝 소개 감사 선물 단계표 (강CRM에서 '몇 명이면 무엇') + [명함 소개하기] */
+      function setRef(R) {
+        const box = $('ntPh'), b = $('ntQt');
+        ++phTok;
+        box.className = 'ph lad'; box.innerHTML = R.html; box.style.display = 'block';
+        b.className = 'qtbtn pri'; b.innerHTML = '<i class="fa-solid fa-share-nodes"></i> 명함 소개하기'; b.style.display = 'flex';
+        b.onclick = () => { close(); if (typeof shareCard === 'function') shareCard(); };
       }
       function show(n, fromPush) {
         curId = n.id || '';
@@ -2156,6 +2177,11 @@
       // 명함이 이미 열려 있을 때 알림을 누르면 주소 끝(#)만 바뀜 → 그때도 보여주기
       window.addEventListener('hashchange', fromHash);
       window.ntShowPhone = () => show({ id: '', heading: '📱 내 폰 정보', body: '', image: '', ph: true }, false);   // [V4.4] 명함의 '📱 내 폰' 줄
+      window.ntShowRef = (R) => {   // [V4.5] 명함의 '🤝 소개' 줄 (사은품 단계가 있을 때)
+        show({ id: '', heading: '지인에게 명함을 소개해 주세요', body: R.body, image: '' }, false);
+        $('ntTag').innerHTML = '<i class="fa-solid fa-gift"></i> 소개 감사 선물';
+        setRef(R);
+      };
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(load, 300));
       else setTimeout(load, 300);
     })();
@@ -2482,7 +2508,7 @@
           if (r.ok) {
             const j = await r.json(), f = (j && j.fields) || {};
             const g = (k) => { const v = f[k]; if (!v) return ''; if (v.stringValue !== undefined) return v.stringValue; if (v.integerValue !== undefined) return Number(v.integerValue); if (v.doubleValue !== undefined) return Number(v.doubleValue); return ''; };
-            who = { dv: String(g('dv') || '').slice(0, 30), am: String(g('am') || ''), ie: String(g('ie') || ''), ce: String(g('ce') || ''), bt: String(g('bt') || ''), rc: Number(g('rc')) || 0, ac: String(g('ac')) === '1', pf: String(g('pf') || ''), ra: String(g('ra') || '') };   // [V4.4] pf 📱 보이는 날 · ra ⭐ 보이는 날
+            who = { dv: String(g('dv') || '').slice(0, 30), am: String(g('am') || ''), ie: String(g('ie') || ''), ce: String(g('ce') || ''), bt: String(g('bt') || ''), rc: Number(g('rc')) || 0, ac: String(g('ac')) === '1', pf: String(g('pf') || ''), ra: String(g('ra') || ''), rk: Number(g('rk')) || 0 };   // [V4.5] rk 소개로 개통한 지인   // [V4.4] pf 📱 보이는 날 · ra ⭐ 보이는 날
           } else who = null;
           whoFor = cid;
         } catch (e) { who = null; }
@@ -2494,7 +2520,7 @@
       /* [V4.4] 명함이 지저분하지 않게: 큰 상자 3개 → 한 줄 메뉴 하나 (필요한 줄만)
          · 📱 내 폰 N개월째: 강CRM이 정한 날(pf = 개통 + 18개월 · 그날 📱 알림 푸시)부터 · 누르면 창에 기종·할부·약정 + [바꿀 폰 견적 받아보기]
          · ⭐ 리뷰 남기기: 개통 안부가 나가는 날(ra)부터 30일 동안만 · 한 번 누르면 숨김
-         · 🤝 명함 소개하기: 한 줄 (소개 N명 · 감사 문구) */
+         · 🤝 명함 소개하기: 한 줄 (소개 N명 · 감사 문구) · [V4.5] 사은품 단계가 있으면 "1명 더 개통하시면 🎁 ○○" → 누르면 단계표 창 */
       const hasPhone = (w) => !!(w && cfg().myPhoneOn !== false && (w.dv || w.am || w.ie || w.ce));
       function phoneDue(w) {
         if (/^\d{4}-\d{2}-\d{2}$/.test(w.pf || '')) return ymdOf(new Date()) >= w.pf;
@@ -2523,6 +2549,22 @@
         const P = phoneOf(w);
         return `<dl>${P.rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>${P.tip ? `<div class="tip">${esc(P.tip)}</div>` : ''}<p class="note">매장 기록으로 계산한 예상이에요. 정확한 날짜·금액은 편하게 물어봐 주세요.</p>`;
       }
+      /* [V4.5] 🎁 소개 사은품 단계 (강CRM 설정: refTiers [{n,g}] · refBasis act=개통한 지인 / all=견적요청만 해도) */
+      function refTiersOf() {
+        const t = cfg().refTiers; if (!Array.isArray(t)) return [];
+        const out = t.map(x => ({ n: parseInt(x && x.n, 10), g: String((x && x.g) || '').trim().slice(0, 30) })).filter(x => x.n >= 1 && x.n <= 50 && x.g).sort((a, b) => a.n - b.n);
+        return out.filter((x, i) => i === 0 || out[i - 1].n !== x.n).slice(0, 5);
+      }
+      function refInfo(w) {
+        const T = refTiersOf(); if (!T.length) return null;
+        const act = cfg().refBasis !== 'all', all = w ? (w.rc || 0) : 0, cnt = act ? (w ? (w.rk || 0) : 0) : all;
+        const next = T.find(t => t.n > cnt), verb = act ? '개통하시면' : '소개하시면';
+        const sub = next ? (cnt ? `${next.n - cnt}명 더 ${verb} 🎁 ${next.g}` : (act ? `${next.n === 1 ? '소개해 주신 분이' : `지인 ${next.n}명이`} 개통하시면 🎁 ${next.g}` : `${next.n}명 소개하시면 🎁 ${next.g}`)) : '🎉 감사 선물을 모두 채우셨어요! 정말 고맙습니다';
+        const li = T.map(t => { const ok = cnt >= t.n, nx = next && t.n === next.n; return `<li class="${ok ? 'ok' : (nx ? 'next' : '')}"><span class="n">${t.n}명</span><span class="g">🎁 ${esc(t.g)}</span><span class="s">${ok ? '✓ 달성' : (nx ? `${t.n - cnt}명 남음` : '')}</span></li>`; }).join('');
+        const html = `<p class="cnt">지금 소개 <b>${all}명</b>${act ? ` · 그중 개통 <b>${cnt}명</b>` : ''}</p><ul>${li}</ul><p class="note">${act ? '소개해 주신 분이 개통하시면 한 명으로 세요. ' : ''}선물은 매장에서 챙겨드려요 🙂</p>`;
+        const body = act ? '받으신 분이 명함으로 견적을 요청하고 개통하시면 고객님 소개로 기록돼요.' : '받으신 분이 명함으로 견적을 요청하면 고객님 소개로 기록돼요.';
+        return { sub, html, body, cnt, next };
+      }
       function renderMine() {
         const box = $('cxMine'); if (!box) return;
         const cid = getCrmId();
@@ -2537,8 +2579,8 @@
         const rv = reviewUrl();
         if (w && w.ac && rv && reviewDue(w) && lsGet('kcrm_rv_done') !== w.ra) rows.push(`<a class="cx-row" href="${esc(rv)}" target="_blank" rel="noopener" data-cx="review"><span class="cx-ic" style="background:#fffbeb">⭐</span><span class="cx-tx"><span class="cx-tt">리뷰 한 줄 남기기</span><span class="cx-st">개통해 주셔서 감사해요! 남겨주신 리뷰가 큰 힘이 돼요</span></span><span class="cx-ar" aria-hidden="true">›</span></a>`);
         if (C.refOn !== false) {
-          const n = w ? w.rc : 0;
-          const reward = String(C.refReward || '').trim().slice(0, 60) || '소개해 주신 분이 개통하시면 감사 선물을 챙겨드려요 🎁';
+          const n = w ? w.rc : 0, R = refInfo(w);
+          const reward = R ? R.sub : (String(C.refReward || '').trim().slice(0, 60) || '소개해 주신 분이 개통하시면 감사 선물을 챙겨드려요 🎁');
           rows.push(`<button type="button" class="cx-row" data-cx="share"><span class="cx-ic" style="background:#f0fdf4">🤝</span><span class="cx-tx"><span class="cx-tt">지인에게 명함 소개하기</span><span class="cx-st">${esc(reward)}</span></span>${n ? `<span class="cx-pill">소개 ${n}명</span>` : ''}<span class="cx-ar" aria-hidden="true">›</span></button>`);
         }
         if (rows.length) parts.push(`<div class="cx-list">${rows.join('')}</div>`);
@@ -2546,7 +2588,7 @@
         box.querySelectorAll('[data-cx]').forEach(b => b.addEventListener('click', () => {
           const k = b.dataset.cx;
           if (k === 'phone') { if (typeof window.ntShowPhone === 'function') window.ntShowPhone(); else cxQuote(''); }
-          else if (k === 'share') shareCard();
+          else if (k === 'share') { const R = refInfo(w); if (R && typeof window.ntShowRef === 'function') window.ntShowRef(R); else shareCard(); }
           else if (k === 'review') { if (w) lsSet('kcrm_rv_done', w.ra || '1'); logCx('⭐ 명함에서 리뷰 쓰기 누름', true); setTimeout(renderMine, 600); }
         }));
       }
