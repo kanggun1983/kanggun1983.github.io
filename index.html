@@ -238,12 +238,17 @@
       });
       var isStaffPhone = false;
       try { isStaffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+      try {   // [V4.6] 이미 알림을 켠 폰엔 '이벤트 혜택 알림받기' 숨기기 (끄면 다시 보임)
+        evAlertSync(!!(OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn));
+        OneSignal.User.PushSubscription.addEventListener('change', function (ev) { evAlertSync(!!(ev && ev.current && ev.current.optedIn && OneSignal.Notifications.permission)); });
+      } catch (e) {}
       if (isStaffPhone) return;   // 직원 폰: 직원 등록 그대로 두기
       if (getCrmId()) await linkCrmUser(OneSignal);
       else OneSignal.User.addTag('source', 'namecard');
       if (window.KCRM_TEAM) { try { OneSignal.User.addTags({ card: 'team', team_s: window.KCRM_TEAM_S || '' }); } catch (e) {} }
     });
 
+    function evAlertSync(on) { const b = document.getElementById('evAlertBtn'); if (b) b.style.display = on ? 'none' : ''; }   // [V4.6]
     function isIOS() {
       return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -334,6 +339,7 @@
           }
           if (OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn) {
             await linkCrmUser(OneSignal);   // [추가] 이미 알림을 받는 폰도 강CRM 고객번호로 다시 연결
+            evAlertSync(true);
             alert('이미 이벤트 혜택 알림을 받고 계십니다. 😊');
             return;
           }
@@ -342,6 +348,7 @@
           if (OneSignal.Notifications.permission) {
             await OneSignal.User.PushSubscription.optIn();
             await linkCrmUser(OneSignal);   // [추가] 알림을 켠 뒤 한 번 더 연결 (강CRM에 '알림 받음'으로 바로 뜨게)
+            evAlertSync(true);
             alert('🎉 이벤트 혜택 알림 신청이 완료되었습니다!');
           } else {
             alert('알림이 차단되어 있습니다.\n브라우저 주소창 옆 [🔒/설정] → 알림 → 허용으로 바꿔 주세요.');
@@ -571,6 +578,8 @@
     .cx-pill { flex-shrink: 0; font-size: 12px; font-weight: 800; color: #166534; background: #dcfce7; border-radius: 9999px; padding: 3px 9px; }
     .cx-ar { flex-shrink: 0; color: #94a3b8; font-size: 18px; font-weight: 700; line-height: 1; }
     .mq-note { margin: 0; padding: 0 14px 12px; font-size: 11.5px; color: #64748b; }
+    .cx-ref-hint { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; margin: -6px 0 16px; padding: 10px 14px; border-radius: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font: inherit; font-size: 13.5px; font-weight: 800; line-height: 1.4; text-align: left; cursor: pointer; word-break: keep-all; }   /* [V4.6] 다음 소개 선물 */
+    .cx-ref-hint .ar { flex-shrink: 0; font-size: 17px; color: #4ade80; }
     .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
 
     /* 📌 맨 아래 고정 배너 (인터넷+TV 등 · 강CRM에서 문구·켜고 끄기) */
@@ -702,12 +711,14 @@
           <button class="btn-vcard" onclick="downloadVCard()">
             <i class="fa-solid fa-address-card"></i> 명함저장
           </button>
-          <button class="btn-vcard btn-share" onclick="shareCard()">
+          <button class="btn-vcard btn-share" id="shareBtn" onclick="(window.cxShareTap || shareCard)()">
             <i class="fa-solid fa-share-nodes"></i> 명함 공유하기
           </button>
         </div>
+        <!-- [V4.6] 개인 링크 고객: '명함 공유하기' = '🎁 명함 소개하기' (같은 링크라 하나로) · 다음 사은품 한 줄 -->
+        <button type="button" id="cxRefHint" class="cx-ref-hint" style="display:none" onclick="(window.cxShareTap || shareCard)()"></button>
 
-        <button class="btn-vcard" style="background: #334155;" onclick="requestNotificationPermission()">
+        <button class="btn-vcard" id="evAlertBtn" style="background: #334155;" onclick="requestNotificationPermission()">
           <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
         </button>
 
@@ -1179,8 +1190,11 @@
       box.querySelector('.mq-text').textContent = q.text;
       box.style.display = 'block';
       const t = document.getElementById('mqTeaser');
-      t.innerHTML = `<span>📄 ${md}에 보내드린 견적이 있어요</span><span>보기 ›</span>`;
+      let who = ''; try { who = String(localStorage.getItem('kcrm_who') || '').slice(0, 12); } catch (e) {}
+      t.innerHTML = '<span></span><span>보기 ›</span>';
+      t.firstChild.textContent = who ? `📄 ${who}님, ${md}에 보내드린 견적이 있어요` : `📄 ${md}에 보내드린 견적이 있어요`;   // [V4.6] 인사 띠와 하나로
       t.style.display = 'flex';
+      { const wb = document.getElementById('welcomeBack'); if (wb) wb.style.display = 'none'; }
       const bk = box.querySelector('.mq-book'); if (bk) bk.addEventListener('click', (e) => { logMyQuote('book'); if (window.cxVisitOn && window.cxVisitOn()) { e.preventDefault(); window.cxOpenVisit({ note: '📄 받은 견적 조건으로 방문' + (q.summary ? ' · ' + q.summary : '') }); } });   // [V4.2]
       // 화면에 실제로 보였을 때 한 번 '견적 확인함' 기록 (담당 직원이 다시 연락하기 좋은 때)
       try {
@@ -2520,7 +2534,7 @@
       /* [V4.4] 명함이 지저분하지 않게: 큰 상자 3개 → 한 줄 메뉴 하나 (필요한 줄만)
          · 📱 내 폰 N개월째: 강CRM이 정한 날(pf = 개통 + 18개월 · 그날 📱 알림 푸시)부터 · 누르면 창에 기종·할부·약정 + [바꿀 폰 견적 받아보기]
          · ⭐ 리뷰 남기기: 개통 안부가 나가는 날(ra)부터 30일 동안만 · 한 번 누르면 숨김
-         · 🤝 명함 소개하기: 한 줄 (소개 N명 · 감사 문구) · [V4.5] 사은품 단계가 있으면 "1명 더 개통하시면 🎁 ○○" → 누르면 단계표 창 */
+         · 🤝 명함 소개하기: [V4.6] 메뉴 줄 대신 '명함 공유하기' 버튼이 '🎁 명함 소개하기'로 + 아래 한 줄 (사은품 단계가 있으면 "1명 더 개통하시면 🎁 ○○" → 누르면 단계표 창) */
       const hasPhone = (w) => !!(w && cfg().myPhoneOn !== false && (w.dv || w.am || w.ie || w.ce));
       function phoneDue(w) {
         if (/^\d{4}-\d{2}-\d{2}$/.test(w.pf || '')) return ymdOf(new Date()) >= w.pf;
@@ -2568,7 +2582,7 @@
       function renderMine() {
         const box = $('cxMine'); if (!box) return;
         const cid = getCrmId();
-        if (!cid) { box.innerHTML = ''; return; }
+        if (!cid) { box.innerHTML = ''; renderRefHint(null); return; }
         const C = cfg(), parts = [], rows = [];
         try { const vb = JSON.parse(lsGet('kcrm_vb') || 'null'); if (vb && /^\d{4}-\d{2}-\d{2}$/.test(vb.d) && /^\d{2}:\d{2}$/.test(vb.t) && vb.d >= ymdOf(new Date())) parts.push(`<div class="cx-mine-vb">📅 ${esc(mdw(vb.d))} ${esc(tKo(vb.t))} 방문 예약했어요<br><span style="font-weight:600">시간이 바뀌면 편하게 연락 주세요 🙂</span></div>`); } catch (e) {}
         const w = who && whoFor === cid ? who : null;
@@ -2578,20 +2592,30 @@
         }
         const rv = reviewUrl();
         if (w && w.ac && rv && reviewDue(w) && lsGet('kcrm_rv_done') !== w.ra) rows.push(`<a class="cx-row" href="${esc(rv)}" target="_blank" rel="noopener" data-cx="review"><span class="cx-ic" style="background:#fffbeb">⭐</span><span class="cx-tx"><span class="cx-tt">리뷰 한 줄 남기기</span><span class="cx-st">개통해 주셔서 감사해요! 남겨주신 리뷰가 큰 힘이 돼요</span></span><span class="cx-ar" aria-hidden="true">›</span></a>`);
-        if (C.refOn !== false) {
-          const n = w ? w.rc : 0, R = refInfo(w);
-          const reward = R ? R.sub : (String(C.refReward || '').trim().slice(0, 60) || '소개해 주신 분이 개통하시면 감사 선물을 챙겨드려요 🎁');
-          rows.push(`<button type="button" class="cx-row" data-cx="share"><span class="cx-ic" style="background:#f0fdf4">🤝</span><span class="cx-tx"><span class="cx-tt">지인에게 명함 소개하기</span><span class="cx-st">${esc(reward)}</span></span>${n ? `<span class="cx-pill">소개 ${n}명</span>` : ''}<span class="cx-ar" aria-hidden="true">›</span></button>`);
-        }
+        renderRefHint(w);   // [V4.6] 🤝 소개는 '명함 소개하기' 버튼 하나로 (명함 공유하기와 같은 링크라 겹쳤음)
         if (rows.length) parts.push(`<div class="cx-list">${rows.join('')}</div>`);
         box.innerHTML = parts.join('');
         box.querySelectorAll('[data-cx]').forEach(b => b.addEventListener('click', () => {
           const k = b.dataset.cx;
           if (k === 'phone') { if (typeof window.ntShowPhone === 'function') window.ntShowPhone(); else cxQuote(''); }
-          else if (k === 'share') { const R = refInfo(w); if (R && typeof window.ntShowRef === 'function') window.ntShowRef(R); else shareCard(); }
           else if (k === 'review') { if (w) lsSet('kcrm_rv_done', w.ra || '1'); logCx('⭐ 명함에서 리뷰 쓰기 누름', true); setTimeout(renderMine, 600); }
         }));
       }
+      /* [V4.6] 개인 링크 고객: [명함 공유하기] → [🎁 명함 소개하기] + 아래 한 줄(다음 사은품 · 소개 N명) · 누르면 단계표(있으면) → 공유 */
+      const refOnFor = () => !!getCrmId() && cfg().refOn !== false;
+      function renderRefHint(w) {
+        const btn = $('shareBtn'), hint = $('cxRefHint'); if (!btn || !hint) return;
+        if (!refOnFor()) { btn.innerHTML = '<i class="fa-solid fa-share-nodes"></i> 명함 공유하기'; hint.style.display = 'none'; return; }
+        btn.innerHTML = '<i class="fa-solid fa-gift"></i> 명함 소개하기';
+        const R = refInfo(w), n = w ? (w.rc || 0) : 0;
+        const text = R ? R.sub : (String(cfg().refReward || '').trim().slice(0, 60) || '소개해 주신 분이 개통하시면 감사 선물을 챙겨드려요 🎁');
+        hint.innerHTML = `<span>${R ? '' : '🤝 '}${esc(text)}${n ? ` · 소개 ${n}명` : ''}</span><span class="ar" aria-hidden="true">›</span>`;
+        hint.style.display = 'flex';
+      }
+      window.cxShareTap = () => {
+        const cid = getCrmId(), w = who && whoFor === cid ? who : null, R = refOnFor() ? refInfo(w) : null;
+        if (R && typeof window.ntShowRef === 'function') window.ntShowRef(R); else shareCard();
+      };
       function cxQuote(what) {
         const t = $('calcTabBtn'); if (t) { switchTab({ currentTarget: t }, 'calc'); try { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} }
         logCx(what || '📱 내 폰 정보 보고 견적 받아보기 누름', false);
@@ -2683,7 +2707,8 @@
       let who = '';
       try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
       if (who) el.textContent = who + ' 고객님, 다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂';
-      el.style.display = 'block';
+      const mq = document.getElementById('mqTeaser');
+      el.style.display = mq && mq.style.display === 'flex' ? 'none' : 'block';   // [V4.6] 받은 견적 띠가 있으면 그 띠 하나만
     }
     function ownerAnswer(ans) {
       const cid = getPendingId();
