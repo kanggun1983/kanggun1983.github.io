@@ -533,6 +533,33 @@
     /* [V4.1] 💬 카톡 문의 버튼: 강CRM에서 끄면 숨김 · 설정을 불러오기 전엔 잠깐 숨겨서 꺼놨을 때 깜빡 보이지 않게 */
     html.kk-wait .qt-kakao, html.kk-wait .mq-kakao, html.no-kakao .qt-kakao, html.no-kakao .mq-kakao { display: none !important; }
     html.no-kakao .mq-btns { grid-template-columns: 1fr 1fr; }
+    /* [V4.2] 🙋 고객 기능 (📅 방문 예약 · 🔔 입고 알림 · 📱 내 폰 정보 · 🤝 소개 현황 · ⭐ 리뷰) */
+    .cx-box { margin: 0 0 14px; border-radius: 16px; border: 1px solid #e2e8f0; background: #fff; padding: 14px; }
+    .cx-h { font-size: 15px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
+    .cx-sub { font-size: 13px; color: var(--text-sub); margin-top: 4px; line-height: 1.5; word-break: keep-all; }
+    .cx-rows { margin-top: 10px; display: grid; grid-template-columns: auto 1fr; gap: 7px 12px; font-size: 14px; }
+    .cx-rows dt { color: var(--text-sub); font-weight: 600; }
+    .cx-rows dd { color: var(--text-main); font-weight: 700; text-align: right; word-break: keep-all; }
+    .cx-tip { margin-top: 10px; background: #fdf2f8; color: #9d174d; border-radius: 12px; padding: 10px 12px; font-size: 13.5px; font-weight: 800; line-height: 1.45; word-break: keep-all; }
+    .cx-btn { width: 100%; min-height: 48px; margin-top: 10px; border-radius: 14px; border: 2px solid var(--lgu-pink); background: #fff; color: var(--lgu-pink); font: inherit; font-size: 15px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; text-decoration: none; }
+    .cx-btn.pri { border: 0; background: linear-gradient(110deg, #e6007e, #a8005b); color: #fff; }
+    .cx-btn.star { border-color: #f59e0b; color: #92400e; background: #fffbeb; }
+    .cx-note { font-size: 11.5px; color: #64748b; margin-top: 8px; line-height: 1.45; }
+    .cx-big { font-size: 24px; font-weight: 900; color: var(--lgu-pink); vertical-align: -2px; }
+    .cx-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .cx-chip { min-height: 44px; padding: 0 14px; border: 1px solid #fcd34d; border-radius: 9999px; background: #fffbeb; font: inherit; font-size: 14px; font-weight: 700; color: #78350f; cursor: pointer; text-align: left; }
+    .cx-chip.done { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+    .cx-mine-vb { margin: 0 0 14px; border-radius: 14px; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; font-size: 14px; font-weight: 800; padding: 12px 14px; line-height: 1.45; }
+    .vb-days { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 6px; -webkit-overflow-scrolling: touch; }
+    .vb-day { flex: 0 0 auto; width: 58px; height: 66px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff; font: inherit; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: var(--text-main); }
+    .vb-day b { font-size: 18px; font-weight: 800; line-height: 1.1; }
+    .vb-day span { font-size: 11.5px; font-weight: 600; color: var(--text-sub); }
+    .vb-day.sun span:first-child { color: #dc2626; }
+    .vb-day.sat span:first-child { color: #2563eb; }
+    .vb-day.on { border-color: #4f46e5; background: #eef2ff; }
+    .vb-day:disabled { opacity: .35; cursor: default; }
+    .bs .opts.opts4 { grid-template-columns: repeat(4, 1fr); }
+    .bs .opt:disabled { opacity: .35; cursor: default; }
     .mq-note { margin: 0; padding: 0 14px 12px; font-size: 11.5px; color: #64748b; }
     .pc-privacy { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 8px; line-height: 1.5; word-break: keep-all; }
 
@@ -618,6 +645,8 @@
         <button type="button" id="mqTeaser" class="mq-teaser" style="display:none" onclick="openMyQuote()"></button>
         <!-- 강CRM 개인 링크로 들어온 기존 고객에게만 표시 -->
         <div id="welcomeBack" class="welcome-back">다시 찾아주셔서 감사합니다! 궁금한 점은 편하게 문의 주세요 🙂</div>
+        <!-- [V4.2] 📱 내 폰 정보 · 🤝 소개 현황 · ⭐ 리뷰 (본인 확인한 폰에서만) -->
+        <div id="cxMine"></div>
 
         <div class="info-box">
           <div class="info-item">
@@ -636,6 +665,8 @@
             <span class="value">10:00 - 20:00 (연중무휴)</span>
           </div>
         </div>
+        <!-- [V4.2] 🔔 입고 알림 신청 (강CRM에 기종을 적었을 때만) -->
+        <div id="cxStock"></div>
 
         <div class="btn-row btn-row-main">
           <button class="btn-vcard" onclick="downloadVCard()">
@@ -665,7 +696,7 @@
           <a href="#" class="action-btn" onclick="openChatbot(); return false;">
             <i class="fa-solid fa-robot"></i>AI상담원
           </a>
-          <a href="https://m.booking.naver.com/booking/6/bizes/1588564?theme=place&amp;entry=pll&amp;lang=ko" target="_blank" rel="noopener" class="action-btn">
+          <a href="https://m.booking.naver.com/booking/6/bizes/1588564?theme=place&amp;entry=pll&amp;lang=ko" target="_blank" rel="noopener" class="action-btn" id="qaBook">
             <i class="fa-solid fa-calendar-check"></i>방문예약
           </a>
           <a href="https://pf.kakao.com/_hxkKzX" target="_blank" rel="noopener" class="action-btn">
@@ -1059,7 +1090,7 @@
       if (!r2.ok) throw new Error('no data');
       const base = await r2.json();
       // [V2.7] 예전엔 지원금표를 파일로 대신 쓰면 '상담 알림 서버' 주소까지 빠져서 직원 폰 푸시가 안 갔음 → 강CRM 설정은 그대로 붙임
-      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc', 'reply', 'kakao', 'kakaoOn', 'showDist'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
+      if (pcFsExtra) ['alert', 'banner', 'mvno', 'distKeep', 'customerCalc', 'reply', 'kakao', 'kakaoOn', 'showDist', 'visitBookOn', 'restock', 'myPhoneOn', 'refOn', 'refReward', 'reviewUrl'].forEach(k => { if (pcFsExtra[k] !== undefined) base[k] = pcFsExtra[k]; });
       return base;
     }
     /* [V4.0] ⏱ 연락 약속 시간 · 💬 카톡 상담 (강CRM 설정 → 명함 폰값계산 → 연락 약속 시간 · 카톡 주소) */
@@ -1120,7 +1151,7 @@
       const t = document.getElementById('mqTeaser');
       t.innerHTML = `<span>📄 ${md}에 보내드린 견적이 있어요</span><span>보기 ›</span>`;
       t.style.display = 'flex';
-      const bk = box.querySelector('.mq-book'); if (bk) bk.addEventListener('click', () => logMyQuote('book'));
+      const bk = box.querySelector('.mq-book'); if (bk) bk.addEventListener('click', (e) => { logMyQuote('book'); if (window.cxVisitOn && window.cxVisitOn()) { e.preventDefault(); window.cxOpenVisit({ note: '📄 받은 견적 조건으로 방문' + (q.summary ? ' · ' + q.summary : '') }); } });   // [V4.2]
       // 화면에 실제로 보였을 때 한 번 '견적 확인함' 기록 (담당 직원이 다시 연락하기 좋은 때)
       try {
         if (window.IntersectionObserver) { const io = new IntersectionObserver((es) => { if (es.some(e => e.isIntersecting)) { io.disconnect(); logMyQuote('view'); } }, { threshold: 0.4 }); io.observe(box); }
@@ -1960,7 +1991,7 @@
         const b = document.querySelectorAll('.tab-btn')[2];
         if (b) switchTab({ currentTarget: b }, 'calc');
       }
-      pcLoad().then(qtInit, qtInit).then(kakaoReady, kakaoReady);   // 지원금표(기종 목록)를 불러온 뒤 견적요청 양식 채우기 · ⏱ 연락 약속 시간
+      pcLoad().then(qtInit, qtInit).then(kakaoReady, kakaoReady).then(() => { if (window.cxInit) window.cxInit(); });   // [V4.2] 🙋 고객 기능도 설정 반영   // 지원금표(기종 목록)를 불러온 뒤 견적요청 양식 채우기 · ⏱ 연락 약속 시간
       refreshReplyUi(); loadMyQuote();   // [V4.0] 📄 받은 견적
       if (window.KCRM_STAFF) { const tb = document.getElementById('calcTabBtn'); if (tb) tb.textContent = '폰값계산'; }
       if (getCrmId()) showWelcomeBack();
@@ -2204,6 +2235,266 @@
     })();
   </script>
 
+  <!-- [V4.2] 📅 방문 예약 (날짜·시간 고르기 → 강CRM 방문 약속) -->
+  <div class="bs-back" id="vbBack" role="dialog" aria-modal="true" aria-labelledby="vbTitle">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="vbTitle" style="flex:1">📅 방문 예약</h3><button type="button" id="vbClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p class="sub">오실 날짜와 시간을 골라주세요. 담당자가 확인 연락드리고 미리 준비해 둘게요.</p>
+      <span class="lab">날짜</span>
+      <div class="vb-days" id="vbDays" role="radiogroup" aria-label="날짜"></div>
+      <span class="lab">시간</span>
+      <div class="opts opts4" id="vbTimes" role="radiogroup" aria-label="시간"></div>
+      <span class="lab">어떤 일로 오세요? <span style="font-weight:500;color:var(--text-sub)">(선택)</span></span>
+      <div class="opts opts2" id="vbWhy"></div>
+      <div id="vbWho">
+        <span class="lab">연락받을 번호</span>
+        <input type="tel" id="vbTel" inputmode="tel" placeholder="010-0000-0000" autocomplete="tel">
+        <span class="lab">이름 <span style="font-weight:500;color:var(--text-sub)">(선택)</span></span>
+        <input type="text" id="vbName" placeholder="예) 홍길동" autocomplete="name" maxlength="20">
+        <label class="agree"><input type="checkbox" id="vbAgree" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"> 예약 확인 연락을 위해 이름·번호를 매장 담당자에게 보내는 데 동의해요. (상담 후 보관하지 않아요)</label>
+      </div>
+      <p class="err" id="vbErr" role="alert"></p>
+      <button type="button" class="go" id="vbGo"><i class="fa-solid fa-calendar-check"></i> 방문 예약하기</button>
+      <p id="vbDone" style="display:none;text-align:center;font-weight:700;color:#3730a3;padding:14px 0;line-height:1.6"></p>
+      <a class="tel" id="vbNaver" href="https://m.booking.naver.com/booking/6/bizes/1588564?theme=place&amp;entry=pll&amp;lang=ko" target="_blank" rel="noopener">네이버 예약으로 할게요 ›</a>
+    </div>
+  </div>
+  <!-- [V4.2] 🔔 입고 알림 신청 -->
+  <div class="bs-back" id="rsBack" role="dialog" aria-modal="true" aria-labelledby="rsTitle">
+    <div class="bs">
+      <div style="display:flex;align-items:center;gap:8px"><h3 id="rsTitle" style="flex:1">🔔 입고 알림 신청</h3><button type="button" id="rsClose" aria-label="닫기" style="width:44px;height:44px;border:0;background:#f1f5f9;border-radius:9999px;font-size:18px;color:#475569;cursor:pointer"><i class="fa-solid fa-xmark"></i></button></div>
+      <p id="rsModel" style="font-size:18px;font-weight:800;color:var(--text-main);margin:10px 0 2px;word-break:keep-all"></p>
+      <p class="sub">들어오는 대로 제일 먼저 문자로 알려드려요. (광고 문자는 보내지 않아요)</p>
+      <div id="rsWho">
+        <span class="lab">알림 받을 번호</span>
+        <input type="tel" id="rsTel" inputmode="tel" placeholder="010-0000-0000" autocomplete="tel">
+        <span class="lab">이름 <span style="font-weight:500;color:var(--text-sub)">(선택)</span></span>
+        <input type="text" id="rsName" placeholder="예) 홍길동" autocomplete="name" maxlength="20">
+        <label class="agree"><input type="checkbox" id="rsAgree" style="width:18px;height:18px;flex-shrink:0;margin-top:1px"> 입고 알림 문자를 받기 위해 이름·번호를 매장 담당자에게 보내는 데 동의해요. (알림 후 보관하지 않아요)</label>
+      </div>
+      <p class="err" id="rsErr" role="alert"></p>
+      <button type="button" class="go" id="rsGo" style="background:linear-gradient(110deg,#f59e0b,#d97706)"><i class="fa-solid fa-bell"></i> 알림 신청하기</button>
+      <p id="rsDone" style="display:none;text-align:center;font-weight:700;color:#065f46;padding:14px 0;line-height:1.6"></p>
+    </div>
+  </div>
+  <script>
+    /* [V4.2] 🙋 고객 기능 (강CRM V177 설정 → 명함 폰값계산 → 🙋 고객 명함 추가 기능)
+       · 📅 방문 예약: 날짜·시간을 골라 보냄 → 강CRM '명함견적'에 '방문 예약' · 등록 고객은 고객카드 🏬 방문 약속에 바로 들어가요
+       · 🔔 입고 알림: 강CRM에 적은 기종을 누르면 신청 → 입고되면 매장에서 기종별로 한 번에 문자
+       · 📱 내 폰 정보 · 🤝 소개 현황 · ⭐ 리뷰 쓰기: 개인 링크로 본인 확인한 폰에서만 (강CRM이 card_who/명함번호에 넣어둔 값 · 이름·번호는 없음) */
+    (function () {
+      if (window.KCRM_STAFF) return;
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+      const W = ['일', '월', '화', '수', '목', '금', '토'];
+      const cfg = () => (typeof cardCfg === 'function' ? cardCfg() : null) || {};
+      const visitOn = () => cfg().visitBookOn !== false;
+      const stockModels = () => { const r = cfg().restock; return r && r.on !== false && Array.isArray(r.models) ? r.models.map(x => String(x || '').trim().slice(0, 30)).filter(Boolean).slice(0, 12) : []; };
+      const reviewUrl = () => { const u = String(cfg().reviewUrl || ''); return /^https:\/\/[^\s"'<>]+$/.test(u) ? u : ''; };
+      const ymdOf = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const dOf = (ymd) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd); return m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(NaN); };
+      const mdw = (ymd) => { const d = dOf(ymd); return `${d.getMonth() + 1}/${d.getDate()}(${W[d.getDay()]})`; };
+      const tKo = (t) => { const h = +t.slice(0, 2), m = +t.slice(3); return `${h < 12 ? '오전' : '오후'} ${h % 12 || 12}:${String(m).padStart(2, '0')}`; };
+      const lsGet = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+      const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+      const telOk = (v) => /^01\d{8,9}$/.test(String(v || '').replace(/\D/g, ''));
+
+      /* ---------- 📅 방문 예약 ---------- */
+      const VB = { day: '', time: '', why: '', note: '' };
+      const WHY = ['휴대폰 바꾸기', '인터넷·TV', '요금·결합 상담', '개통·서류 업무', '기타'];
+      function vbDays() { const out = [], t = new Date(); for (let i = 0; i < 14; i++) out.push(ymdOf(new Date(t.getFullYear(), t.getMonth(), t.getDate() + i))); return out; }
+      function vbTimes(day) {   // 영업 시작 ~ 끝나기 1시간 전 · 30분마다 · 오늘은 1시간 뒤부터
+        const R = (typeof cardReply === 'function') ? cardReply() : { open: 10, close: 20 }, out = [];
+        const now = new Date(), isToday = day === ymdOf(now), minM = now.getHours() * 60 + now.getMinutes() + 60;
+        for (let m = R.open * 60; m <= R.close * 60 - 60; m += 30) out.push({ t: String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'), off: isToday && m < minM });
+        return out;
+      }
+      const dayFull = (d) => !vbTimes(d).some(x => !x.off);
+      function vbRender() {
+        const days = vbDays();
+        if (!VB.day || !days.includes(VB.day) || dayFull(VB.day)) VB.day = days.find(d => !dayFull(d)) || days[1];
+        $('vbDays').innerHTML = days.map((d, i) => { const dt = dOf(d), on = d === VB.day; return `<button type="button" class="vb-day${on ? ' on' : ''}${dt.getDay() === 0 ? ' sun' : ''}${dt.getDay() === 6 ? ' sat' : ''}" role="radio" aria-checked="${on}" aria-label="${dt.getMonth() + 1}월 ${dt.getDate()}일 ${W[dt.getDay()]}요일" data-d="${d}" ${dayFull(d) ? 'disabled' : ''}><span>${i === 0 ? '오늘' : (i === 1 ? '내일' : W[dt.getDay()])}</span><b>${dt.getDate()}</b><span>${dt.getMonth() + 1}월</span></button>`; }).join('');
+        const ts = vbTimes(VB.day);
+        if (!ts.some(x => x.t === VB.time && !x.off)) VB.time = '';
+        $('vbTimes').innerHTML = ts.map(x => `<button type="button" class="opt${x.t === VB.time ? ' on' : ''}" role="radio" aria-checked="${x.t === VB.time}" data-t="${x.t}" ${x.off ? 'disabled' : ''}>${x.t}</button>`).join('');
+        $('vbWhy').innerHTML = WHY.map(w => `<button type="button" class="opt${w === VB.why ? ' on' : ''}${w === '기타' ? ' wide' : ''}" aria-pressed="${w === VB.why}" data-w="${esc(w)}">${esc(w)}</button>`).join('');
+        $('vbDays').querySelectorAll('[data-d]').forEach(b => b.onclick = () => { VB.day = b.dataset.d; vbRender(); });
+        $('vbTimes').querySelectorAll('[data-t]').forEach(b => b.onclick = () => { VB.time = b.dataset.t; $('vbErr').textContent = ''; vbRender(); });
+        $('vbWhy').querySelectorAll('[data-w]').forEach(b => b.onclick = () => { VB.why = VB.why === b.dataset.w ? '' : b.dataset.w; vbRender(); });
+        $('vbWho').style.display = getCrmId() ? 'none' : 'block';
+      }
+      function openVisit(opt) {
+        if (!visitOn()) { window.open(BOOK_URL, '_blank', 'noopener'); return; }
+        VB.note = (opt && opt.note) || '';
+        $('vbErr').textContent = ''; $('vbDone').style.display = 'none'; $('vbGo').style.display = 'block'; $('vbGo').disabled = false;
+        vbRender();
+        $('vbBack').style.display = 'flex';
+        const on = $('vbDays').querySelector('.vb-day.on'); if (on && on.scrollIntoView) try { on.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
+      }
+      function closeVisit() { $('vbBack').style.display = 'none'; }
+      $('vbClose').onclick = closeVisit;
+      $('vbBack').addEventListener('click', (e) => { if (e.target === $('vbBack')) closeVisit(); });
+      ['vbTel', 'vbAgree'].forEach(id => $(id).addEventListener('input', () => { $('vbErr').textContent = ''; }));
+      $('vbGo').onclick = async () => {
+        if (getPendingId()) { showOwnerSheet(function (ans) { if (ans === 'later') return; vbRender(); if (ans === 'yes') $('vbGo').click(); }); return; }
+        if (!VB.day || !VB.time) { $('vbErr').textContent = '오실 시간을 골라주세요.'; return; }
+        const extra = {};
+        if (!getCrmId()) {
+          const tel = $('vbTel').value.replace(/\D/g, '');
+          if (!telOk(tel)) { $('vbErr').textContent = '연락받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; $('vbTel').focus(); return; }
+          if (!$('vbAgree').checked) { $('vbErr').textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+          Object.assign(extra, { phone: tel, name: $('vbName').value.trim().slice(0, 20), agree: 'Y' });
+        }
+        const when = `${mdw(VB.day)} ${tKo(VB.time)}`;
+        const summary = `📅 방문 예약 · ${when}${VB.why ? ' · ' + VB.why : ''}`;
+        const lines = [`📅 방문 예약: ${VB.day} (${W[dOf(VB.day).getDay()]}) ${VB.time}`, `VISIT=${VB.day} ${VB.time}`, VB.why ? `용무: ${VB.why}` : '', VB.note ? String(VB.note).slice(0, 200) : ''].filter(Boolean);
+        Object.assign(extra, { summary, detail: lines.join('\n') });
+        $('vbGo').disabled = true; $('vbGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+        const res = await qtSend(extra);
+        $('vbGo').innerHTML = '<i class="fa-solid fa-calendar-check"></i> 방문 예약하기';
+        if (res === 'ok') {
+          $('vbErr').textContent = '';
+          cardAlertStaff(cardWho(extra), summary);
+          lsSet('kcrm_vb', JSON.stringify({ d: VB.day, t: VB.time }));
+          $('vbGo').style.display = 'none';
+          $('vbDone').innerHTML = `방문 예약을 보냈어요! 📅<br><b style="font-size:18px">${esc(when)}</b><br>담당자가 확인 연락드릴게요.<br>시간이 바뀌면 편하게 말씀해 주세요.`;
+          $('vbDone').style.display = 'block';
+          renderMine();
+        } else {
+          $('vbGo').disabled = false;
+          $('vbErr').textContent = `예약을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+          cardAlertStaff(cardWho(extra), summary, true);   // 저장은 안 됐어도 직원 폰에는 알림
+          const cid = getCrmId(); smsTo(`[방문예약${cid ? '/' + cid : ''}] ${when}${VB.why ? ' · ' + VB.why : ''} 에 방문할게요`);
+        }
+      };
+
+      /* ---------- 🔔 입고 알림 ---------- */
+      let rsModel = '';
+      const rsDone = () => { try { const a = JSON.parse(lsGet('kcrm_rs') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+      function renderStock() {
+        const box = $('cxStock'); if (!box) return;
+        const ms = stockModels();
+        if (!ms.length) { box.innerHTML = ''; return; }
+        const done = rsDone();
+        box.innerHTML = `<div class="cx-box" style="border-color:#fcd34d;background:#fffdf5"><div class="cx-h">🔔 입고되면 알려드려요</div><p class="cx-sub">기다리시는 기종을 누르면, 들어오는 대로 제일 먼저 문자 드려요.</p><div class="cx-chips">${ms.map(m => `<button type="button" class="cx-chip${done.includes(m) ? ' done' : ''}" data-rs="${esc(m)}">${done.includes(m) ? '✓ ' : ''}${esc(m)}</button>`).join('')}</div></div>`;
+        box.querySelectorAll('[data-rs]').forEach(b => b.onclick = () => openStock(b.dataset.rs));
+      }
+      function openStock(m) {
+        rsModel = m;
+        const already = rsDone().includes(m);
+        $('rsModel').textContent = '📱 ' + m;
+        $('rsErr').textContent = '';
+        $('rsDone').textContent = already ? '이미 신청하셨어요 ✓ 들어오면 바로 알려드릴게요.' : '';
+        $('rsDone').style.display = already ? 'block' : 'none';
+        $('rsGo').style.display = already ? 'none' : 'block'; $('rsGo').disabled = false;
+        $('rsWho').style.display = getCrmId() || already ? 'none' : 'block';
+        $('rsBack').style.display = 'flex';
+      }
+      function closeStock() { $('rsBack').style.display = 'none'; }
+      $('rsClose').onclick = closeStock;
+      $('rsBack').addEventListener('click', (e) => { if (e.target === $('rsBack')) closeStock(); });
+      ['rsTel', 'rsAgree'].forEach(id => $(id).addEventListener('input', () => { $('rsErr').textContent = ''; }));
+      $('rsGo').onclick = async () => {
+        if (getPendingId()) { showOwnerSheet(function (ans) { if (ans === 'later') return; $('rsWho').style.display = getCrmId() ? 'none' : 'block'; if (ans === 'yes') $('rsGo').click(); }); return; }
+        const extra = {};
+        if (!getCrmId()) {
+          const tel = $('rsTel').value.replace(/\D/g, '');
+          if (!telOk(tel)) { $('rsErr').textContent = '알림 받을 번호를 정확히 넣어주세요. (예: 010-1234-5678)'; $('rsTel').focus(); return; }
+          if (!$('rsAgree').checked) { $('rsErr').textContent = '연락처를 보내려면 동의에 체크해 주세요.'; return; }
+          Object.assign(extra, { phone: tel, name: $('rsName').value.trim().slice(0, 20), agree: 'Y' });
+        }
+        Object.assign(extra, { summary: `🔔 입고 알림 · ${rsModel}`, detail: [`🔔 입고 알림 신청: ${rsModel}`, `STOCK=${rsModel}`].join('\n') });
+        $('rsGo').disabled = true; $('rsGo').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 보내는 중…';
+        const res = await qtSend(extra);
+        $('rsGo').innerHTML = '<i class="fa-solid fa-bell"></i> 알림 신청하기';
+        if (res === 'ok') {
+          lsSet('kcrm_rs', JSON.stringify([...rsDone().filter(x => x !== rsModel), rsModel].slice(-20)));
+          $('rsGo').style.display = 'none'; $('rsWho').style.display = 'none';
+          $('rsDone').textContent = '신청했어요! 🔔 들어오면 제일 먼저 문자로 알려드릴게요.';
+          $('rsDone').style.display = 'block';
+          renderStock();
+        } else {
+          $('rsGo').disabled = false;
+          $('rsErr').textContent = `신청을 바로 못 보내서 문자로 보내드릴게요. (${res === 'net' ? '인터넷 연결' : '오류 ' + res})`;
+          const cid = getCrmId(); smsTo(`[입고알림${cid ? '/' + cid : ''}] ${rsModel} 들어오면 알려주세요`);
+        }
+      };
+
+      /* ---------- 📱 내 폰 정보 · 🤝 소개 현황 · ⭐ 리뷰 (본인 확인한 폰에서만) ---------- */
+      let who = null, whoFor = '';
+      async function loadWho() {
+        const cid = getCrmId();
+        if (!cid) { who = null; whoFor = ''; renderMine(); return; }
+        try {
+          const r = await fetch(FS_BASE + 'card_who/' + encodeURIComponent(cid) + '?key=' + FS_KEY, { cache: 'no-store' });
+          if (r.ok) {
+            const j = await r.json(), f = (j && j.fields) || {};
+            const g = (k) => { const v = f[k]; if (!v) return ''; if (v.stringValue !== undefined) return v.stringValue; if (v.integerValue !== undefined) return Number(v.integerValue); if (v.doubleValue !== undefined) return Number(v.doubleValue); return ''; };
+            who = { dv: String(g('dv') || '').slice(0, 30), am: String(g('am') || ''), ie: String(g('ie') || ''), ce: String(g('ce') || ''), bt: String(g('bt') || ''), rc: Number(g('rc')) || 0, ac: String(g('ac')) === '1' };
+          } else who = null;
+          whoFor = cid;
+        } catch (e) { who = null; }
+        renderMine();
+      }
+      const ymKo = (ym) => { const m = /^(\d{4})-(\d{2})$/.exec(String(ym || '')); return m ? `${m[1]}년 ${+m[2]}월` : ''; };
+      const thisYm = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+      const monthsFrom = (ym) => { const m = /^(\d{4})-(\d{2})$/.exec(String(ym || '')); if (!m) return null; const d = new Date(); return (d.getFullYear() - +m[1]) * 12 + (d.getMonth() + 1 - +m[2]); };
+      function renderMine() {
+        const box = $('cxMine'); if (!box) return;
+        const cid = getCrmId();
+        if (!cid) { box.innerHTML = ''; return; }
+        const C = cfg(), parts = [], now = thisYm();
+        try { const vb = JSON.parse(lsGet('kcrm_vb') || 'null'); if (vb && /^\d{4}-\d{2}-\d{2}$/.test(vb.d) && /^\d{2}:\d{2}$/.test(vb.t) && vb.d >= ymdOf(new Date())) parts.push(`<div class="cx-mine-vb">📅 ${esc(mdw(vb.d))} ${esc(tKo(vb.t))} 방문 예약했어요<br><span style="font-weight:600">시간이 바뀌면 편하게 연락 주세요 🙂</span></div>`); } catch (e) {}
+        const w = who && whoFor === cid ? who : null;
+        if (w && C.myPhoneOn !== false && (w.dv || w.am || w.ie || w.ce)) {
+          const rows = [];
+          if (w.dv) rows.push(['기종', esc(w.dv)]);
+          if (/^\d{4}-\d{2}$/.test(w.am)) { const n = monthsFrom(w.am); rows.push(['개통', `${ymKo(w.am)}${n !== null && n >= 1 ? ` · ${n}개월째` : ''}`]); }
+          if (w.ie === 'done' || (/^\d{4}-\d{2}$/.test(w.ie) && w.ie < now)) rows.push(['할부', '다 갚았어요 ✓']);
+          else if (/^\d{4}-\d{2}$/.test(w.ie)) rows.push(['할부', `${ymKo(w.ie)}까지 · ${Math.max(1, -monthsFrom(w.ie))}개월 남음`]);
+          if (w.ce === 'none') rows.push(['약정', '약정 없음']);
+          else if (/^\d{4}-\d{2}$/.test(w.ce)) rows.push(['약정', w.ce < now ? '끝났어요 ✓' : `${ymKo(w.ce)}까지`]);
+          let tip = '';
+          if (w.bt === 'now' || (/^\d{4}-\d{2}$/.test(w.bt) && w.bt <= now)) tip = '💡 할부·약정이 끝났어요. 지금 바꾸셔도 부담이 적어요!';
+          else if (/^\d{4}-\d{2}$/.test(w.bt)) tip = `💡 ${ymKo(w.bt)} 이후에 바꾸시면 남은 할부·약정 부담이 없어요`;
+          parts.push(`<div class="cx-box"><div class="cx-h">📱 내 폰 정보</div><dl class="cx-rows">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>${tip ? `<div class="cx-tip">${esc(tip)}</div>` : ''}<button type="button" class="cx-btn" data-cx="quote"><i class="fa-solid fa-mobile-screen-button"></i> 바꿀 폰 견적 받아보기</button><p class="cx-note">매장 기록으로 계산한 예상이에요. 정확한 날짜·금액은 편하게 물어봐 주세요.</p></div>`);
+        }
+        if (C.refOn !== false) {
+          const n = w ? w.rc : 0;
+          const reward = String(C.refReward || '').trim().slice(0, 60) || '소개해 주신 분이 개통하시면 감사 선물을 챙겨드려요 🎁';
+          parts.push(`<div class="cx-box"><div class="cx-h">🤝 소개 현황</div>${n ? `<p class="cx-sub" style="margin-top:6px">고객님 명함으로 들어온 지인 <span class="cx-big">${n}</span>명 · 정말 감사해요!</p>` : `<p class="cx-sub">가족·지인에게 이 명함을 보내주세요. 받은 분이 견적을 요청하면 고객님 소개로 기록돼요.</p>`}<div class="cx-tip" style="background:#f0fdf4;color:#166534">${esc(reward)}</div><button type="button" class="cx-btn pri" data-cx="share"><i class="fa-solid fa-share-nodes"></i> 명함 소개하기</button></div>`);
+        }
+        const rv = reviewUrl();
+        if (w && w.ac && rv) parts.push(`<div class="cx-box" style="border-color:#fde68a"><div class="cx-h">⭐ 리뷰 한 줄 부탁드려요</div><p class="cx-sub">개통해 주셔서 감사해요! 남겨주신 리뷰가 매장에 큰 힘이 돼요.</p><a class="cx-btn star" href="${esc(rv)}" target="_blank" rel="noopener" data-cx="review"><i class="fa-solid fa-star"></i> 리뷰 쓰기</a></div>`);
+        box.innerHTML = parts.join('');
+        box.querySelectorAll('[data-cx]').forEach(b => b.addEventListener('click', () => {
+          const k = b.dataset.cx;
+          if (k === 'quote') { const t = $('calcTabBtn'); if (t) { switchTab({ currentTarget: t }, 'calc'); try { t.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) {} } logCx('📱 내 폰 정보 보고 견적 받아보기 누름', false); }
+          else if (k === 'share') shareCard();
+          else if (k === 'review') logCx('⭐ 명함에서 리뷰 쓰기 누름', true);
+        }));
+      }
+      // 강CRM '명함견적'에 관심 기록 (하루 한 번씩)
+      function logCx(what, keep) {
+        const cid = getCrmId(); if (!cid) return;
+        const key = 'kcrm_cx_' + (what.charAt(0) === '⭐' ? 'rv' : 'qt');
+        if (lsGet(key) === ymdOf(new Date())) return;
+        lsSet(key, ymdOf(new Date()));
+        try { qtSend({ kind: 'calc', summary: what.slice(0, 200), detail: what }, !!keep); } catch (e) {}
+      }
+      function cxInit() {
+        renderStock(); renderMine();
+        if (getCrmId() && !whoFor) loadWho();
+        const qa = $('qaBook');
+        if (qa && !qa.dataset.cx) { qa.dataset.cx = '1'; qa.addEventListener('click', (e) => { if (visitOn()) { e.preventDefault(); openVisit(); } }); }
+      }
+      window.cxOpenVisit = openVisit; window.cxVisitOn = visitOn; window.cxInit = cxInit;
+      window.cxAfterOwner = () => { whoFor = ''; cxInit(); };
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeVisit(); closeStock(); } });
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', cxInit); else cxInit();
+    })();
+  </script>
+
   <!-- [V2.9] 📤 명함 공유하기 (휴대폰 공유창이 없을 때) -->
   <div class="bs-back" id="shBack" role="dialog" aria-modal="true" aria-labelledby="shTitle">
     <div class="bs">
@@ -2275,6 +2566,7 @@
         if (window.KCRM_IOS_KEEP_C) { try { history.replaceState(null, '', location.pathname + '?c=' + encodeURIComponent(cid) + '&ok=' + Date.now() + (window.KCRM_TEAM && window.KCRM_TEAM_S ? '&s=' + window.KCRM_TEAM_S : '') + location.hash); } catch (e) {} }   // [V3.8] 공용 명함은 보낸 직원(s)도 남김
         showWelcomeBack();
         try { loadMyQuote(); } catch (e) {}   // [V4.0] 본인 확인 뒤 받은 견적 보이기
+        try { if (window.cxAfterOwner) window.cxAfterOwner(); } catch (e) {}   // [V4.2] 📱 내 폰 정보 · 🤝 소개 현황
         try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
         try { if (typeof qtContactUi === 'function') qtContactUi(); } catch (e) {}
         window.OneSignalDeferred = window.OneSignalDeferred || [];
