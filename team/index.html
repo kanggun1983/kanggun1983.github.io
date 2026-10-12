@@ -608,6 +608,7 @@
     .nt .row button { flex: 1; height: 50px; border-radius: 14px; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; }
     .nt .ok { border: 0; background: linear-gradient(110deg, #3b82f6, #4f46e5); color: #fff; }
     .nt .ask { border: 1px solid #cbd5e1; background: #fff; color: var(--text-main); }
+    .nt .rvbtn { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; height: 52px; margin-top: 14px; border-radius: 14px; border: 2px solid #f59e0b; background: #fffbeb; color: #92400e; font: inherit; font-size: 16px; font-weight: 800; text-decoration: none; cursor: pointer; }   /* [V4.3] ⭐ 리뷰 쓰기 (개통 안부 푸시) */
     /* 강CRM 안 직원용: 계산기만 */
     body.kc-staff { background: #fff; padding: 0 !important; }
     body.kc-staff .header, body.kc-staff .tab-menu, body.kc-staff .pc-contact, body.kc-staff #welcomeBack { display: none !important; }
@@ -2036,6 +2037,7 @@
         <span class="tag" id="ntTag"><i class="fa-solid fa-bullhorn"></i> 진천점 소식</span>
         <h3 id="ntTitle"></h3>
         <p id="ntBody"></p>
+        <a class="rvbtn" id="ntRv" href="#" target="_blank" rel="noopener" style="display:none"><i class="fa-solid fa-star"></i> 리뷰 쓰기</a>
         <div class="row">
           <button type="button" class="ask" id="ntAsk"><i class="fa-solid fa-comment-dots"></i> 문의하기</button>
           <button type="button" class="ok" id="ntOk">확인</button>
@@ -2055,8 +2057,27 @@
       const val = (f, k) => (f && f[k] && f[k].stringValue) || '';
       let bound = false, curId = '';
       function close() { $('ntBack').style.display = 'none'; try { if (curId) localStorage.setItem(KEY, curId); } catch (e) {} }
+      /* [V4.3] 개통 안부 푸시(#pn … rv:1) → 창에 [⭐ 리뷰 쓰기] · 주소는 강CRM 설정의 리뷰 주소만 (알림 주소에 다른 링크를 넣어도 안 따라감) */
+      function reviewHref() { const u = String(((typeof cardCfg === 'function' && cardCfg()) || {}).reviewUrl || ''); return /^https:\/\/[^\s"'<>]+$/.test(u) ? u : ''; }
+      async function reviewFetch() {
+        if (reviewHref()) return reviewHref();
+        try { const r = await fetch(FS_BASE + 'card_public/phonecalc?key=' + FS_KEY, { cache: 'no-store' }); const j = await r.json(); const d = JSON.parse((j.fields && j.fields.json && j.fields.json.stringValue) || '{}'); const u = String(d.reviewUrl || ''); return /^https:\/\/[^\s"'<>]+$/.test(u) ? u : ''; } catch (e) { return ''; }
+      }
+      function setReview(on) {
+        const a = $('ntRv');
+        a.style.display = 'none';
+        if (!on) return;
+        const apply = (u) => { if (u) { a.href = u; a.style.display = 'flex'; } };
+        apply(reviewHref());
+        if (!reviewHref()) reviewFetch().then(apply);
+        a.onclick = () => {
+          try { if (typeof getCrmId === 'function' && getCrmId() && typeof qtSend === 'function' && localStorage.getItem('kcrm_cx_rv') !== new Date().toDateString()) { localStorage.setItem('kcrm_cx_rv', new Date().toDateString()); qtSend({ kind: 'calc', summary: '⭐ 명함에서 리뷰 쓰기 누름', detail: '⭐ 개통 안부 알림 → 명함 창에서 [리뷰 쓰기] 누름' }, true); } } catch (e) {}
+          setTimeout(close, 300);
+        };
+      }
       function show(n, fromPush) {
         curId = n.id || '';
+        setReview(!!(fromPush && n.rv));
         $('ntTag').innerHTML = fromPush ? '<i class="fa-solid fa-bell"></i> 받은 알림' : '<i class="fa-solid fa-bullhorn"></i> 진천점 소식';
         $('ntTitle').textContent = n.heading || '알려드려요';
         $('ntBody').textContent = n.body;
@@ -2080,7 +2101,7 @@
         try {
           let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
           const j = JSON.parse(decodeURIComponent(escape(atob(b))));
-          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || '') };
+          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || ''), rv: j.rv === 1 };
           if (!n.body) return false;
           show(n, true);
           return true;
