@@ -46,6 +46,7 @@
         var rg = params.get('reg') === '1' ? 'reg=1' + (params.get('m') ? '&m=' + encodeURIComponent(String(params.get('m')).slice(0, 20)) : '') : '';   // [V3.7] 매장 QR 고객 등록
         var target = location.origin + location.pathname + (/^[A-Za-z0-9_-]{2,40}$/.test(cid) ? '?c=' + encodeURIComponent(cid) + okp : (/^[A-Za-z0-9_-]{2,40}$/.test(r0) ? '?r=' + encodeURIComponent(r0) : '')) + (rg ? ((/^[A-Za-z0-9_-]{2,40}$/.test(cid) || /^[A-Za-z0-9_-]{2,40}$/.test(r0)) ? '&' : '?') + rg : '');
         if (s0) target += (target.indexOf('?') >= 0 ? '&' : '?') + 's=' + s0;
+        if (params.get('mr') !== null && /^[A-Za-z0-9_-]{2,40}$/.test(cid)) target += (target.indexOf('?') >= 0 ? '&' : '?') + 'mr=' + encodeURIComponent(String(params.get('mr')).slice(0, 30));   // [V4.7] 📵 부재 재연락
         target += (/^#pn=/.test(location.hash) ? location.hash : '');
         if (isKakao) {
           sessionStorage.setItem('kcrm_chrome_try', String(Date.now()));
@@ -136,6 +137,9 @@
           }
         }
         const cid = params.get('c');
+        // [V4.7] 📵 부재 재연락 문자 링크 (?c=명함번호&mr=연락 이유) → 맨 위 버튼 (본인 확인과 상관없이 이 명함번호로 응답)
+        if (params.get('mr') !== null && cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF && !window.KCRM_LEAVING)
+          window.KCRM_MISS = { cid: cid, reason: String(params.get('mr') || '').replace(/[<>"'&\n\r]/g, '').trim().slice(0, 30) };
         if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF) {
           // [V2.5] 명함 링크를 받은 지인이 열어도 원래 고객으로 연결되지 않게: 이 폰에서 처음 여는 번호면 '본인 확인' 뒤에 연결
           //   · 이미 이 폰에 연결된 같은 번호 → 그대로
@@ -156,6 +160,7 @@
           else localStorage.setItem('kcrm_cid_pending', cid);
           // 주소창 정리: 확인 표시(ok)는 항상 지움 · 명함번호도 지움 (아이폰 사파리는 '홈 화면에 추가'용으로 내 번호·확인 대기일 때만 남김)
           params.delete('ok');
+          if (!window.KCRM_LEAVING) params.delete('mr');   // [V4.7]
           const keepC = window.KCRM_IOS_KEEP_C && notList.indexOf(cid) < 0;
           if (!keepC) params.delete('c');
           const q = params.toString();
@@ -653,11 +658,26 @@
     body.kc-staff .header, body.kc-staff .tab-menu, body.kc-staff .pc-contact, body.kc-staff #welcomeBack { display: none !important; }
     body.kc-staff .mobile-card { box-shadow: none !important; border-radius: 0 !important; margin: 0 auto !important; max-width: 640px; }
     body.kc-staff > :not(.mobile-card):not(script):not(style) { display: none !important; }
+    /* [V4.7] 📵 부재 재연락 버튼 */
+    .miss-reply { margin: 14px 14px 4px; padding: 16px; border-radius: 20px; background: #fff; border: 2px solid #f9a8d4; box-shadow: 0 4px 18px rgba(219,39,119,.12); text-align: left; }
+    .miss-reply .mr-title { font-size: 20px; font-weight: 800; color: #831843; line-height: 1.35; }
+    .miss-reply .mr-sub { margin-top: 6px; font-size: 14px; color: #374151; line-height: 1.6; }
+    .miss-reply .mr-call { width: 100%; height: 54px; margin-top: 12px; border: 0; border-radius: 14px; background: #db2777; color: #fff; font-size: 17px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; }
+    .miss-reply .mr-later { margin-top: 10px; padding: 10px; border: 1px solid #fbcfe8; border-radius: 14px; }
+    .miss-reply .mr-later-t { font-size: 15px; font-weight: 800; color: #9d174d; }
+    .miss-reply .mr-slots { margin-top: 8px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .miss-reply .mr-slots button { height: 44px; border: 1px solid #f9a8d4; border-radius: 10px; background: #fff; color: #831843; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .miss-reply .mr-no { width: 100%; height: 44px; margin-top: 6px; border: 0; background: none; color: #4b5563; font-size: 14px; font-weight: 700; text-decoration: underline; cursor: pointer; }
+    .miss-reply .mr-err { margin-top: 8px; font-size: 13px; font-weight: 700; color: #b91c1c; }
+    .miss-reply .mr-done { font-size: 16px; font-weight: 800; color: #065f46; line-height: 1.5; }
+    .miss-reply button:disabled { opacity: .5; }
   </style>
 </head>
 <body>
 
   <div class="mobile-card">
+    <!-- [V4.7] 📵 부재 재연락: 문자 링크(?c=&mr=)로 들어온 고객에게만 -->
+    <section id="missReply" class="miss-reply" style="display:none" aria-live="polite"></section>
     <div class="header">
       <div class="brand-title">LG U+ 진천점</div>
       <div class="profile-img-wrap">
@@ -1083,7 +1103,7 @@
     }
     function openSms() {
       const cid = getCrmId();
-      smsTo(cid ? `[명함상담/${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ');
+      smsTo(cid ? `[명함상담/회원번호:${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ');   // [V4.7] 회원번호 표시
     }
 
     /* ===== AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
@@ -2040,8 +2060,61 @@
       refreshReplyUi(); loadMyQuote();   // [V4.0] 📄 받은 견적
       if (window.KCRM_STAFF) { const tb = document.getElementById('calcTabBtn'); if (tb) tb.textContent = '폰값계산'; }
       if (getCrmId()) showWelcomeBack();
-      if (getPendingId()) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인
+      if (getPendingId() && !window.KCRM_MISS) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인 · [V4.7] 부재 재연락 링크는 버튼부터
+      missRender();   // [V4.7] 📵
       if (deferredInstall && !isStandalone()) showInstallButton(true);
+    });
+
+    /* ===== [V4.7] 📵 부재 재연락: 영업 전화를 못 받은 고객이 문자 링크로 들어오면 맨 위에 버튼 =====
+       · [지금 바로 통화하기] → 전화 (명함의 전화번호 · 공용 명함은 그 직원 번호)
+       · [편한 시간에 연락 주세요] 오늘 오후 · 오늘 저녁 · 내일 오전 · 내일 오후
+       · [연락 원치 않아요] → 강CRM 광고 · 자동 연락 제외
+       → 강CRM (card_requests kind 'miss') + 직원 폰 알림 · 같은 문자에서 한 번 누르면 '감사합니다'로 */
+    const MISS_SLOTS = ['오늘 오후', '오늘 저녁', '내일 오전', '내일 오후'];
+    function missKey(M) { return 'kcrm_miss_' + M.cid + '_' + M.reason; }
+    function missEsc(t) { return String(t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
+    function missHour() { try { return Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }).format(new Date())); } catch (e) { return new Date().getHours(); } }
+    function missRender() {
+      const M = window.KCRM_MISS, box = document.getElementById('missReply');
+      if (!M || !box) return;
+      let done = '';
+      try { done = localStorage.getItem(missKey(M)) || ''; } catch (e) {}
+      box.style.display = 'block';
+      if (done) { box.innerHTML = '<div class="mr-done">' + missEsc(done) + '</div>'; return; }
+      const why = M.reason ? '<b>' + missEsc(M.reason) + '</b>' + (/려고$|어서$/.test(M.reason) ? '' : '드리려고') + ' 연락드렸어요.' : '안내드릴 게 있어서 연락드렸어요.';
+      const h = missHour(), slots = MISS_SLOTS.filter(s => s === '오늘 오후' ? h < 17 : (s === '오늘 저녁' ? h < 20 : true));
+      box.innerHTML = '<div class="mr-title">전화 못 받으셨죠?</div><div class="mr-sub">' + why + '<br>편하신 방법을 골라 주세요.</div>'
+        + '<button type="button" class="mr-call" data-mr="call"><i class="fa-solid fa-phone"></i> 지금 바로 통화하기</button>'
+        + '<div class="mr-later"><div class="mr-later-t">편한 시간에 연락 주세요</div><div class="mr-slots">' + slots.map(s => '<button type="button" data-mr="later:' + s + '">' + s + '</button>').join('') + '</div></div>'
+        + '<button type="button" class="mr-no" data-mr="optout">연락 원치 않아요</button><div class="mr-err" id="missErr" role="alert"></div>';
+    }
+    function missTel() { const a = document.querySelector('a.action-btn[href^="tel:"]') || document.querySelector('a[href^="tel:"]'); return a ? a.getAttribute('href') : 'tel:01044443353'; }
+    async function missSend(v) {
+      const M = window.KCRM_MISS;
+      const data = { kind: 'miss', cid: M.cid, name: '', phone: '', agree: '', summary: v, detail: M.reason || '', at: new Date().toISOString() };
+      const fields = {};
+      Object.keys(data).forEach(k => { fields[k] = { stringValue: String(data[k]).slice(0, k === 'detail' ? 1500 : 200) }; });
+      const res = await cardSaveRequest(fields, v === 'call');
+      try {
+        if (!((PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert))) await pcFetchData();
+        let who = ''; try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+        const lab = v === 'call' ? '지금 통화 누름' : (v === 'optout' ? '연락 원치 않음' : v.replace(/^later:/, '') + ' 연락 원함');
+        cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', '📵 부재 재연락 · ' + lab + (M.reason ? ' (' + M.reason + ')' : ''), res !== 'ok');
+      } catch (e) {}
+      return res;
+    }
+    function missDone(text) { try { localStorage.setItem(missKey(window.KCRM_MISS), text); } catch (e) {} missRender(); }
+    document.addEventListener('click', async function (e) {
+      const b = e.target && e.target.closest ? e.target.closest('#missReply [data-mr]') : null;
+      if (!b || !window.KCRM_MISS) return;
+      const v = b.dataset.mr, err = document.getElementById('missErr');
+      if (v === 'call') { missSend('call'); missDone('📞 전화 연결 중이에요. 통화가 안 되면 편한 시간을 문자로 남겨 주세요.'); location.href = missTel(); return; }
+      if (v === 'optout' && !confirm('앞으로 이 번호로 연락드리지 않을게요. 괜찮으세요?')) return;
+      document.querySelectorAll('#missReply [data-mr]').forEach(x => { x.disabled = true; });
+      if (err) err.textContent = '';
+      const res = await missSend(v);
+      if (res === 'ok') missDone(v === 'optout' ? '앞으로 연락드리지 않을게요. 감사합니다.' : '✅ ' + v.replace(/^later:/, '') + '에 연락드릴게요. 감사합니다!');
+      else { document.querySelectorAll('#missReply [data-mr]').forEach(x => { x.disabled = false; }); const e2 = document.getElementById('missErr'); if (e2) e2.textContent = '잠깐 연결이 안 됐어요. 다시 눌러 주세요.'; }
     });
 
     /* ===== 챗봇 인사말 말풍선: 최대 20초만 감시 ===== */
