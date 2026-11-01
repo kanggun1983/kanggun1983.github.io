@@ -426,7 +426,7 @@
     .sh-btn { width: 100%; height: 54px; border-radius: 16px; font: inherit; font-size: 16px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; border: 2px solid #e2e8f0; background: #fff; color: var(--text-main); text-decoration: none; }
     .sh-btn.pri { border: 0; background: linear-gradient(110deg, #e6007e, #a8005b); color: #fff; }
     .sh-url { font-size: 13px; color: var(--text-sub); background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 12px; word-break: break-all; margin-top: 4px; }
-    .quick-actions { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
     .action-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 2px; background: #fff; border: 1px solid #cbd5e1; border-radius: 14px; text-decoration: none; color: var(--text-main); font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .action-btn:hover { background: #f1f5f9; }
     .action-btn i { font-size: 16px; color: var(--lgu-pink); margin-bottom: 6px; }
@@ -436,7 +436,6 @@
     .service-desc { font-size: 12.5px; color: var(--text-sub); font-weight: 500; line-height: 1.4; }
     .welcome-back { background: #fde8f3; color: var(--lgu-dark); font-size: 13px; font-weight: 700; border-radius: 12px; padding: 10px 14px; margin-bottom: 14px; text-align: center; display: none; }
     button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #1e293b; outline-offset: 2px; }
-    #chatbase-bubble-button { display: none !important; }
 
     /* ===== 견적요청 (고객용 간단 양식) ===== */
     .qt-box { border-top: 8px solid #f1f5f9; margin: 18px -20px 0; padding: 4px 20px 2px; }
@@ -621,7 +620,6 @@
     .bb .ar { margin-left: auto; font-size: 16px; opacity: .85; }
     body.has-bb #onesignal-bell-container.onesignal-reset.onesignal-bell-container-bottom-right,
     body.has-bb #onesignal-bell-container.onesignal-reset.onesignal-bell-container-bottom-left { bottom: calc(96px + env(safe-area-inset-bottom, 0px)) !important; }
-    body.has-bb #chatbase-bubble-button { bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important; }
     .bs-back { position: fixed; inset: 0; z-index: 1000; background: rgba(15,23,42,.5); display: none; align-items: flex-end; justify-content: center; }
     .bs { width: 100%; max-width: 440px; background: #fff; border-radius: 24px 24px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom, 0px)); max-height: 90vh; overflow-y: auto; }
     .bs h3 { font-size: 19px; font-weight: 800; color: var(--text-main); }
@@ -775,9 +773,6 @@
           </a>
           <a href="#" class="action-btn" onclick="openSms(); return false;">
             <i class="fa-solid fa-comment-dots"></i>문자상담
-          </a>
-          <a href="#" class="action-btn" onclick="openChatbot(); return false;">
-            <i class="fa-solid fa-robot"></i>AI상담원
           </a>
           <a href="https://m.booking.naver.com/booking/6/bizes/1588564?theme=place&amp;entry=pll&amp;lang=ko" target="_blank" rel="noopener" class="action-btn" id="qaBook">
             <i class="fa-solid fa-calendar-check"></i>방문예약
@@ -1127,14 +1122,6 @@
     function openSms() {
       const cid = getCrmId();
       smsTo(cid ? `[명함상담/회원번호:${cid}] 문의드립니다: ` : '[명함상담] 문의드립니다: ');   // [V4.7] 회원번호 표시
-    }
-
-    /* ===== AI상담원: 챗봇 로딩 전이면 문자상담으로 대체 ===== */
-    function openChatbot() {
-      if (window.chatbase) {
-        try { window.chatbase('open'); return; } catch (e) {}
-      }
-      if (confirm('AI상담원을 불러오는 중입니다. 문자로 상담하시겠어요?')) openSms();
     }
 
     /* =====================================================================
@@ -2253,9 +2240,6 @@
     }, 300);
   </script>
 
-  <script>
-  (function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="S6x0x6CyjQvh5R1lnZB3g";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
-  </script>
 
   <!-- 📢 매장 공지 창 -->
   <div class="nt-back" id="ntBack" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
@@ -3099,6 +3083,76 @@
           apply(store, p && p.name && p.active !== false ? p : null);
         })
         .catch(() => {});
+    })();
+  </script>
+  <!-- [V4.8] 👵 어르신 큰 글씨 명함: 강CRM이 60세 이상 고객 명함번호에 bg=1을 넣어두면 큰 버튼 4개만 -->
+  <style>
+    #bigCard { position: fixed; inset: 0; z-index: 1100; background: #fff; overflow-y: auto; display: none; -webkit-overflow-scrolling: touch; }
+    #bigCard .bgh { background: linear-gradient(160deg, #e6007e, #a8005b); color: #fff; text-align: center; padding: 28px 20px 24px; }
+    #bigCard .bgh img { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 5px solid rgba(255,255,255,.6); background: #fff; }
+    #bigCard .bgst { font-size: 19px; font-weight: 700; opacity: .92; margin-bottom: 12px; }
+    #bigCard .bgnm { font-size: 36px; font-weight: 900; margin-top: 10px; word-break: keep-all; }
+    #bigCard .bghi { font-size: 21px; font-weight: 800; margin-top: 10px; background: rgba(255,255,255,.18); border-radius: 14px; padding: 10px 12px; word-break: keep-all; }
+    #bigCard .bgb { padding: 20px 18px 8px; display: flex; flex-direction: column; gap: 14px; max-width: 520px; margin: 0 auto; }
+    #bigCard .bgbtn { min-height: 84px; border-radius: 22px; font: inherit; font-size: 30px; font-weight: 900; display: flex; align-items: center; justify-content: center; gap: 14px; color: #fff; text-decoration: none; border: 0; cursor: pointer; }
+    #bigCard .bgbtn i { font-size: 30px; }
+    #bigCard .bgcall { background: #16a34a; } #bigCard .bgsms { background: #f59e0b; } #bigCard .bgmap { background: #2563eb; }
+    #bigCard .bgsave { background: #fff; color: #a8005b; border: 3px solid #e6007e; min-height: 72px; font-size: 25px; }
+    #bigCard .bgsmall { display: block; width: 100%; background: none; border: 0; font: inherit; font-size: 18px; color: #6b7280; text-decoration: underline; padding: 14px 0 calc(28px + env(safe-area-inset-bottom, 0px)); cursor: pointer; }
+  </style>
+  <div id="bigCard" role="dialog" aria-modal="true" aria-label="큰 글씨 명함">
+    <div class="bgh">
+      <div class="bgst" id="bgStore"></div>
+      <img id="bgImg" alt="">
+      <div class="bgnm" id="bgName"></div>
+      <div class="bghi" id="bgHi" style="display:none"></div>
+    </div>
+    <div class="bgb">
+      <a class="bgbtn bgcall" id="bgCall" href="tel:01044443353"><i class="fa-solid fa-phone"></i> 전화하기</a>
+      <button type="button" class="bgbtn bgsms" id="bgSms"><i class="fa-solid fa-comment-dots"></i> 문자 보내기</button>
+      <a class="bgbtn bgmap" id="bgMap" target="_blank" rel="noopener"><i class="fa-solid fa-map-location-dot"></i> 오시는 길</a>
+      <button type="button" class="bgbtn bgsave" id="bgSave"><i class="fa-solid fa-user-plus"></i> 내 폰에 저장</button>
+    </div>
+    <button type="button" class="bgsmall" id="bgSmall">작은 글씨로 전체 명함 보기 ›</button>
+  </div>
+  <script>
+    (function () {
+      if (window.KCRM_STAFF || window.KCRM_LEAVING) return;
+      var id = ''; try { id = (typeof getCrmId === 'function' && getCrmId()) || (typeof getPendingId === 'function' && getPendingId()) || ''; } catch (e) { id = ''; }
+      if (!id || !/^[A-Za-z0-9_-]{2,40}$/.test(id)) return;
+      var staffPhone = false; try { staffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+      var today = (function () { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); })();
+      // 📇 명함 열어봄 → 강CRM 아침 전화 명단 (이 폰에서 하루 한 번 · 직원 폰은 빼고)
+      if (!staffPhone && typeof qtSend === 'function') {
+        var k = 'kcrm_seen_' + id, last = ''; try { last = localStorage.getItem(k) || ''; } catch (e) {}
+        if (last !== today) {
+          try { localStorage.setItem(k, today); } catch (e) {}
+          setTimeout(function () { try { qtSend({ kind: 'seen', cid: id, summary: '📇 명함 열어봄' }); } catch (e) {} }, 1500);
+        }
+      }
+      var box = document.getElementById('bigCard'), $ = function (i) { return document.getElementById(i); };
+      function fill() {
+        var t = function (sel) { var el = document.querySelector(sel); return el ? el.textContent.trim() : ''; };
+        $('bgStore').textContent = t('.brand-title');
+        $('bgName').textContent = t('.profile-name');
+        var img = document.getElementById('profileImg'); if (img) { $('bgImg').src = img.src; $('bgImg').alt = img.alt || ''; }
+        var tel = document.querySelector('a.action-btn[href^="tel:"]') || document.querySelector('.info-box a[href^="tel:"]') || document.querySelector('a[href^="tel:"]');
+        if (tel) $('bgCall').setAttribute('href', tel.getAttribute('href'));
+        var map = document.querySelector('a[href*="map.naver.com"]'); if (map) $('bgMap').setAttribute('href', map.getAttribute('href'));
+      }
+      function show(who) {
+        fill(); setTimeout(fill, 1500);   // 공용 명함은 직원 정보를 조금 늦게 불러와요
+        if (who) { $('bgHi').textContent = who + '님, 반갑습니다 🙂'; $('bgHi').style.display = 'block'; }
+        box.style.display = 'block'; document.documentElement.style.overflow = 'hidden';
+      }
+      $('bgSms').onclick = function () { if (typeof openSms === 'function') openSms(); };
+      $('bgSave').onclick = function () { if (typeof downloadVCard === 'function') downloadVCard(); };
+      $('bgSmall').onclick = function () { box.style.display = 'none'; document.documentElement.style.overflow = ''; try { sessionStorage.setItem('kcrm_small', '1'); } catch (e) {} };
+      try { if (sessionStorage.getItem('kcrm_small') === '1') return; } catch (e) {}
+      fetch(FS_BASE + 'card_who/' + encodeURIComponent(id) + '?key=' + FS_KEY, { cache: 'no-store' })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .then(function (j) { var f = (j && j.fields) || {}; if (f.bg && String(f.bg.stringValue) === '1') show(f.n ? String(f.n.stringValue || '').slice(0, 12) : ''); })
+        .catch(function () {});
     })();
   </script>
 </body>
