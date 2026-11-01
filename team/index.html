@@ -2104,6 +2104,9 @@
       { // [V4.9] 강CRM 고객카드 · 가족 탭에서 연 계산기: 지금 요금제 · 가족을 미리 채움
         const selOf = (car, plan, fee) => { const L = pcPlansFor(car), k = pcPiKey(plan); const hit = (k && L.find(x => pcPiKey(x.n) === k)) || (fee ? L.find(x => x.f === fee) : null); return hit ? hit.f + '|' + hit.n : (fee ? 'manual' : ''); };
         const sunOf = v => v === 'yes' || v === 'no' || v === 'unk' ? v : 'yes';
+        if (['pension', 'disabled', 'merit', 'basic', 'near'].includes(q.welf)) S.welf = q.welf;   // [V5.1] 강CRM 스캔에서 고른 복지 · 결합 회선 · 집 인터넷
+        if (q.fl >= 1 && q.fl <= 4) S.fl = +q.fl;
+        if (q.bnet) S.bnet = 1;
         if (['lt1', '1to2', 'gt2'].includes(q.devAge)) S.devAge = q.devAge;   // [V5.0] 지금 폰 쓴 기간 (강CRM 개통일)
         if (q.nowFee > 0) { S.nowFee = +q.nowFee; S.nowSel = S.now && !/none|알뜰/.test(S.now) ? selOf(S.now, q.nowPlan, +q.nowFee) : ''; S.nowSun = sunOf(q.nowSun); }
         if (Array.isArray(q.fam) && q.fam.length) {
