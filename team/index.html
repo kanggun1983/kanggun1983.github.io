@@ -1730,11 +1730,10 @@
     const PCD_DEF = {
       lgEasy: [[2200, 3300, 4400], [3300, 5500, 6600], [4400, 6600, 8800]], lgEasyTier: [69000, 88000], lgTog: [10000, 14000, 20000, 20000], lgTogMin: 85000,
       sktNet: [3500, 7000, 18000, 24000, 24000], sktMob: [0, 6000, 15000, 20000, 24000],
-      ktTier: [22000, 64900, 108900, 141900, 174900], ktTotal: [0, 0, 5500, 16610, 22110, 27610], ktPremMin: 77000, ktPremRate: 0.25,
-      welf: { life: [26000, 0.5, 33500], house: [11000, 0.35, 21500], near: [11000, 0.35, 21500], pension: [0, 0.5, 12100], dis: [0, 0.35, 0], merit: [0, 0.35, 0] }
+      ktTier: [22000, 64900, 108900, 141900, 174900], ktTotal: [0, 0, 5500, 16610, 22110, 27610], ktPremMin: 77000, ktPremRate: 0.25
     };
-    const PC_WELF = [['', '없음'], ['pension', '기초연금 받고 있어요'], ['dis', '장애인'], ['merit', '국가유공자'], ['life', '생계 · 의료급여 수급자'], ['house', '주거 · 교육급여 수급자'], ['near', '차상위계층']];
-    function pcD() { const x = (PC.data && PC.data.disc) || (pcFsExtra && pcFsExtra.disc) || null; return x && typeof x === 'object' ? Object.assign({}, PCD_DEF, x, { welf: Object.assign({}, PCD_DEF.welf, x.welf || {}) }) : PCD_DEF; }
+    const PC_WELF = [['', '없음'], ['pension', '기초연금 받고 있어요 (만 65세↑)'], ['disabled', '장애인'], ['merit', '국가유공자'], ['basic', '기초생활 (생계 · 의료급여)'], ['near', '주거 · 교육급여 · 차상위']];
+    function pcD() { const x = (PC.data && PC.data.disc) || (pcFsExtra && pcFsExtra.disc) || null; return x && typeof x === 'object' ? Object.assign({}, PCD_DEF, x) : PCD_DEF; }
     function pcPlusOn() { return !(PC.data && PC.data.discOn === false); }
     const pcCarKey = c => pcPiCar(c);   // 'SKT' · 'KT' · 'LG U+'
     // 이 회선 한 달 결합 할인 — car: 통신사, fee: 요금제(할인 전), rate: 0.75(선택약정)·1, n: 같은 통신사 가족 회선 수(본인 포함), net: 집 인터넷 같은 통신사, others: 다른 가족 월정액 합계, fees: 가족 요금제들
@@ -1756,10 +1755,14 @@
       const b = out.reduce((a, c) => c.d > a.d ? c : a);
       return { n: b.n, d: Math.round(Math.min(b.d, x)) };
     }
+    // 복지할인 = 강CRM 구매 안내서와 같은 공식 (과기정통부 요금감면 · V240) · 선택약정 → 결합할인 → 복지할인(결합까지 뺀 금액에)
     function pcWelfAmt(kind, bill) {
-      const w = pcD().welf[kind]; if (!w || bill <= 0) return 0;
-      const [full, r, cap] = w, v = bill <= full ? bill : full + (bill - full) * r;
-      return Math.round(cap ? Math.min(cap, v) : v);
+      const b = Math.max(0, Math.round(Number(bill) || 0));
+      if (kind === 'basic') return Math.min(b, 28600);
+      if (kind === 'near') return Math.min(b, 12100) + Math.round(Math.max(0, Math.min(b, 45100) - 12100) * 0.35);
+      if (kind === 'pension') return Math.min(Math.round(b * 0.5), 12100);
+      if (kind === 'disabled' || kind === 'merit') return Math.round(b * 0.35);
+      return 0;
     }
     // 가족 목록 → 바꾼 뒤 통신사별 회선 · 요금제 (본인 포함)
     function pcFamAfter(selfFee) {
