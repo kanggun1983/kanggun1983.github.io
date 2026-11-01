@@ -220,6 +220,18 @@
       try { return localStorage.getItem('kcrm_ref'); } catch (e) { return null; }
     }
 
+    // [V4.7] 잠깐 떴다 사라지는 안내 (확인 버튼 없이)
+    function kcToast(msg) {
+      try {
+        var t = document.createElement('div');
+        t.setAttribute('role', 'status');
+        t.textContent = msg;
+        t.style.cssText = 'position:fixed;left:50%;bottom:110px;transform:translateX(-50%);max-width:88vw;background:#0f172a;color:#fff;font-size:15px;font-weight:700;line-height:1.4;padding:12px 18px;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.25);z-index:99999;text-align:center;transition:opacity .3s';
+        document.body.appendChild(t);
+        setTimeout(function () { t.style.opacity = '0'; }, 2600);
+        setTimeout(function () { t.remove(); }, 3000);
+      } catch (e) { alert(msg); }
+    }
     // 강CRM 명함번호를 OneSignal external_id로 연결 (같은 고객의 여러 알림을 한 사람으로 묶음)
     async function linkCrmUser(OneSignal) {
       const cid = getCrmId();
@@ -239,7 +251,8 @@
       await OneSignal.init({
         appId: "32c44bb5-a891-4703-98ef-13e670cf8650",
         serviceWorkerPath: "OneSignalSDKWorker.js",
-        serviceWorkerParam: { scope: "/" }
+        serviceWorkerParam: { scope: "/" },
+        welcomeNotification: { disable: true }   // [V4.7] 원시그널 인사말 알림 끄기 (다시 설치할 때마다 오던 것)
       });
       var isStaffPhone = false;
       try { isStaffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
@@ -345,7 +358,7 @@
           if (OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn) {
             await linkCrmUser(OneSignal);   // [추가] 이미 알림을 받는 폰도 강CRM 고객번호로 다시 연결
             evAlertSync(true);
-            alert('이미 이벤트 혜택 알림을 받고 계십니다. 😊');
+            kcToast('이미 이벤트 혜택 알림을 받고 계세요 😊');
             return;
           }
           await OneSignal.Notifications.requestPermission();
@@ -354,7 +367,7 @@
             await OneSignal.User.PushSubscription.optIn();
             await linkCrmUser(OneSignal);   // [추가] 알림을 켠 뒤 한 번 더 연결 (강CRM에 '알림 받음'으로 바로 뜨게)
             evAlertSync(true);
-            alert('🎉 이벤트 혜택 알림 신청이 완료되었습니다!');
+            kcToast('🎉 알림 신청 완료! 이벤트 혜택을 알려 드릴게요');   // [V4.7] 확인 창 대신 잠깐 뜨는 안내 (한 번 덜 누르게)
           } else {
             alert('알림이 차단되어 있습니다.\n브라우저 주소창 옆 [🔒/설정] → 알림 → 허용으로 바꿔 주세요.');
           }
