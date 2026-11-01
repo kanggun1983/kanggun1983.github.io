@@ -1869,7 +1869,15 @@
       } else if (fam.length) h += `<div class="pc-plus-note">${nowFee > 0 ? '가족 요금제를 고르면 가족 합계를 보여드려요' : '위 \'지금 내는 요금제\'를 넣으면 가족 합계를 비교해요'}</div>`;
       h += `</div>`;
       el.innerHTML = h;
+      pcFitBottom();
     }
+    // 강CRM 상담용: 맨 아래 칸이 고정된 '보내기' 칸(고객 안내 줄이 붙으면 더 높아짐)에 가리지 않게 그 높이만큼 띄우기
+    function pcFitBottom() {
+      if (!document.body.classList.contains('kc-staff')) return;
+      const bar = pcEl('pcStaffSend'), el = pcEl('pcCmp'); if (!bar || !el) return;
+      requestAnimationFrame(() => { el.style.marginBottom = Math.max(150, bar.offsetHeight + 32) + 'px'; });
+    }
+    window.addEventListener('resize', () => { try { pcFitBottom(); } catch (e) {} });
     function pcPlusSummary() {   // 견적요청 · 견적 문자에 붙일 한 줄
       const S = PC.st; if (!pcPlusOn()) return '';
       const out = [];
