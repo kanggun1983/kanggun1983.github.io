@@ -535,6 +535,15 @@
     .pc-cmp .r { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 4px 0; border-bottom: 1px dashed #fed7aa; }
     .pc-cmp .v { font-size: 15.5px; font-weight: 900; color: #9a3412; text-align: center; margin-top: 8px; line-height: 1.45; word-break: keep-all; }
     .pc-cmp .v small { font-size: 12.5px; font-weight: 700; color: #7c2d12; }
+    .pc-good { margin-top: 10px; background: #ecfdf5; border: 1.5px solid #6ee7b7; border-radius: 14px; padding: 12px; text-align: center; }
+    .pc-good b { font-size: 18px; color: #047857; } .pc-good small { display: block; font-size: 12.5px; color: #065f46; margin-top: 4px; line-height: 1.5; word-break: keep-all; }
+    .pc-three { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+    .pc-op { border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 8px 6px; background: #fff; text-align: center; min-width: 0; }
+    .pc-op.best { border-color: var(--lgu-pink); background: #fdf2f8; }
+    .pc-op .t { font-size: 12.5px; font-weight: 900; color: var(--text-main); }
+    .pc-op .m { font-size: 16px; font-weight: 900; color: var(--lgu-dark); margin: 4px 0 2px; word-break: keep-all; }
+    .pc-op .s { font-size: 11px; color: var(--text-sub); line-height: 1.4; word-break: keep-all; }
+    .pc-op .pc-hot { color: var(--lgu-dark); }
     .pc-fam { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px; margin-top: 8px; font-size: 13.5px; }
     .pc-fam.self { border-color: var(--lgu-pink); background: #fdf2f8; }
     .pc-fam-top { display: flex; align-items: center; gap: 8px; }
@@ -1155,7 +1164,7 @@
     const FS_BASE = 'https://firestore.googleapis.com/v1/projects/phoneplace-db/databases/(default)/documents/';
     const FS_KEY = 'AIzaSyCEtd4aYZtxF7RTciLDHEc9oSReCE4_1rk';   // 웹용 공개 키 (보안은 Firebase 규칙이 담당)
     const PC = { data: null, last: null, touched: false, asked: false, logs: 0,
-      st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외', fl: 1, bnet: 0, welf: '', nowSel: '', nowFee: 0, nowSun: 'yes', fam: [] } };
+      st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외', fl: 1, bnet: 0, welf: '', nowSel: '', nowFee: 0, nowSun: 'yes', fam: [], devAge: '', oldInst: 0 } };
     const PC_W = ['일', '월', '화', '수', '목', '금', '토'];
     const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
     /* [V4.8] 📶 요금제 혜택 — 강CRM 설정 → 📶 요금제 혜택 (대표가 고친 것) · 없으면 통신사 공식 페이지 기준 기본값 */
@@ -1808,24 +1817,61 @@
       const nowVal = S.nowSel || '';
       const nowFee = S.nowFee || 0;
       const sunOpt = (key, v) => `<div class="pc-seg pc-seg-sm">${[['네', 'yes'], ['아니요', 'no'], ['모르겠어요', 'unk']].map(([l, x]) => `<button type="button" class="pc-opt${v === x ? ' on' : ''}" data-pp="${key}" data-v="${x}">${l}</button>`).join('')}</div>`;
-      let h = `<div class="pc-plus-box"><div class="pc-plus-h">📱 지금 폰 그대로 쓰면?</div>`;
+      /* [V5.0] 📱 지금 조건과 비교
+         · 강CRM 상담용(또는 설정 showNowCmp 켬): 지금 그대로 / 새 폰 / 지금 폰 + 알뜰유심 — 지금 선약 · 결합 · 복지 · 남은 할부까지
+         · 고객용 기본: '요금 차이'만 (새 요금제 2년 평균 vs 지금 요금) */
+      const staffView = document.body.classList.contains('kc-staff') || !!(PC.data && PC.data.showNowCmp === true);
+      let h = `<div class="pc-plus-box"><div class="pc-plus-h">${staffView ? '📱 지금 조건과 비교' : '📱 지금 요금과 비교'}</div>`;
       if (!nowCar && S.now !== '알뜰폰') h += `<div class="pc-plus-note">1번에서 지금 쓰는 통신사를 고르면 비교해 드려요</div>`;
       else {
         h += `<div class="pc-sub">지금 내는 요금제</div>` + (nowCar ? pcPlanSel('data-pp-sel="nowSel"', nowCar, nowVal, '<option value="">고르세요</option>') : '') +
           ((!nowCar || nowVal === 'manual') ? `<input class="pc-in" type="number" inputmode="numeric" data-pp-num="nowFee" value="${nowFee || ''}" placeholder="월 요금 (원) 예) 59000">` : '') +
           (nowCar ? `<div class="pc-sub">선택약정 25% 받고 있어요?</div>` + sunOpt('nowSun', S.nowSun || 'yes') : '');
+        if (staffView) h += `<div class="pc-sub">지금 폰 쓴 기간</div><div class="pc-seg pc-seg-sm">${[['1년 안', 'lt1'], ['1~2년', '1to2'], ['2년 넘음', 'gt2']].map(([l, x]) => `<button type="button" class="pc-opt${S.devAge === x ? ' on' : ''}" data-pp="devAge" data-v="${x}">${l}</button>`).join('')}</div>` +
+          `<div class="pc-sub">지금 폰 남은 할부 (있으면 · 월)</div><input class="pc-in" type="number" inputmode="numeric" data-pp-num="oldInst" value="${S.oldInst || ''}" placeholder="없으면 비워 두세요">`;
         if (nowFee > 0) {
           const nk = pcCarKey(nowCar), famOn = (S.fam || []).length;
-          const nowFees = nk ? [nowFee].concat(famOn ? (S.fam || []).filter(f => f.fee > 0 && pcCarKey(f.car) === nk).map(f => f.fee) : (nk === car ? Array(Math.max(0, (S.fl || 1) - 1)).fill(nowFee) : [])) : [nowFee];
-          const now2 = (rate) => { const b = nk ? pcBundle(nk, nowFee, rate, nowFees.length, !!S.bnet && nk === car, nowFees.reduce((a, v) => a + v, 0) - nowFee, nowFees) : null; const base = nowFee * rate - (b ? b.d : 0), w = pcWelfAmt(S.welf, base); return (base - w) * 24; };
-          const yes = nowCar ? now2(0.75) : now2(1), no = now2(1);
-          const nowT = (S.nowSun || 'yes') === 'no' || !nowCar ? no : yes;
-          const diff = cur.tot - nowT, feeOnly = cur.tot - (cur.cash ? cur.dev : cur.m * cur.n);
-          h += `<div class="pc-cmp"><div class="r"><span>지금처럼 2년</span><b>${(S.nowSun === 'unk' && nowCar) ? won(yes) + ' ~ ' + won(no) : won(nowT)}</b></div>` +
-            `<div class="r"><span>새 폰 (${S.d}) 2년</span><b>${won(cur.tot)}</b></div>` +
-            `<div class="r"><span>새 폰 기기값 빼면 요금만</span><b>${won(feeOnly)}</b></div>` +
-            `<div class="v">새 폰으로 바꾸면 2년 <u>${won(Math.abs(diff))}</u> ${diff >= 0 ? '더' : '덜'} (월 약 ${won(Math.abs(diff) / 24)})<br><small>${feeOnly <= nowT ? '요금은 지금보다 2년 ' + won(nowT - feeOnly) + ' 줄어요 · 차이는 새 폰 값이에요' : '요금도 지금보다 2년 ' + won(feeOnly - nowT) + ' 더 나가요'}</small></div>` +
-            (S.nowSun === 'unk' && nowCar ? `<div class="pc-plus-note">선택약정을 받는지 모르면 두 경우(받으면 ~ 안 받으면)를 같이 보여드려요</div>` : '') + `</div>`;
+          const others = nk ? (famOn ? (S.fam || []).filter(f => f.fee > 0 && pcCarKey(f.car) === nk).map(f => ({ fee: f.fee, rate: (f.sun || 'yes') === 'no' ? 1 : 0.75 })) : (nk === car ? Array(Math.max(0, (S.fl || 1) - 1)).fill(0).map(() => ({ fee: nowFee, rate: (S.nowSun || 'yes') === 'no' ? 1 : 0.75 })) : [])) : [];
+          const allFees = [nowFee, ...others.map(o => o.fee)], netNow = !!S.bnet && nk === car;
+          const nowOf = (rate) => { const b = nk ? pcBundle(nk, nowFee, rate, allFees.length, netNow, allFees.reduce((a, v) => a + v, 0) - nowFee, allFees) : null; const base = nowFee * rate - (b ? b.d : 0), w = pcWelfAmt(S.welf, base); return { m: base - w, b: b ? b.d : 0, w, sun: nowFee * (1 - rate) }; };
+          const rYes = nowCar ? 0.75 : 1, nowY = nowOf(rYes), nowN = nowOf(1);
+          const nowM = (S.nowSun || 'yes') === 'no' || !nowCar ? nowN : nowY;
+          const old = S.oldInst || 0;
+          if (!staffView) {
+            const d = nowM.m - cur.fee;
+            h += `<div class="pc-good"><b>새 요금제 월 ${won(cur.fee)}</b><small>지금(월 ${won(nowM.m)})보다 요금이 월 ${won(Math.abs(d))} ${d >= 0 ? '줄어요' : '늘어요'}${cur.f1 !== cur.f2 ? ' · 2년 평균' : ''}${(cur.P1 && (cur.P1.b || cur.P1.w)) ? ' · 결합 · 복지 할인 포함' : ''}</small></div>` +
+              `<div class="pc-plus-note">기기값 비교는 상담 때 자세히 안내해 드려요</div>`;
+          } else {
+            // 알뜰: 같은 망 · 지금 요금제와 데이터가 비슷한 것 중 가장 싼 것 · 복지할인 불가 · 남는 가족이 잃는 결합
+            const pi = pcPiFind(nowCar, (String(nowVal).split('|')[1] || '')) || null;
+            const dTxt = String((pi && pi.d) || ''), unl = /무제한/.test(dTxt) && !/GB/.test(dTxt.split('+')[0] || ''), gbM = /(\d+(?:\.\d+)?)\s*GB/i.exec(dTxt), mbM = /(\d+)\s*MB/i.exec(dTxt);
+            const curGb = unl ? 999 : (gbM ? +gbM[1] : (mbM ? +mbM[1] / 1024 : 0));
+            const netKey = nk === 'SKT' ? 'SK' : (nk === 'LG U+' ? 'LG' : 'KT');
+            const mvAll = []; (Array.isArray((PC.data || {}).mvno) ? PC.data.mvno : []).filter(m => m.net === netKey).forEach(m => (m.plans || []).forEach(p => { if (!/키즈|청소년|시니어/.test(p.name) && p.price > 0) mvAll.push({ ...p, brand: m.brand }); }));
+            const daily = p => /(^|\s|\+)\s*(매일|일)\s*\d/.test(String(p.data || '') + ' ' + p.name);
+            let pool = curGb >= 999 ? mvAll.filter(p => pcMvGb(p) >= 70 || daily(p) || (pcMvGb(p) >= 11 && pcMvQos(p) >= 3)) : (curGb > 0 ? mvAll.filter(p => { const g2 = pcMvGb(p); return g2 >= curGb * 0.7 && g2 <= Math.max(curGb * 1.6, curGb + 5); }) : []);
+            if (!pool.length && curGb > 0 && curGb < 999) {   // 딱 맞는 게 없으면 데이터가 가장 가까운 요금제 (같으면 싼 것)
+              const dist = p => { const g2 = pcMvGb(p); return g2 > 0 ? Math.abs(Math.log(g2 / curGb)) : 99; };
+              const best = mvAll.filter(p => pcMvGb(p) > 0).sort((a, b) => dist(a) - dist(b))[0];
+              if (best) pool = mvAll.filter(p => Math.abs(dist(p) - dist(best)) < 0.05);
+            }
+            const mv = pool.sort((a, b) => a.price - b.price)[0] || null;
+            let loss = 0;   // 내가 빠지면 남는 가족 결합 할인이 줄어드는 만큼 (같은 통신사 가족)
+            if (nk && others.length) { const rest = others.map(o => o.fee), restSum = rest.reduce((a, v) => a + v, 0); others.forEach(o => { const bb = pcBundle(nk, o.fee, o.rate, allFees.length, netNow, allFees.reduce((a, v) => a + v, 0) - o.fee, allFees), ba = pcBundle(nk, o.fee, o.rate, rest.length, netNow, restSum - o.fee, rest); loss += Math.max(0, (bb ? bb.d : 0) - (ba ? ba.d : 0)); }); }
+            const oldOk = S.devAge === 'gt2';
+            const col = (cls, t, m, lines, tot) => `<div class="pc-op${cls}"><div class="t">${t}</div><div class="m">월 ${won(m)}</div><div class="s">${lines.filter(Boolean).join('<br>')}<br>2년 ${won(tot)}</div></div>`;
+            const nowLines = [`${won(nowFee)}`, nowM.sun ? `−선약 ${won(nowM.sun)}` : '', nowM.b ? `−결합 ${won(nowM.b)}` : '', nowM.w ? `−복지 ${won(nowM.w)}` : '', old ? `+남은 할부 ${won(old)}` : ''];
+            const newLines = [cur.cash ? '기기 일시불' : `기기 ${won(cur.m)}`, `요금 ${won(cur.fee)}`, (cur.P1 && (cur.P1.b || cur.P1.w)) ? '(결합 · 복지 포함)' : '', old ? `+남은 할부 ${won(old)}` : '', oldOk ? '<b class="pc-hot">지금 폰 2년 넘게 썼어요</b>' : ''];
+            const mvM = mv ? mv.price + loss + old : 0;
+            h += `<div class="pc-three">` +
+              col('', '지금 그대로', nowM.m + old, nowLines, (nowM.m + old) * 24) +
+              col(oldOk ? ' best' : '', `새 폰${oldOk ? ' <span class="pc-badge">추천</span>' : ''}`, cur.mon + old, newLines, cur.tot + old * 24) +
+              (mv ? col('', '지금 폰+알뜰', mvM, [`${pcEsc(mv.brand)} ${pcEsc(mv.name)} ${won(mv.price)}`, loss ? `+가족이 잃는 결합 ${won(loss)}` : '', '<b>복지할인 불가</b>', old ? `+남은 할부 ${won(old)}` : ''], mvM * 24)
+                  : `<div class="pc-op"><div class="t">지금 폰+알뜰</div><div class="s">${mvAll.length ? '지금 요금제와 데이터가 비슷한 알뜰 요금제가 없어요' : netKey + '망 알뜰 정책표가 아직 없어요 · 강CRM 설정에서 올려 주세요'}</div></div>`) +
+              `</div>` +
+              ((S.nowSun === 'unk' && nowCar) ? `<div class="pc-plus-note">선택약정을 모르면 받는 걸로 계산했어요 (안 받으면 지금 그대로 월 ${won(nowN.m + old)})</div>` : '') +
+              `<div class="pc-plus-note">· 알뜰은 ${netKey}망 · 지금 요금제(${pcEsc(dTxt.split('+')[0].trim() || '데이터')})와 비슷한 것 중 가장 싼 것 · 할인 기간 뒤 요금은 상담 때 확인<br>· 알뜰로 옮기면 선택약정 · 결합이 끝나고 남는 가족 결합 할인도 줄어요 · 알뜰은 복지할인 불가${S.devAge ? '' : '<br>· 지금 폰 쓴 기간을 고르면 2년 넘은 고객은 새 폰에 추천 표시'}</div>`;
+          }
         }
       }
       h += `</div>`;
@@ -2057,6 +2103,7 @@
       { // [V4.9] 강CRM 고객카드 · 가족 탭에서 연 계산기: 지금 요금제 · 가족을 미리 채움
         const selOf = (car, plan, fee) => { const L = pcPlansFor(car), k = pcPiKey(plan); const hit = (k && L.find(x => pcPiKey(x.n) === k)) || (fee ? L.find(x => x.f === fee) : null); return hit ? hit.f + '|' + hit.n : (fee ? 'manual' : ''); };
         const sunOf = v => v === 'yes' || v === 'no' || v === 'unk' ? v : 'yes';
+        if (['lt1', '1to2', 'gt2'].includes(q.devAge)) S.devAge = q.devAge;   // [V5.0] 지금 폰 쓴 기간 (강CRM 개통일)
         if (q.nowFee > 0) { S.nowFee = +q.nowFee; S.nowSel = S.now && !/none|알뜰/.test(S.now) ? selOf(S.now, q.nowPlan, +q.nowFee) : ''; S.nowSun = sunOf(q.nowSun); }
         if (Array.isArray(q.fam) && q.fam.length) {
           S.fam = q.fam.slice(0, 4).map(f => { const car = ['SKT', 'KT', 'LG U+'].includes(f.car) ? f.car : 'SKT'; return { rel: f.rel || '가족', car, sel: selOf(car, f.plan, +f.fee || 0), fee: +f.fee || 0, sun: f.sun === 'no' ? 'no' : 'yes', act: 'keep', to: '' }; });
