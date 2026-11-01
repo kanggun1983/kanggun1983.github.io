@@ -526,6 +526,23 @@
     .pc-pi details summary { cursor: pointer; color: #4338ca; font-weight: 700; margin-top: 4px; min-height: 28px; }
     .pc-pi .src { font-size: 10.5px; color: #64748b; margin-top: 4px; }
     .pc-warn { font-size: 12px; font-weight: 600; color: #b91c1c; margin-top: 6px; line-height: 1.5; }
+    /* [V4.9] ➕ 할인 더 받기 · 지금처럼 · 가족 */
+    .pc-seg-sm { margin-bottom: 4px; }
+    .pc-seg-sm .pc-opt { min-height: 44px; font-size: 14px; }
+    .pc-plus-note { font-size: 12px; color: var(--text-sub); line-height: 1.55; margin: 4px 0 6px; word-break: keep-all; }
+    .pc-plus-box { margin-top: 14px; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px 14px; background: #fff; }
+    .pc-plus-h { font-size: 15px; font-weight: 900; color: var(--text-main); margin-bottom: 4px; }
+    .pc-cmp { margin-top: 10px; background: #fff7ed; border: 1.5px solid #fdba74; border-radius: 14px; padding: 10px 12px; }
+    .pc-cmp .r { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 4px 0; border-bottom: 1px dashed #fed7aa; }
+    .pc-cmp .v { font-size: 15.5px; font-weight: 900; color: #9a3412; text-align: center; margin-top: 8px; line-height: 1.45; word-break: keep-all; }
+    .pc-cmp .v small { font-size: 12.5px; font-weight: 700; color: #7c2d12; }
+    .pc-fam { border: 1.5px solid #cbd5e1; border-radius: 12px; padding: 10px; margin-top: 8px; font-size: 13.5px; }
+    .pc-fam.self { border-color: var(--lgu-pink); background: #fdf2f8; }
+    .pc-fam-top { display: flex; align-items: center; gap: 8px; }
+    .pc-sel-sm { flex: 1; min-width: 0; margin: 0; }
+    .pc-fam-x { width: 44px; height: 44px; border: 1px solid #e2e8f0; border-radius: 10px; background: #fff; font-size: 16px; color: #64748b; cursor: pointer; flex-shrink: 0; }
+    .pc-fam-add { width: 100%; min-height: 48px; margin-top: 8px; border: 1.5px dashed #cbd5e1; border-radius: 12px; background: #fff; font: inherit; font-size: 14px; font-weight: 800; color: #475569; cursor: pointer; }
+    .pc-card .pc-row.minus span:last-child { color: #16a34a; font-weight: 800; }
     .pc-keep { margin-top: 12px; border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.7; word-break: keep-all; }
     .pc-keep.ok { background: #fdf2f8; color: #831843; }
     .pc-keep.warn { background: #fef3c7; color: #92400e; }
@@ -945,7 +962,10 @@
               <div class="pc-lb"><b>6</b>기기값 결제</div>
               <div class="pc-seg" id="pcIns"></div>
 
-              <div class="pc-lb"><b>7</b>할인 방식</div>
+              <div class="pc-lb"><b>7</b>할인 더 받기 <span style="font-weight:500;font-size:12px;color:var(--text-sub)">(해당되면 골라 주세요)</span></div>
+              <div id="pcPlusIn"></div>
+
+              <div class="pc-lb"><b>8</b>할인 방식</div>
               <div class="pc-seg" id="pcRes"></div>
               <div class="pc-detail" id="pcDetail"></div>
 
@@ -956,6 +976,7 @@
                 <div class="pc-note" id="pcNote"></div>
               </div>
               <div class="pc-keep ok" id="pcKeep"></div>
+              <div id="pcCmp"></div>
               <!-- [V3.1] 강CRM(직원용)에서만: 계산한 견적을 고객에게 문자로 -->
               <div class="pc-staff-send" id="pcStaffSend">
                 <div class="pc-quote-for" id="pcQuoteFor"></div>
@@ -1135,7 +1156,7 @@
     const FS_BASE = 'https://firestore.googleapis.com/v1/projects/phoneplace-db/databases/(default)/documents/';
     const FS_KEY = 'AIzaSyCEtd4aYZtxF7RTciLDHEc9oSReCE4_1rk';   // 웹용 공개 키 (보안은 Firebase 규칙이 담당)
     const PC = { data: null, last: null, touched: false, asked: false, logs: 0,
-      st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외' } };
+      st: { now: 'SKT', what: 'phone', car: null, m: 0, p: null, c: null, ins: 24, d: '', net: 'KT망', use: '15GB 내외', fl: 1, bnet: 0, welf: '', nowSel: '', nowFee: 0, nowSun: 'yes', fam: [] } };
     const PC_W = ['일', '월', '화', '수', '목', '금', '토'];
     const won = n => Math.round(n).toLocaleString('ko-KR') + '원';
     /* [V4.8] 📶 요금제 혜택 — 강CRM 설정 → 📶 요금제 혜택 (대표가 고친 것) · 없으면 통신사 공식 페이지 기준 기본값 */
@@ -1159,7 +1180,8 @@
  { n: '데이터플랜1.5GB', f: 33000, d: '1.5GB + 다 쓰면 최대 400Kbps', src: 'LG유플러스 보도자료 2026.5.28' },
  { n: '데이터플랜750MB', f: 29000, d: '750MB + 다 쓰면 최대 400Kbps', src: 'LG유플러스 보도자료 2026.5.28' },
  { n: '데이터플랜300MB', f: 28000, d: '300MB + 다 쓰면 최대 400Kbps', src: 'LG유플러스 보도자료 2026.5.28' },
- { n: 'LTE 키즈 22', f: 22000, k: 'kids', v: '60분 + 지정번호 2개(망내) 무제한', s: '기본 제공', d: '700MB + 다 쓰면 최대 400Kbps', b: ['만 12세 이하'], src: 'LG유플러스 요금제 페이지' }
+ { n: 'LTE 시니어 16.5', f: 16500, k: 'senior', d: '300MB', b: ['만 65세 이상 가입', '실버지킴이 포함'], src: '요금 비교 자료 · 가입 전 확인' },
+{ n: 'LTE 키즈 22', f: 22000, k: 'kids', v: '60분 + 지정번호 2개(망내) 무제한', s: '기본 제공', d: '700MB + 다 쓰면 최대 400Kbps', b: ['만 12세 이하'], src: 'LG유플러스 요금제 페이지' }
 ],
 'SKT': [
  { n: '베스트 Max', f: 129000, v: '집/이동전화 무제한', s: '기본 제공', x: '영상/부가통화 300분', d: '완전 무제한', sh: '공유 · 테더링 140GB', b: ['T 멤버십 VIP', '스마트기기 2회선 요금 무료'], age: [['청소년 (만 18세 이하)', '공유 · 테더링 160GB (+20GB) · 커피 · 영화 · 로밍 50% 할인']], src: 'T다이렉트샵 베스트 · 라이트 가이드' },
@@ -1204,7 +1226,7 @@
  { n: '음성18.7', f: 18700, k: 'senior', v: '100분', s: '100건', d: '300MB', age: [['스쿨덤 (만 18세 이하)', '600MB + 이월'], ['65+덤 (만 65~74세)', '300MB + 이월 · 음성 130분 · 문자 150건'], ['75+덤 (만 75세 이상)', '300MB + 이월 · 음성 130분 · 문자 150건']], src: 'KT닷컴 연령별 덤 혜택' }
 ]
 } };
-    PLAN_INFO_DEF.notes = { 'LG U+': [['시니어 (만 65세 이상)', '음성 · 문자 무제한 (자동)']] };
+    PLAN_INFO_DEF.notes = { 'LG U+': [['시니어 (만 65세 이상)', '음성 · 문자 기본 제공 · 부가통화 월 50분 · 신청 없이 자동 (2026.6.1부터 · 월 2만원 이상 요금제 · 과기정통부 정책)'], ['모든 나이', '데이터를 다 쓰면 최대 400Kbps로 계속 (전 국민 안심 데이터 · 2026.7.1부터 · 추가 요금 없음)']], 'SKT': [['시니어 (만 65세 이상)', '음성 · 문자 기본 제공 · 부가통화 월 50분 · 신청 없이 자동 (2026.6.1부터 · 월 2만원 이상 요금제 · 과기정통부 정책)'], ['모든 나이', '데이터를 다 쓰면 최대 400Kbps로 계속 (전 국민 안심 데이터 · 2026.7.1부터 · 추가 요금 없음)']], 'KT': [['시니어 (만 65세 이상)', '음성 · 문자 기본 제공 · 부가통화 월 50분 · 신청 없이 자동 (2026.6.1부터 · 월 2만원 이상 요금제 · 과기정통부 정책)'], ['모든 나이', '데이터를 다 쓰면 최대 400Kbps로 계속 (전 국민 안심 데이터 · 2026.7.1부터 · 추가 요금 없음)']] };
     function pcPiData() { const d = (typeof PC !== 'undefined' && PC.data && PC.data.planInfo) || (pcFsExtra && pcFsExtra.planInfo); return d && d.plans ? d : PLAN_INFO_DEF; }
     function pcPiCar(c) { c = String(c || ''); return /알뜰/.test(c) ? '' : (/LG|U\+|유플/i.test(c) ? 'LG U+' : (/SK/i.test(c) ? 'SKT' : (/KT/i.test(c) ? 'KT' : ''))); }
     const pcPiKey = (s) => String(s || '').toUpperCase().replace(/[\s()[\]·\-_/]/g, '');
@@ -1534,16 +1556,21 @@
       if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
       pcFill('pcPlan', showIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee), i]), S.p);
 
-      const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids && C.plans[i].fee > 0);
+      /* [V4.9] 바꿀 요금제: 지원금 엑셀 요금제 + 📶 요금제 혜택 표(통신사 전체 요금제) — 엑셀에 요금제가 하나뿐이어도 낮은 요금제를 고를 수 있게 */
+      const CP = C.plans.filter(p => !p.kids && p.fee > 0).map(p => ({ name: p.name, fee: p.fee }));
+      { const have = new Set(CP.map(p => pcPiKey(p.name))); pcPlansFor(S.car).forEach(p => { if (!have.has(pcPiKey(p.n))) { CP.push({ name: p.n, fee: p.f }); have.add(pcPiKey(p.n)); } }); }
+      CP.sort((a, b) => b.fee - a.fee);
+      const chgIdx = CP.map((p, i) => i);
       if (S.c === null || (S.c !== -1 && !chgIdx.includes(S.c))) {
-        const safe = chgIdx.filter(i => C.plans[i].fee >= LIM);
+        const safe = chgIdx.filter(i => CP[i].fee >= LIM);
         S.c = safe.length ? safe[safe.length - 1] : chgIdx[chgIdx.length - 1];
       }
       pcEl('pcPlanInfo').innerHTML = pcPiHtml(S.car, C.plans[S.p] && C.plans[S.p].name, '기본 제공');   // [V4.8] 📶
-      pcEl('pcChgInfo').innerHTML = S.c !== -1 && C.plans[S.c] ? pcPiHtml(S.car, C.plans[S.c].name, '(바꿀 요금제)') : '';
-      pcFill('pcChg', [['그대로 유지 (안 바꿈)', -1], ...chgIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee) + (C.plans[i].fee < LIM ? ' (위약금 주의)' : ''), i])], S.c);
+      pcEl('pcChgInfo').innerHTML = S.c !== -1 && CP[S.c] ? pcPiHtml(S.car, CP[S.c].name, '(바꿀 요금제)') : '';
+      pcFill('pcChg', [['그대로 유지 (안 바꿈)', -1], ...chgIdx.map(i => [CP[i].name + ' ' + won(CP[i].fee) + (CP[i].fee < LIM ? ' (위약금 주의)' : ''), i])], S.c);
 
       pcSeg('pcIns', 'ins', [['24개월', 24], ['36개월', 36], ['현금개통', 0]], () => { S.d = ''; });
+      pcPlusInRender();   // [V4.9]
 
       const fee = C.plans[S.p].fee;
       const sup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
@@ -1568,15 +1595,16 @@
         return { rule, cd, months };
       };
       const noChg = S.c === -1;
-      const chgPlan = noChg ? C.plans[S.p] : C.plans[S.c];
+      const chgPlan = noChg ? C.plans[S.p] : CP[S.c];
       const calc = (disc) => {
         const rate = disc === '선택약정' ? 0.75 : 1;
         const keep = keepOf(disc);
-        const f1 = fee * rate, f2 = chgPlan.fee * rate;
+        const P1 = pcPlusFee(fee, rate), P2 = pcPlusFee(chgPlan.fee, rate);   // [V4.9] 결합 · 복지 할인 뒤
+        const f1 = P1.net, f2 = P2.net;
         const avg = noChg ? f1 : (f1 * keep.months + f2 * (24 - keep.months)) / 24;
         const dev = disc === '공통지원' ? md.price - sup : md.price;
         const m = pcInst(dev, n);
-        return { m, fee: avg, f1, f2, keep, dev, cash: n === 0, mon: n ? m + avg : avg, tot: n ? m * n + avg * 24 : dev + avg * 24 };
+        return { m, fee: avg, f1, f2, keep, dev, cash: n === 0, mon: n ? m + avg : avg, tot: n ? m * n + avg * 24 : dev + avg * 24, P1, P2, n };
       };
       const g = calc('공통지원'), s = calc('선택약정');
       const best = g.tot <= s.tot ? '공통지원' : '선택약정';
@@ -1592,6 +1620,8 @@
           (o.cash ? `<div class="pc-row"><span>기기 일시불</span><span>${won(o.dev)}</span></div>`
                   : `<div class="pc-row"><span>기기</span><span>${won(o.m)}</span></div>`) +
           `<div class="pc-row"><span>요금${avgOn ? ' 평균' : ''}</span><span>${won(o.fee)}</span></div>` +
+          (o.P1.b ? `<div class="pc-row minus"><span>가족 결합</span><span>-${won(o.P1.b.d)}</span></div>` : '') +
+          (o.P1.w ? `<div class="pc-row minus"><span>복지 할인</span><span>-${won(o.P1.w)}</span></div>` : '') +
           (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
         `</div>`;
       pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '이 요금제는 공통지원금 없음') + card('선택약정', s, '요금 25% 할인');
@@ -1614,6 +1644,8 @@
         h += `<div class="sec"><div class="st">② 요금제 · 처음 ${avgOn ? Math.round(o.keep.months) + '개월' : '2년'}</div>` +
           ln(`${pcEsc(pName)} 기본요금`, won(fee)) +
           (isG ? '' : ln('선택약정 25% 할인', '-' + won(fee * 0.25), 'minus')) +
+          (o.P1.b ? ln(pcEsc(o.P1.b.n) + ' (예상)', '-' + won(o.P1.b.d), 'minus') : '') +
+          (o.P1.w ? ln('복지 할인 (예상)', '-' + won(o.P1.w), 'minus') : '') +
           ln('월 요금', won(o.f1)) +
           ln('월 합계', won(firstSum), 'sum big') +
           (o.cash ? '' : `<div class="eq">월 할부금 ${won(o.m)} + 월 요금 ${won(o.f1)}</div>`) +
@@ -1623,6 +1655,8 @@
           h += `<div class="sec"><div class="st">③ 요금제 변경 후 · ${pcFd(o.keep.cd)}부터</div>` +
             ln(`${pcEsc(chgPlan.name)} 기본요금`, won(chgPlan.fee)) +
             (isG ? '' : ln('선택약정 25% 할인', '-' + won(chgPlan.fee * 0.25), 'minus')) +
+            (o.P2.b ? ln(pcEsc(o.P2.b.n) + ' (예상)', '-' + won(o.P2.b.d), 'minus') : '') +
+            (o.P2.w ? ln('복지 할인 (예상)', '-' + won(o.P2.w), 'minus') : '') +
             ln('월 요금', won(o.f2)) +
             ln('월 합계', won(afterSum), 'sum big') +
             (o.cash ? '' : `<div class="eq">월 할부금 ${won(o.m)} + 월 요금 ${won(o.f2)}</div>`) +
@@ -1688,7 +1722,189 @@
         ins: n ? `할부 ${n}개월` : '현금개통', mon: cur.mon, avg: avgOn, dist, distOn,
         date: pcYmd(od), chg: noChg ? '그대로 유지' : chgPlan.name, cd: pcYmd(cd)
       };
+      PC.quote.plus = pcPlusSummary();
+      pcCmpRender(g, s, best);   // [V4.9] 지금처럼 · 가족
     }
+    /* ===== [V4.9] ➕ 할인 더 받기 (가족 결합 · 복지 할인) · 지금처럼 쓰기 비교 · 우리 가족 통신비 =====
+       · 금액은 통신사 홈페이지 · 복지로 안내 기준 '예상'이에요 (강CRM이 card_public/phonecalc.disc로 바꿀 수 있음)
+       · 결합: 같은 통신사 가족끼리 · 가장 많이 깎이는 결합 하나 · 복지: 결합 뒤 금액에 (본인만) */
+    const PCD_DEF = {
+      lgEasy: [[2200, 3300, 4400], [3300, 5500, 6600], [4400, 6600, 8800]], lgEasyTier: [69000, 88000], lgTog: [10000, 14000, 20000, 20000], lgTogMin: 85000,
+      sktNet: [3500, 7000, 18000, 24000, 24000], sktMob: [0, 6000, 15000, 20000, 24000],
+      ktTier: [22000, 64900, 108900, 141900, 174900], ktTotal: [0, 0, 5500, 16610, 22110, 27610], ktPremMin: 77000, ktPremRate: 0.25
+    };
+    const PC_WELF = [['', '없음'], ['pension', '기초연금 받고 있어요 (만 65세↑)'], ['disabled', '장애인'], ['merit', '국가유공자'], ['basic', '기초생활 (생계 · 의료급여)'], ['near', '주거 · 교육급여 · 차상위']];
+    function pcD() { const x = (PC.data && PC.data.disc) || (pcFsExtra && pcFsExtra.disc) || null; return x && typeof x === 'object' ? Object.assign({}, PCD_DEF, x) : PCD_DEF; }
+    function pcPlusOn() { return !(PC.data && PC.data.discOn === false); }
+    const pcCarKey = c => pcPiCar(c);   // 'SKT' · 'KT' · 'LG U+'
+    // 이 회선 한 달 결합 할인 — car: 통신사, fee: 요금제(할인 전), rate: 0.75(선택약정)·1, n: 같은 통신사 가족 회선 수(본인 포함), net: 집 인터넷 같은 통신사, others: 다른 가족 월정액 합계, fees: 가족 요금제들
+    function pcBundle(car, fee, rate, n, net, others, fees) {
+      const D = pcD(), k = pcCarKey(car), x = fee * rate, out = [];
+      n = Math.max(1, Math.min(5, n || 1));
+      if (k === 'SKT') {
+        const t = net ? D.sktNet[n - 1] : (n >= 2 ? D.sktMob[n - 1] : 0);
+        if (t) out.push({ n: '요즘가족결합', d: t / n });
+      } else if (k === 'KT') {
+        if (net) { const tot = fee + (others || 0); let i = 0; while (i < D.ktTier.length && tot >= D.ktTier[i]) i++; if (D.ktTotal[i]) out.push({ n: '총액결합할인', d: D.ktTotal[i] * fee / tot }); }
+        if (n >= 2 && fee >= D.ktPremMin && (fees || []).filter(f => f >= D.ktPremMin).length >= 2) out.push({ n: '프리미엄 가족결합', d: fee * D.ktPremRate });
+      } else if (k === 'LG U+' && n >= 2) {
+        const R = D.lgEasy[Math.min(n, 4) - 2]; out.push({ n: '참 쉬운 가족 결합', d: x >= D.lgEasyTier[1] ? R[2] : (x >= D.lgEasyTier[0] ? R[1] : R[0]) });
+        const unl = (fees || [fee]).filter(f => f >= D.lgTogMin).length;
+        if (fee >= D.lgTogMin && unl >= 2) out.push({ n: 'U+투게더 결합', d: D.lgTog[Math.min(unl, 5) - 2] });
+      }
+      if (!out.length) return null;
+      const b = out.reduce((a, c) => c.d > a.d ? c : a);
+      return { n: b.n, d: Math.round(Math.min(b.d, x)) };
+    }
+    // 복지할인 = 강CRM 구매 안내서와 같은 공식 (과기정통부 요금감면 · V240) · 선택약정 → 결합할인 → 복지할인(결합까지 뺀 금액에)
+    function pcWelfAmt(kind, bill) {
+      const b = Math.max(0, Math.round(Number(bill) || 0));
+      if (kind === 'basic') return Math.min(b, 28600);
+      if (kind === 'near') return Math.min(b, 12100) + Math.round(Math.max(0, Math.min(b, 45100) - 12100) * 0.35);
+      if (kind === 'pension') return Math.min(Math.round(b * 0.5), 12100);
+      if (kind === 'disabled' || kind === 'merit') return Math.round(b * 0.35);
+      return 0;
+    }
+    // 가족 목록 → 바꾼 뒤 통신사별 회선 · 요금제 (본인 포함)
+    function pcFamAfter(selfFee) {
+      const S = PC.st, car = pcCarKey(S.car), fam = (S.fam || []).filter(f => f.fee > 0 || f.act !== 'keep');
+      const g = {}; const add = (c, fee) => { if (!c) return; (g[c] = g[c] || []).push(fee); };
+      add(car, selfFee);
+      fam.filter(f => f.fee > 0).forEach(f => { if ((f.act || 'keep') === 'keep') add(pcCarKey(f.car), f.fee); else add(car, +(String(f.to || '').split('|')[0]) || f.fee); });
+      return g;
+    }
+    // 본인 요금 한 달: 할인 전 요금제 → 약정 → 결합 → 복지
+    function pcPlusFee(fee, rate) {
+      const S = PC.st, base = fee * rate;
+      if (!pcPlusOn()) return { net: base, b: null, w: 0 };
+      let n = S.fl || 1, fees = [fee], others = 0;
+      if ((S.fam || []).length) { const g = pcFamAfter(fee)[pcCarKey(S.car)] || [fee]; n = g.length; fees = g; others = g.reduce((a, v) => a + v, 0) - fee; }
+      else { fees = Array(n).fill(fee); others = (n - 1) * fee; }
+      const b = pcBundle(S.car, fee, rate, n, !!S.bnet, others, fees);
+      const after = base - (b ? b.d : 0), w = pcWelfAmt(S.welf, after);
+      return { net: after - w, b, w };
+    }
+    function pcPlansFor(car) { return ((pcPiData().plans || {})[pcCarKey(car)] || []).filter(p => p && p.f > 0 && !/키즈|ZEM|주니어/.test(p.n)); }
+    function pcPlanSel(attr, car, val, extra) {
+      const L = pcPlansFor(car);
+      return `<select class="pc-sel" ${attr}>${extra || ''}${L.map(p => `<option value="${p.f}|${pcEsc(p.n)}" ${val && String(val) === p.f + '|' + p.n ? 'selected' : ''}>${pcEsc(p.n)} ${won(p.f)}</option>`).join('')}<option value="manual" ${val === 'manual' ? 'selected' : ''}>목록에 없어요 (금액 직접)</option></select>`;
+    }
+    function pcPlusInRender() {
+      const S = PC.st, el = pcEl('pcPlusIn'); if (!el) return;
+      if (!pcPlusOn()) { el.innerHTML = ''; el.previousElementSibling && (el.previousElementSibling.style.display = 'none'); return; }
+      const seg = (key, items) => `<div class="pc-seg pc-seg-sm">${items.map(([l, v]) => `<button type="button" class="pc-opt${S[key] === v ? ' on' : ''}" data-pp="${key}" data-v="${pcEsc(String(v))}">${l}</button>`).join('')}</div>`;
+      const famN = (S.fam || []).length;
+      el.innerHTML = `<div class="pc-sub">👨‍👩‍👧 가족 휴대폰 (본인 포함 · 같은 통신사)</div>` +
+        (famN ? `<div class="pc-plus-note">아래 '우리 가족 통신비'에 넣은 가족으로 계산해요</div>` : seg('fl', [['혼자', 1], ['2대', 2], ['3대', 3], ['4대+', 4]])) +
+        `<div class="pc-sub">🏠 집 인터넷도 같은 통신사?</div>` + seg('bnet', [['없음', 0], ['있음', 1]]) +
+        `<div class="pc-sub">💳 복지 할인</div><select class="pc-sel" data-pp-sel="welf">${PC_WELF.map(([v, l]) => `<option value="${v}" ${S.welf === v ? 'selected' : ''}>${l}</option>`).join('')}</select>` +
+        `<div class="pc-plus-note">결합은 가장 많이 깎이는 걸로 자동 계산 · 금액은 통신사 홈페이지 · 복지로 기준 예상이에요 · 실제 가입 조건은 상담 때 확인해 드려요</div>`;
+    }
+    // ② 지금처럼 쓰기 · ③ 우리 가족 통신비 (pcRender 끝에서)
+    function pcCmpRender(g, sres, best) {
+      const S = PC.st, el = pcEl('pcCmp'); if (!el) return;
+      if (!pcPlusOn()) { el.innerHTML = ''; return; }
+      const cur = S.d === '공통지원' ? g : sres, car = pcCarKey(S.car);
+      const nowCar = S.now === 'none' || /알뜰/.test(S.now) ? '' : S.now;
+      const nowVal = S.nowSel || '';
+      const nowFee = S.nowFee || 0;
+      const sunOpt = (key, v) => `<div class="pc-seg pc-seg-sm">${[['네', 'yes'], ['아니요', 'no'], ['모르겠어요', 'unk']].map(([l, x]) => `<button type="button" class="pc-opt${v === x ? ' on' : ''}" data-pp="${key}" data-v="${x}">${l}</button>`).join('')}</div>`;
+      let h = `<div class="pc-plus-box"><div class="pc-plus-h">📱 지금 폰 그대로 쓰면?</div>`;
+      if (!nowCar && S.now !== '알뜰폰') h += `<div class="pc-plus-note">1번에서 지금 쓰는 통신사를 고르면 비교해 드려요</div>`;
+      else {
+        h += `<div class="pc-sub">지금 내는 요금제</div>` + (nowCar ? pcPlanSel('data-pp-sel="nowSel"', nowCar, nowVal, '<option value="">고르세요</option>') : '') +
+          ((!nowCar || nowVal === 'manual') ? `<input class="pc-in" type="number" inputmode="numeric" data-pp-num="nowFee" value="${nowFee || ''}" placeholder="월 요금 (원) 예) 59000">` : '') +
+          (nowCar ? `<div class="pc-sub">선택약정 25% 받고 있어요?</div>` + sunOpt('nowSun', S.nowSun || 'yes') : '');
+        if (nowFee > 0) {
+          const nk = pcCarKey(nowCar), famOn = (S.fam || []).length;
+          const nowFees = nk ? [nowFee].concat(famOn ? (S.fam || []).filter(f => f.fee > 0 && pcCarKey(f.car) === nk).map(f => f.fee) : (nk === car ? Array(Math.max(0, (S.fl || 1) - 1)).fill(nowFee) : [])) : [nowFee];
+          const now2 = (rate) => { const b = nk ? pcBundle(nk, nowFee, rate, nowFees.length, !!S.bnet && nk === car, nowFees.reduce((a, v) => a + v, 0) - nowFee, nowFees) : null; const base = nowFee * rate - (b ? b.d : 0), w = pcWelfAmt(S.welf, base); return (base - w) * 24; };
+          const yes = nowCar ? now2(0.75) : now2(1), no = now2(1);
+          const nowT = (S.nowSun || 'yes') === 'no' || !nowCar ? no : yes;
+          const diff = cur.tot - nowT, feeOnly = cur.tot - (cur.cash ? cur.dev : cur.m * cur.n);
+          h += `<div class="pc-cmp"><div class="r"><span>지금처럼 2년</span><b>${(S.nowSun === 'unk' && nowCar) ? won(yes) + ' ~ ' + won(no) : won(nowT)}</b></div>` +
+            `<div class="r"><span>새 폰 (${S.d}) 2년</span><b>${won(cur.tot)}</b></div>` +
+            `<div class="r"><span>새 폰 기기값 빼면 요금만</span><b>${won(feeOnly)}</b></div>` +
+            `<div class="v">새 폰으로 바꾸면 2년 <u>${won(Math.abs(diff))}</u> ${diff >= 0 ? '더' : '덜'} (월 약 ${won(Math.abs(diff) / 24)})<br><small>${feeOnly <= nowT ? '요금은 지금보다 2년 ' + won(nowT - feeOnly) + ' 줄어요 · 차이는 새 폰 값이에요' : '요금도 지금보다 2년 ' + won(feeOnly - nowT) + ' 더 나가요'}</small></div>` +
+            (S.nowSun === 'unk' && nowCar ? `<div class="pc-plus-note">선택약정을 받는지 모르면 두 경우(받으면 ~ 안 받으면)를 같이 보여드려요</div>` : '') + `</div>`;
+        }
+      }
+      h += `</div>`;
+      // ③ 가족
+      const fam = S.fam || [];
+      h += `<div class="pc-plus-box"><div class="pc-plus-h">👨‍👩‍👧 우리 가족 통신비 한 번에</div>` +
+        `<div class="pc-fam self"><b>① 본인</b> · 위 계산 그대로<div class="pc-plus-note">${pcEsc(S.car)} · ${pcEsc((PC.last || {}).model || '')} · ${S.d}${nowFee ? ' · 지금 월 ' + won(nowFee) : ' · 지금 요금제를 위에 넣으면 가족 합계를 비교해요'}</div></div>`;
+      fam.forEach((f, i) => {
+        const famCar = f.car || 'SKT';
+        h += `<div class="pc-fam" data-fi="${i}"><div class="pc-fam-top"><b>${i + 2}. </b><select class="pc-sel pc-sel-sm" data-pf="rel">${['배우자', '자녀', '부모', '형제자매', '기타'].map(r => `<option ${f.rel === r ? 'selected' : ''}>${r}</option>`).join('')}</select><button type="button" class="pc-fam-x" data-pf-del="${i}" aria-label="빼기">✕</button></div>` +
+          `<div class="pc-sub">지금 통신사 · 요금제</div><div class="pc-seg pc-seg-sm">${['SKT', 'KT', 'LG U+'].map(c => `<button type="button" class="pc-opt${famCar === c ? ' on' : ''}" data-pf="car" data-v="${c}">${c}</button>`).join('')}</div>` +
+          pcPlanSel('data-pf="sel"', famCar, f.sel || '', '<option value="">요금제 고르기 · 모르면 빼고 계산</option>') +
+          (f.sel === 'manual' ? `<input class="pc-in" type="number" inputmode="numeric" data-pf="fee" value="${f.fee || ''}" placeholder="월 요금 (원)">` : '') +
+          `<div class="pc-sub">선택약정 25% 받고 있어요?</div><div class="pc-seg pc-seg-sm">${[['네', 'yes'], ['아니요', 'no']].map(([l, x]) => `<button type="button" class="pc-opt${(f.sun || 'yes') === x ? ' on' : ''}" data-pf="sun" data-v="${x}">${l}</button>`).join('')}</div>` +
+          `<div class="pc-sub">바꾼 뒤</div><div class="pc-seg pc-seg-sm">${[['그대로', 'keep'], ...(pcCarKey(famCar) !== car ? [[S.car + '로 같이 옮기기', 'move']] : [])].map(([l, x]) => `<button type="button" class="pc-opt${(f.act || 'keep') === x ? ' on' : ''}" data-pf="act" data-v="${x}">${l}</button>`).join('')}</div>` +
+          (f.act === 'move' ? `<div class="pc-sub">옮기면 쓸 요금제 (선택약정 25%)</div>` + pcPlanSel('data-pf="to"', car, f.to || '', '<option value="">고르세요 (안 고르면 지금과 같은 금액)</option>') : '') + `</div>`;
+      });
+      if (fam.length < 4) h += `<button type="button" class="pc-fam-add" data-pf-add>＋ 가족 추가 (최대 5명)</button>`;
+      // 합계
+      const rows = fam.filter(f => f.fee > 0);
+      if (rows.length && nowFee > 0) {
+        const S2 = S, fr = r => (r.sun || 'yes') === 'no' ? 1 : 0.75;
+        // 지금: 통신사별로 같은 통신사 가족끼리 결합한다고 봄 (본인 포함)
+        const nowG = {}; const nowAdd = (c, fee, rate, self) => { if (!c) return; (nowG[c] = nowG[c] || []).push({ fee, rate, self }); };
+        if (nowCar) nowAdd(pcCarKey(nowCar), nowFee, (S.nowSun || 'yes') === 'no' ? 1 : 0.75, true); else nowAdd('알뜰', nowFee, 1, true);
+        rows.forEach(r => nowAdd(pcCarKey(r.car || 'SKT'), r.fee, fr(r), false));
+        const groupSum = (G, net) => { let tot = 0, bund = 0; Object.keys(G).forEach(c => { const L = G[c], fees = L.map(x => x.fee), sum = fees.reduce((a, v) => a + v, 0); L.forEach(x => { if (x.skip) return; const b = c === '알뜰' ? null : pcBundle(c, x.fee, x.rate, L.length, net && c === car, sum - x.fee, fees); const base = x.fee * x.rate - (b ? b.d : 0); const w = x.self ? pcWelfAmt(S2.welf, base) : 0; tot += base - w; bund += b ? b.d : 0; }); }); return { tot, bund }; };
+        const nowM = groupSum(nowG, !!S.bnet);
+        // 바꾼 뒤: 본인은 위 계산(기기 할부 포함 2년 평균), 가족은 그대로/옮기기
+        const aftG = {}; const aftAdd = (c, fee, rate) => { (aftG[c] = aftG[c] || []).push({ fee, rate, self: false }); };
+        (aftG[car] = []).push({ fee: (PC.quote && PC.quote.fee) || 0, rate: S.d === '선택약정' ? 0.75 : 1, skip: true });   // 본인도 결합 회선 수에 (금액은 위 계산에 이미 들어 있음)
+        rows.forEach(r => { if ((r.act || 'keep') === 'move') aftAdd(car, +(String(r.to || '').split('|')[0]) || r.fee, 0.75); else aftAdd(pcCarKey(r.car || 'SKT'), r.fee, fr(r)); });
+        const famAft = groupSum(aftG, !!S.bnet).tot;
+        const selfAft = cur.mon, aftM = selfAft + famAft, devM = cur.cash ? 0 : cur.m;
+        const feeDiff = nowM.tot - (aftM - devM);
+        h += `<div class="pc-cmp"><div class="r"><span>지금 가족 월 합계</span><b>${won(nowM.tot)}</b></div>` +
+          `<div class="r"><span>바꾼 뒤 가족 월 합계${cur.f1 !== cur.f2 ? ' (본인은 2년 평균)' : ''}</span><b>${won(aftM)}</b></div>` +
+          (devM ? `<div class="r"><span>그중 새 폰 할부</span><b>${won(devM)}</b></div>` : '') +
+          `<div class="v">가족 2년 총액: 지금 ${won(nowM.tot * 24)} → ${won(aftM * 24)}<br><small>${devM ? '새 폰 할부를 빼면 ' : ''}가족 요금은 월 ${won(Math.abs(feeDiff))} ${feeDiff >= 0 ? '줄어요' : '늘어요'}</small></div>` +
+          `<div class="pc-plus-note">같은 통신사 가족끼리 결합한다고 보고 계산한 예상이에요 · 가족 복지 할인 · 기존 약정은 상담 때 확인</div></div>`;
+      } else if (fam.length) h += `<div class="pc-plus-note">${nowFee > 0 ? '가족 요금제를 고르면 가족 합계를 보여드려요' : '위 \'지금 내는 요금제\'를 넣으면 가족 합계를 비교해요'}</div>`;
+      h += `</div>`;
+      el.innerHTML = h;
+    }
+    function pcPlusSummary() {   // 견적요청 · 견적 문자에 붙일 한 줄
+      const S = PC.st; if (!pcPlusOn()) return '';
+      const out = [];
+      const n = (S.fam || []).length ? (S.fam.length + 1) + '명(가족 입력)' : ((S.fl || 1) > 1 ? '가족 ' + S.fl + '대' : '');
+      if (n) out.push(n + (S.bnet ? ' + 집 인터넷' : ''));
+      else if (S.bnet) out.push('집 인터넷 같은 통신사');
+      const w = PC_WELF.find(x => x[0] === S.welf); if (S.welf && w) out.push('복지: ' + w[1].replace(' 받고 있어요', ''));
+      if (S.nowFee) out.push('지금 요금 월 ' + won(S.nowFee) + (S.nowSun === 'no' ? '' : S.nowSun === 'unk' ? ' (약정 모름)' : ' (선약)'));
+      (S.fam || []).filter(f => f.fee > 0).forEach(f => out.push(`${f.rel || '가족'} ${f.car || ''} ${won(f.fee)}${(f.act || 'keep') === 'move' ? ' → 같이 이동' : ''}`));
+      return out.join(' · ');
+    }
+    document.addEventListener('click', (e) => {
+      const S = PC.st;
+      const b = e.target.closest('[data-pp]');
+      if (b) { const k = b.dataset.pp, v = b.dataset.v; S[k] = /^(fl|bnet)$/.test(k) ? +v : v; PC.touched = true; pcRender(); return; }
+      const a = e.target.closest('[data-pf-add]');
+      if (a) { S.fam = (S.fam || []).concat([{ rel: '배우자', car: S.now && !/없음|none|알뜰/.test(S.now) ? S.now : 'SKT', sel: '', fee: 0, sun: 'yes', act: 'keep', to: '' }]); PC.touched = true; pcRender(); return; }
+      const x = e.target.closest('[data-pf-del]');
+      if (x) { S.fam.splice(+x.dataset.pfDel, 1); pcRender(); return; }
+      const f = e.target.closest('.pc-fam [data-pf][data-v]');
+      if (f) { const i = +f.closest('[data-fi]').dataset.fi, k = f.dataset.pf, it = S.fam[i]; it[k] = f.dataset.v; if (k === 'car') { it.sel = ''; it.fee = 0; it.act = 'keep'; } pcRender(); }
+    });
+    document.addEventListener('change', (e) => {
+      const S = PC.st, t = e.target;
+      if (t.dataset && t.dataset.ppSel) { const k = t.dataset.ppSel; S[k] = t.value; if (k === 'nowSel') { S.nowFee = t.value && t.value !== 'manual' ? +t.value.split('|')[0] : (t.value === 'manual' ? S.nowFee : 0); } PC.touched = true; pcRender(); return; }
+      if (t.dataset && t.dataset.ppNum) { S[t.dataset.ppNum] = Math.max(0, parseInt(t.value, 10) || 0); pcRender(); return; }
+      const fi = t.closest && t.closest('[data-fi]');
+      if (fi && t.dataset.pf) { const it = S.fam[+fi.dataset.fi], k = t.dataset.pf;
+        if (k === 'sel') { it.sel = t.value; it.fee = t.value && t.value !== 'manual' ? +t.value.split('|')[0] : (t.value === 'manual' ? it.fee : 0); }
+        else if (k === 'fee') it.fee = Math.max(0, parseInt(t.value, 10) || 0);
+        else it[k] = t.value;
+        pcRender(); }
+    });
+
 
     /* [V3.1] 📤 견적 보내기 (강CRM 직원용 계산기)
        · 계산한 견적을 고객용 문자 문구로 만들어 강CRM으로 넘김 → 강CRM이 받는 사람 확인 후 문자앱으로
@@ -1722,6 +1938,7 @@
       if (q.pen) L.push(`※ ${q.why}을 받으면 ${won(q.LIM)} 미만 요금제로 낮출 때 위약금이 있어요.`);
       if (q.dist || q.trade) L.push(`※ ${[q.dist && '유통망지원금', q.trade && '기존 폰 보상'].filter(Boolean).join('·')}은 상담 때 더 챙겨드려요.`);
       L.push(`※ ${q.car} 공통지원금${q.date ? ' ' + q.date : ''} 기준이라 바뀔 수 있어요.`);
+      if (q.plus) L.push(`※ 반영한 할인: ${q.plus} (결합 · 복지 할인은 예상 금액)`);   // [V4.9]
       return L.join('\n');
     }
     // 📊 비교 견적: 공통지원 · 선택약정을 나란히 (강CRM '견적 보내기'에서 켜고 끔)
@@ -1830,6 +2047,15 @@
       else if (/12/.test(q.ins || '')) notes.push('할부 12개월은 계산기에 없어서 24개월로 계산');
       if (/공통/.test(q.disc || '')) S.d = '공통지원'; else if (/선택/.test(q.disc || '')) S.d = '선택약정';
       if (q.trade && pcEl('pcTrade')) pcEl('pcTrade').checked = true;   // 고객이 기기 보상 원함
+      { // [V4.9] 강CRM 고객카드 · 가족 탭에서 연 계산기: 지금 요금제 · 가족을 미리 채움
+        const selOf = (car, plan, fee) => { const L = pcPlansFor(car), k = pcPiKey(plan); const hit = (k && L.find(x => pcPiKey(x.n) === k)) || (fee ? L.find(x => x.f === fee) : null); return hit ? hit.f + '|' + hit.n : (fee ? 'manual' : ''); };
+        const sunOf = v => v === 'yes' || v === 'no' || v === 'unk' ? v : 'yes';
+        if (q.nowFee > 0) { S.nowFee = +q.nowFee; S.nowSel = S.now && !/none|알뜰/.test(S.now) ? selOf(S.now, q.nowPlan, +q.nowFee) : ''; S.nowSun = sunOf(q.nowSun); }
+        if (Array.isArray(q.fam) && q.fam.length) {
+          S.fam = q.fam.slice(0, 4).map(f => { const car = ['SKT', 'KT', 'LG U+'].includes(f.car) ? f.car : 'SKT'; return { rel: f.rel || '가족', car, sel: selOf(car, f.plan, +f.fee || 0), fee: +f.fee || 0, sun: f.sun === 'no' ? 'no' : 'yes', act: 'keep', to: '' }; });
+          notes.push(`가족 ${S.fam.length}명 채움 (고객카드 가족 탭)`);
+        }
+      }
       if (q.tradePhone && pcEl('pcCurPhone')) pcEl('pcCurPhone').value = String(q.tradePhone).slice(0, 30);
       if (q.trade) notes.push('기기 보상 원함' + (q.tradePhone ? ` (${String(q.tradePhone).slice(0, 30)})` : ''));
       const who = String(q.who || '').slice(0, 20);
@@ -1852,6 +2078,7 @@
           lines.push(`${L.disc} · ${L.ins} · 월 ${won(L.mon)}${L.avg ? ' (2년 평균)' : ''}`);
           lines.push((L.distOn ? `유통망지원금 ${L.dist ? '받기' : '안 받음'} · ` : '') + `개통 예정 ${L.date}`);
           lines.push(`변경 예정: ${L.chg} (${L.cd}부터)`);
+          { const ps = pcPlusSummary(); if (ps) lines.push('할인 · 가족: ' + ps); }
         } else {
           lines.push(`희망: ${S.car} 개통 (기종·요금제 문의)`);
         }
