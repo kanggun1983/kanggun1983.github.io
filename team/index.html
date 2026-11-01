@@ -1555,14 +1555,18 @@
       if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
       pcFill('pcPlan', showIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee), i]), S.p);
 
-      const chgIdx = C.plans.map((p, i) => i).filter(i => !C.plans[i].kids && C.plans[i].fee > 0);
+      /* [V4.9] 바꿀 요금제: 지원금 엑셀 요금제 + 📶 요금제 혜택 표(통신사 전체 요금제) — 엑셀에 요금제가 하나뿐이어도 낮은 요금제를 고를 수 있게 */
+      const CP = C.plans.filter(p => !p.kids && p.fee > 0).map(p => ({ name: p.name, fee: p.fee }));
+      { const have = new Set(CP.map(p => pcPiKey(p.name))); pcPlansFor(S.car).forEach(p => { if (!have.has(pcPiKey(p.n))) { CP.push({ name: p.n, fee: p.f }); have.add(pcPiKey(p.n)); } }); }
+      CP.sort((a, b) => b.fee - a.fee);
+      const chgIdx = CP.map((p, i) => i);
       if (S.c === null || (S.c !== -1 && !chgIdx.includes(S.c))) {
-        const safe = chgIdx.filter(i => C.plans[i].fee >= LIM);
+        const safe = chgIdx.filter(i => CP[i].fee >= LIM);
         S.c = safe.length ? safe[safe.length - 1] : chgIdx[chgIdx.length - 1];
       }
       pcEl('pcPlanInfo').innerHTML = pcPiHtml(S.car, C.plans[S.p] && C.plans[S.p].name, '기본 제공');   // [V4.8] 📶
-      pcEl('pcChgInfo').innerHTML = S.c !== -1 && C.plans[S.c] ? pcPiHtml(S.car, C.plans[S.c].name, '(바꿀 요금제)') : '';
-      pcFill('pcChg', [['그대로 유지 (안 바꿈)', -1], ...chgIdx.map(i => [C.plans[i].name + ' ' + won(C.plans[i].fee) + (C.plans[i].fee < LIM ? ' (위약금 주의)' : ''), i])], S.c);
+      pcEl('pcChgInfo').innerHTML = S.c !== -1 && CP[S.c] ? pcPiHtml(S.car, CP[S.c].name, '(바꿀 요금제)') : '';
+      pcFill('pcChg', [['그대로 유지 (안 바꿈)', -1], ...chgIdx.map(i => [CP[i].name + ' ' + won(CP[i].fee) + (CP[i].fee < LIM ? ' (위약금 주의)' : ''), i])], S.c);
 
       pcSeg('pcIns', 'ins', [['24개월', 24], ['36개월', 36], ['현금개통', 0]], () => { S.d = ''; });
       pcPlusInRender();   // [V4.9]
@@ -1590,7 +1594,7 @@
         return { rule, cd, months };
       };
       const noChg = S.c === -1;
-      const chgPlan = noChg ? C.plans[S.p] : C.plans[S.c];
+      const chgPlan = noChg ? C.plans[S.p] : CP[S.c];
       const calc = (disc) => {
         const rate = disc === '선택약정' ? 0.75 : 1;
         const keep = keepOf(disc);
