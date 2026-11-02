@@ -8,6 +8,13 @@
   <title>강태훈 과장님의 명함 · LGU+진천점</title>
 
   <script>
+    /* [V5.6] 🔗 공용 명함 링크 ?c=고객번호.직원번호 → ?c=고객번호&s=직원번호 로 풀기 (맨 먼저 · 문자앱이 & 뒤를 잘라서 & 없이 보냄) */
+    (function () {
+      try {
+        var u = new URL(location.href), m = /^([A-Za-z0-9_-]{2,40})\.([a-z0-9]{3,12})$/.exec(u.searchParams.get('c') || '');
+        if (m) { u.searchParams.set('c', m[1]); if (!u.searchParams.get('s')) u.searchParams.set('s', m[2]); history.replaceState(null, '', u.pathname + u.search + u.hash); }
+      } catch (e) {}
+    })();
     /* ===== [추가] 명함 링크를 열면 크롬으로 자동으로 열기 =====
        · 카톡 안 브라우저 → 카톡 전용 '외부 브라우저로 열기' (아이폰은 사파리로)
        · 안드로이드의 네이버·인스타·페북·밴드·다음 앱 안 브라우저, 삼성 인터넷 등 → 크롬으로
