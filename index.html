@@ -25,6 +25,14 @@
         var c0 = p0.get('c') || '';
         if (ios && !standalone && p0.get('staff') !== '1' && /^[A-Za-z0-9_-]{2,40}$/.test(c0)) window.KCRM_IOS_KEEP_C = true;
       } catch (e) {}
+      // [V5.3] 📇 직원 폰(이 폰에서 강CRM에 로그인함 · 같은 주소라 저장공간을 같이 씀)은 고객으로 연결하지 않음
+      //   · 고객 명함 링크(?c=)를 열어도 이 폰에 고객번호를 저장 안 함 · 예전에 잘못 저장된 고객번호도 지움 → 내 명함 그대로
+      try {
+        if (new URLSearchParams(location.search).get('staff') !== '1' && (localStorage.getItem('kcrm_staff_dev') || localStorage.getItem('kcrmStaffAlert') === 'on')) {
+          window.KCRM_STAFFDEV = true;
+          ['kcrm_cid', 'kcrm_cid_pending', 'kcrm_who', 'kcrm_ref'].forEach(function (k) { localStorage.removeItem(k); });
+        }
+      } catch (e) {}
     })();
     (function () {
       try {
@@ -125,7 +133,7 @@
         // [V2.9] 고객이 [명함 공유하기]로 보낸 주소(?r=명함번호) → 받은 사람은 새 손님 + '지인 소개'로 (본인 확인 없이)
         const rid = params.get('r');
         if (rid !== null) {
-          if (/^[A-Za-z0-9_-]{2,40}$/.test(rid) && !window.KCRM_STAFF && !window.KCRM_LEAVING && !params.get('c')) {
+          if (/^[A-Za-z0-9_-]{2,40}$/.test(rid) && !window.KCRM_STAFF && !window.KCRM_STAFFDEV && !window.KCRM_LEAVING && !params.get('c')) {
             const mine0 = localStorage.getItem('kcrm_cid') || '';
             if (!mine0 && rid !== mine0) localStorage.setItem('kcrm_ref', rid);
           }
@@ -137,9 +145,19 @@
         }
         const cid = params.get('c');
         // [V4.7] 📵 부재 재연락 문자 링크 (?c=명함번호&mr=연락 이유) → 맨 위 버튼 (본인 확인과 상관없이 이 명함번호로 응답)
-        if (params.get('mr') !== null && cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF && !window.KCRM_LEAVING)
-          window.KCRM_MISS = { cid: cid, reason: String(params.get('mr') || '').replace(/[<>"'&\n\r]/g, '').trim().slice(0, 30) };
-        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF) {
+        // [V5.3] 🔗 짧은 링크: mr=1102 (보낸 날짜 4자리 · 이유는 문자 본문에) → 이유 없이 '안내드릴 게 있어서' · 날짜마다 따로 응답
+        if (params.get('mr') !== null && cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF && !window.KCRM_STAFFDEV && !window.KCRM_LEAVING) {
+          const mr0 = String(params.get('mr') || '').replace(/[<>"'&\n\r]/g, '').trim().slice(0, 30);
+          window.KCRM_MISS = /^\d{4}$/.test(mr0) ? { cid: cid, reason: '', tok: mr0 } : { cid: cid, reason: mr0 };
+        }
+        if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && window.KCRM_STAFFDEV && !window.KCRM_STAFF && !window.KCRM_LEAVING) {
+          // [V5.3] 📇 직원 폰: 고객번호 저장 안 하고 주소창만 정리 (화면이 뜨면 안내 한 줄)
+          window.KCRM_PEEK = cid;
+          ['c', 'mr', 'ok'].forEach(function (k) { params.delete(k); });
+          const qp = params.toString();
+          history.replaceState(null, '', location.pathname + (qp ? '?' + qp : '') + location.hash);
+        }
+        else if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF && !window.KCRM_STAFFDEV) {
           // [V2.5] 명함 링크를 받은 지인이 열어도 원래 고객으로 연결되지 않게: 이 폰에서 처음 여는 번호면 '본인 확인' 뒤에 연결
           //   · 이미 이 폰에 연결된 같은 번호 → 그대로
           //   · 방금(10분 안 · 홈 화면 앱은 1시간 안) 본인 확인한 주소(ok=) → 바로 연결 (사파리 → 홈 화면 앱, 앱 안 브라우저 → 크롬)
@@ -237,7 +255,7 @@
       const cid = getCrmId();
       if (!cid) return;
       // 강CRM에서 '이 폰으로 알림 받기'를 켠 직원 폰이면 고객으로 바꾸지 않음 (바뀌면 상담요청 알림이 안 옴)
-      try { if (localStorage.getItem('kcrmStaffAlert') === 'on') return; } catch (e) {}
+      try { if (localStorage.getItem('kcrmStaffAlert') === 'on' || window.KCRM_STAFFDEV) return; } catch (e) {}   // [V5.3] 강CRM 로그인한 폰도
       try {
         await OneSignal.login(cid);
         OneSignal.User.addTags({ source: 'namecard', crm: 'linked' });
@@ -256,6 +274,8 @@
       });
       var isStaffPhone = false;
       try { isStaffPhone = localStorage.getItem('kcrmStaffAlert') === 'on'; } catch (e) {}
+      // [V5.3] 📇 직원 폰인데 예전에 고객번호로 묶여 있으면 풀기 (그 고객에게 가는 알림이 이 폰으로 오지 않게)
+      try { var ex0 = OneSignal.User && OneSignal.User.externalId; if (window.KCRM_STAFFDEV && !isStaffPhone && ex0 && !/^staff-/.test(ex0)) await OneSignal.logout(); } catch (e) {}
       try {   // [V4.6] 이미 알림을 켠 폰엔 '이벤트 혜택 알림받기' 숨기기 (끄면 다시 보임)
         evAlertSync(!!(OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn));
         OneSignal.User.PushSubscription.addEventListener('change', function (ev) { evAlertSync(!!(ev && ev.current && ev.current.optedIn && OneSignal.Notifications.permission)); });
@@ -2442,6 +2462,7 @@
       if (getCrmId()) showWelcomeBack();
       if (getPendingId() && !window.KCRM_MISS) setTimeout(function () { if (getPendingId()) showOwnerSheet(null); }, 700);   // [V2.5] 처음 연 개인 링크 → 본인 확인 · [V4.7] 부재 재연락 링크는 버튼부터
       missRender();   // [V4.7] 📵
+      if (window.KCRM_PEEK) setTimeout(function () { kcToast('👀 고객 명함 링크예요 · 이 폰은 강CRM 직원 폰이라 고객으로 연결하지 않았어요 (내 명함 그대로)'); }, 600);   // [V5.3]
       if (deferredInstall && !isStandalone()) showInstallButton(true);
     });
 
@@ -2451,7 +2472,7 @@
        · [연락 원치 않아요] → 강CRM 광고 · 자동 연락 제외
        → 강CRM (card_requests kind 'miss') + 직원 폰 알림 · 같은 문자에서 한 번 누르면 '감사합니다'로 */
     const MISS_SLOTS = ['오늘 오후', '오늘 저녁', '내일 오전', '내일 오후'];
-    function missKey(M) { return 'kcrm_miss_' + M.cid + '_' + M.reason; }
+    function missKey(M) { return 'kcrm_miss_' + M.cid + '_' + (M.tok || M.reason); }
     function missEsc(t) { return String(t).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
     function missHour() { try { return Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Seoul', hour: 'numeric', hourCycle: 'h23' }).format(new Date())); } catch (e) { return new Date().getHours(); } }
     function missRender() {
