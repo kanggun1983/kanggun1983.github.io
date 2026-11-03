@@ -291,15 +291,52 @@
       try { var ex0 = OneSignal.User && OneSignal.User.externalId; if (window.KCRM_STAFFDEV && !isStaffPhone && ex0 && !/^staff-/.test(ex0)) await OneSignal.logout(); } catch (e) {}
       try {   // [V4.6] 이미 알림을 켠 폰엔 '이벤트 혜택 알림받기' 숨기기 (끄면 다시 보임)
         evAlertSync(!!(OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn));
-        OneSignal.User.PushSubscription.addEventListener('change', function (ev) { evAlertSync(!!(ev && ev.current && ev.current.optedIn && OneSignal.Notifications.permission)); });
+        OneSignal.User.PushSubscription.addEventListener('change', function (ev) { evAlertSync(!!(ev && ev.current && ev.current.optedIn && OneSignal.Notifications.permission)); try { pushStatSync(OneSignal); } catch (e) {} });
       } catch (e) {}
       if (isStaffPhone) return;   // 직원 폰: 직원 등록 그대로 두기
       if (getCrmId()) await linkCrmUser(OneSignal);
       else OneSignal.User.addTag('source', 'namecard');
+      try { pushStatSync(OneSignal); pushStatAsk(OneSignal); } catch (e) {}   // [V5.10] 🔔 알림 상태 · 본인 확인 전이면 다시 묻기
       if (window.KCRM_TEAM) { try { OneSignal.User.addTags({ card: 'team', team_s: window.KCRM_TEAM_S || '' }); } catch (e) {} }
     });
 
     function evAlertSync(on) { const b = document.getElementById('evAlertBtn'); if (b) b.style.display = on ? 'none' : ''; }   // [V4.6]
+
+    // [V5.10] 🔔 알림 상태 한 줄 (켜짐 · 매장과 연결 / 본인 확인 전 / 차단) + 알림은 켰는데 본인 확인 전이면 한 번 더 묻고 연결
+    var pushLinkTried = false;
+    function pushStatEsc(s) { return String(s).replace(/[<>&"]/g, ''); }
+    async function pushStatSync(OneSignal) {
+      var el = document.getElementById('pushStat'); if (!el || window.KCRM_STAFF) return;
+      var staff = false; try { staff = localStorage.getItem('kcrmStaffAlert') === 'on' || !!window.KCRM_STAFFDEV; } catch (e) {}
+      if (staff) { el.style.display = 'none'; return; }
+      var perm = typeof Notification !== 'undefined' ? Notification.permission : 'default';
+      var on = false, ext = '';
+      try { on = !!(OneSignal && OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn); ext = (OneSignal && OneSignal.User && OneSignal.User.externalId) || ''; } catch (e) {}
+      var cid = getCrmId(), pend = getPendingId(), html = '', bg = '#f0fdf4', bd = '#bbf7d0', fg = '#166534';
+      if (on && cid && ext === cid) html = '🔔 알림 켜짐 · 매장과 연결됐어요';
+      else if (on && cid) {
+        html = '🔔 알림 켜짐 · 매장과 연결하는 중…';
+        if (!pushLinkTried) { pushLinkTried = true; try { await linkCrmUser(OneSignal); } catch (e) {} return pushStatSync(OneSignal); }
+      } else if (on && pend) {
+        html = '⚠️ 알림은 켜졌는데 아직 본인 확인 전이라 매장 알림과 연결이 안 됐어요<button type="button" id="pushStatOwn" style="display:block;width:100%;margin-top:8px;height:42px;border:0;border-radius:12px;background:#e6007e;color:#fff;font:inherit;font-size:14px;font-weight:800">본인 확인하고 연결하기</button>';
+        bg = '#fffbeb'; bd = '#fde68a'; fg = '#92400e';
+      } else if (on) html = '🔔 알림 켜짐';
+      else if (perm === 'denied') {
+        html = isStandalone() ? '🔕 명함 앱 알림이 꺼져 있어요 · 폰 설정 → 애플리케이션 → ' + (/^\/team\//.test(location.pathname) ? '진천점 명함' : 'LGU+진천점') + ' → 알림 → 허용' : '🔕 이 사이트 알림이 차단돼 있어요 · 주소창 🔒 → 권한 → 알림 → 허용';
+        bg = '#fef2f2'; bd = '#fecaca'; fg = '#991b1b';
+      } else { el.style.display = 'none'; return; }
+      el.innerHTML = html; el.style.cssText = 'display:block;margin:8px 0 0;padding:10px 12px;border-radius:14px;font-size:13px;font-weight:700;line-height:1.5;word-break:keep-all;text-align:center;background:' + bg + ';border:1px solid ' + bd + ';color:' + fg;
+      var ob = document.getElementById('pushStatOwn');
+      if (ob) ob.onclick = function () { showOwnerSheet(function () { setTimeout(function () { window.OneSignalDeferred.push(function (os) { return pushStatSync(os); }); }, 1500); }); };
+    }
+    function pushStatAsk(OneSignal) {   // 알림은 켰는데 본인 확인 전 → 이 창(탭)에서 한 번만 다시 묻기
+      try {
+        var on = OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn;
+        if (!on || getCrmId() || !getPendingId() || sessionStorage.getItem('kcrm_ownask')) return;
+        sessionStorage.setItem('kcrm_ownask', '1');
+        setTimeout(function () { showOwnerSheet(function () { setTimeout(function () { window.OneSignalDeferred.push(function (os) { return pushStatSync(os); }); }, 1500); }); }, 1200);
+      } catch (e) {}
+    }
     function isIOS() {
       return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -398,7 +435,7 @@
           // v16의 requestPermission()은 결과값을 돌려주지 않으므로 permission 속성으로 확인
           if (OneSignal.Notifications.permission) {
             await OneSignal.User.PushSubscription.optIn();
-            await linkCrmUser(OneSignal);   // [추가] 알림을 켠 뒤 한 번 더 연결 (강CRM에 '알림 받음'으로 바로 뜨게)
+            await linkCrmUser(OneSignal); try { pushStatSync(OneSignal); } catch (e) {}   // [추가] 알림을 켠 뒤 한 번 더 연결 (강CRM에 '알림 받음'으로 바로 뜨게)
             evAlertSync(true);
             kcToast('🎉 알림 신청 완료! 이벤트 혜택을 알려 드릴게요');   // [V4.7] 확인 창 대신 잠깐 뜨는 안내 (한 번 덜 누르게)
           } else {
@@ -917,6 +954,7 @@
         <button class="btn-vcard" id="evAlertBtn" style="background: #334155;" onclick="requestNotificationPermission()">
           <i class="fa-solid fa-bell"></i> 이벤트 혜택 알림받기
         </button>
+        <p id="pushStat" style="display:none" role="status" aria-live="polite"></p>
 
         <!-- [추가] 아직 앱으로 설치 안 된 폰(안드로이드 크롬 등)에만 보이는 버튼 -->
         <button id="installAppBtn" class="btn-vcard" style="display: none; background: #0f766e; box-shadow: 0 4px 14px rgba(15,118,110,0.3);" onclick="installCardApp()">
@@ -3071,7 +3109,7 @@
         try { showWelcomeBack(); } catch (e) {}
         try { if (typeof qtContactUi === 'function') qtContactUi(); const k = $('pcKnown'), n = $('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
         window.OneSignalDeferred = window.OneSignalDeferred || [];
-        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
+        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal).then(function () { try { pushStatSync(OneSignal); } catch (e) {} }); });
         $('regDoneMsg').textContent = `${mask(name)} 고객님, 등록됐어요!`;
         show('regDone');
       };
@@ -4405,7 +4443,7 @@ window.kQRCanvas=function(text,px,lv){var m=window.kQR(text,lv),quiet=4,size=m.n
         try { const k = document.getElementById('pcKnown'), n = document.getElementById('pcNewContact'); if (k) k.style.display = 'block'; if (n) n.style.display = 'none'; } catch (e) {}
         try { if (typeof qtContactUi === 'function') qtContactUi(); } catch (e) {}
         window.OneSignalDeferred = window.OneSignalDeferred || [];
-        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal); });
+        if (!window.KCRM_LEAVING) window.OneSignalDeferred.push(function (OneSignal) { return linkCrmUser(OneSignal).then(function () { try { pushStatSync(OneSignal); } catch (e) {} }); });
       } else if (cid && ans === 'no') {
         let notList = [];
         try { notList = JSON.parse(localStorage.getItem('kcrm_not') || '[]'); } catch (e) {}
