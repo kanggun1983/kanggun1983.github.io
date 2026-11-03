@@ -8,6 +8,12 @@
   <title>강태훈 과장님의 명함 · LGU+진천점</title>
 
   <script>
+    /* [V5.9] 📌 명함 앱 범위를 /index.html 로 좁힘 → 같은 사이트의 위약금 계산기 · 신분증 스캐너가 명함 앱(진천점 로고)으로 안 열리게
+       · 맨 주소(/?c=…)로 와도 /index.html?c=… 로 바로 넘김 (미리보기는 그대로 · 아래 내용은 안 읽고 넘어가서 기록이 두 번 안 남음) */
+    if (location.pathname === '/') { location.replace('/index.html' + location.search + location.hash); document.write('<plaintext style="display:none">'); }
+  </script>
+
+  <script>
     /* [V5.6] 🔗 공용 명함 링크 ?c=고객번호.직원번호 → ?c=고객번호&s=직원번호 로 풀기 (맨 먼저 · 문자앱이 & 뒤를 잘라서 & 없이 보냄) */
     (function () {
       try {
