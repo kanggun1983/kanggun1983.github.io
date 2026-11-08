@@ -1750,7 +1750,7 @@
       if (!mIdx.includes(S.m)) S.m = mIdx[0];
       const md = C.models[S.m];
       const LIM = (md.gen === 'LTE' ? R.limLTE : R.lim5G) || 0;
-      pcFill('pcModel', mIdx.map(i => [pcModelLabel(C.models[i].name), i]), S.m);   // [V5.11] S942 → 갤럭시 S26 S942
+      pcFill('pcModel', mIdx.map(i => [pcModelLabel(C.models[i].name), i]), S.m);   // [V5.12] S942 → 갤럭시 S26 (S942)
 
       const showIdx = C.plans.map((p, i) => i).filter(i => (!C.show || C.show.includes(C.plans[i].name)) && C.plans[i].fee > 0);
       if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
@@ -2437,7 +2437,7 @@
       return { code: m[1], cap };
     }
     // [V5.11] 폰값계산 기종 고르기: 모델 코드면 '갤럭시 S26 S942' 처럼 이름 + 코드 (강CRM 재고처럼) · 이미 이름이면 그대로
-    function pcModelLabel(nm) { nm = String(nm || '').trim(); try { if (!qtIsCode(nm)) return nm; const n = qtCodeName(nm); return n ? n + ' ' + nm : nm; } catch (e) { return nm; } }
+    function pcModelLabel(nm) { nm = String(nm || '').trim(); try { if (!qtIsCode(nm)) return nm; const n = qtCodeName(nm); return n ? n + ' (' + nm + ')' : nm; } catch (e) { return nm; } }
     function qtCodeName(nm) {
       const k = qtCodeOf(nm); if (!k) return '';
       const extra = (typeof PC !== 'undefined' && PC.data && PC.data.qtNames) || {};
