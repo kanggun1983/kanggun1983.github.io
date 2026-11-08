@@ -1731,7 +1731,8 @@
       }
 
       /* 제조사 토글 (삼성 · 애플 · 기타) → 그 회사 기종만 */
-      const brandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
+      // [V5.13] 모델 코드(S942 · SM-F776 · AIP17 · UIP16E)도 제조사로 — 예전엔 SKT · KT 엑셀처럼 코드로 된 기종이 전부 '기타'로 빠지고 삼성 칸이 안 보였음
+      const brandOf = (nm) => { const t = String(nm || '') + ' ' + pcModelLabel(nm); return /iphone|아이폰|apple/i.test(t) || /^((A|U)?IP\d|A\d{4}(?!\d))/i.test(String(nm || '').trim()) ? '애플' : (/갤럭시|galaxy|삼성|samsung|폴더|플립|폴드/i.test(t) || (/^(SM-?)?[SFAMZ]\d{3}(?!\d)/i.test(String(nm || '').trim()) || /^S\d{2}(?![\d])/i.test(String(nm || '').trim())) ? '삼성' : '기타'); };
       const brands = ['삼성', '애플', '기타'].filter(b => C.models.some(m => brandOf(m.name) === b));
       if (S.m >= C.models.length) S.m = 0;
       if (!brands.includes(S.brand)) S.brand = brandOf(C.models[S.m].name);
