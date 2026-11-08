@@ -837,6 +837,11 @@
     .nt { width: 100%; max-width: 360px; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.25); animation: ntIn .25s ease-out; }
     @keyframes ntIn { from { transform: translateY(16px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
     .nt img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
+    .nt .nt-imgw { position: relative; cursor: zoom-in; }
+    .nt .nt-zoom { position: absolute; right: 10px; bottom: 10px; background: rgba(17,24,39,.72); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 999px; pointer-events: none; }
+    .nt-full { position: fixed; inset: 0; z-index: 100000; background: rgba(0,0,0,.92); display: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .nt-full img { display: block; width: 100%; max-width: 720px; margin: 0 auto; height: auto; }
+    .nt-full .x { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.9); color: #111; font-size: 20px; z-index: 1; }
     .nt .bd { padding: 18px 18px 16px; }
     .nt .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: #4f46e5; background: #eef2ff; border-radius: 9999px; padding: 4px 10px; }
     .nt h3 { font-size: 19px; font-weight: 800; color: var(--text-main); margin: 10px 0 6px; line-height: 1.35; word-break: keep-all; }
@@ -2856,7 +2861,7 @@
   <!-- 📢 매장 공지 창 -->
   <div class="nt-back" id="ntBack" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
     <div class="nt">
-      <img id="ntImg" alt="" style="display:none">
+      <div class="nt-imgw" id="ntImgW" style="display:none" role="button" tabindex="0" aria-label="사진 크게 보기"><img id="ntImg" alt=""><span class="nt-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i> 눌러서 크게</span></div>
       <div class="bd">
         <span class="tag" id="ntTag"><i class="fa-solid fa-bullhorn"></i> 진천점 소식</span>
         <h3 id="ntTitle"></h3>
@@ -2927,15 +2932,18 @@
         $('ntTitle').textContent = n.heading || '알려드려요';
         $('ntBody').textContent = n.body || '';
         $('ntBody').style.display = n.body ? '' : 'none';
-        const img = $('ntImg');
-        if (/^https:\/\//.test(n.image || '')) { img.src = n.image; img.style.display = 'block'; img.onerror = () => { img.style.display = 'none'; }; }
-        else { img.removeAttribute('src'); img.style.display = 'none'; }
+        const img = $('ntImg'), iw = $('ntImgW');   // [V5.16] 🔍 사진: 강CRM에서 고른 부분(p: 0 맨 위 ~ 100 맨 아래)이 보이고 · 누르면 전체를 크게
+        if (/^https:\/\//.test(n.image || '')) { img.src = n.image; img.style.objectPosition = '50% ' + (isFinite(n.pos) ? n.pos : 50) + '%'; iw.style.display = 'block'; img.onerror = () => { iw.style.display = 'none'; }; }
+        else { img.removeAttribute('src'); iw.style.display = 'none'; }
         if (!bound) {
           bound = true;
           $('ntOk').onclick = close;
+          const openFull = () => { const src = $('ntImg').getAttribute('src'); if (!src) return; let f = document.getElementById('ntFull'); if (!f) { f = document.createElement('div'); f.id = 'ntFull'; f.className = 'nt-full'; f.setAttribute('role', 'dialog'); f.setAttribute('aria-label', '사진 크게 보기'); f.innerHTML = '<button type="button" class="x" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button><img alt="">'; f.addEventListener('click', () => { f.style.display = 'none'; }); document.body.appendChild(f); } f.querySelector('img').src = src; f.scrollTop = 0; f.style.display = 'block'; };
+          $('ntImgW').addEventListener('click', openFull);
+          $('ntImgW').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFull(); } });
           $('ntAsk').onclick = () => { close(); if (typeof openSms === 'function') openSms(); };
           $('ntBack').addEventListener('click', (e) => { if (e.target === $('ntBack')) close(); });
-          document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('ntBack').style.display === 'flex') close(); });
+          document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const f = document.getElementById('ntFull'); if (f && f.style.display === 'block') { f.style.display = 'none'; return; } if ($('ntBack').style.display === 'flex') close(); });
         }
         $('ntBack').style.display = 'flex';
       }
@@ -2947,7 +2955,7 @@
         try {
           let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
           const j = JSON.parse(decodeURIComponent(escape(atob(b))));
-          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || ''), rv: j.rv === 1, ph: j.ph === 1 };
+          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || ''), pos: (typeof j.p === 'number' && j.p >= 0 && j.p <= 100) ? j.p : NaN, rv: j.rv === 1, ph: j.ph === 1 };
           if (!n.body) return false;
           show(n, true);
           return true;
