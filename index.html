@@ -161,7 +161,7 @@
         // [V5.3] 🔗 짧은 링크: mr=1102 (보낸 날짜 4자리 · 이유는 문자 본문에) → 이유 없이 '안내드릴 게 있어서' · 날짜마다 따로 응답
         if (params.get('mr') !== null && cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF && !window.KCRM_STAFFDEV && !window.KCRM_LEAVING) {
           const mr0 = String(params.get('mr') || '').replace(/[<>"'&\n\r]/g, '').trim().slice(0, 30);
-          window.KCRM_MISS = /^\d{4}$/.test(mr0) ? { cid: cid, reason: '', tok: mr0 } : { cid: cid, reason: mr0 };
+          window.KCRM_MISS = mr0 === 'no' ? { cid: cid, reason: '홍보 문자 수신거부', tok: 'no', opt: true } : (/^\d{4}$/.test(mr0) ? { cid: cid, reason: '', tok: mr0 } : { cid: cid, reason: mr0 });   // [V5.15] 🙅 mr=no = 홍보 문자의 '바로 수신거부' 링크
         }
         if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && window.KCRM_STAFFDEV && !window.KCRM_STAFF && !window.KCRM_LEAVING) {
           // [V5.3] 📇 직원 폰: 고객번호 저장 안 하고 주소창만 정리 (화면이 뜨면 안내 한 줄)
@@ -2786,6 +2786,11 @@
       try { done = localStorage.getItem(missKey(M)) || ''; } catch (e) {}
       box.style.display = 'block';
       if (done) { box.innerHTML = '<div class="mr-done">' + missEsc(done) + '</div>'; return; }
+      if (M.opt) {   // [V5.15] 🙅 수신거부 링크: 버튼 하나만 (누르면 강CRM 마케팅 수신 거부)
+        box.innerHTML = '<div class="mr-title">홍보 문자 수신거부</div><div class="mr-sub">아래 버튼을 누르시면 앞으로 홍보 · 안내 문자를 보내지 않을게요.</div>'
+          + '<button type="button" class="mr-no" data-mr="optout">수신 거부하기</button><div class="mr-err" id="missErr" role="alert"></div>';
+        return;
+      }
       const why = M.reason ? '<b>' + missEsc(M.reason) + '</b>' + (/려고$|어서$/.test(M.reason) ? '' : '드리려고') + ' 연락드렸어요.' : '안내드릴 게 있어서 연락드렸어요.';
       const h = missHour(), slots = MISS_SLOTS.filter(s => s === '오늘 오후' ? h < 17 : (s === '오늘 저녁' ? h < 20 : true));
       box.innerHTML = '<div class="mr-title">전화 못 받으셨죠?</div><div class="mr-sub">' + why + '<br>편하신 방법을 골라 주세요.</div>'
@@ -2804,7 +2809,7 @@
         if (!((PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert))) await pcFetchData();
         let who = ''; try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
         const lab = v === 'call' ? '지금 통화 누름' : (v === 'optout' ? '연락 원치 않음' : v.replace(/^later:/, '') + ' 연락 원함');
-        cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', '📵 부재 재연락 · ' + lab + (M.reason ? ' (' + M.reason + ')' : ''), res !== 'ok');
+        cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', (M.opt ? '🙅 ' : '📵 부재 재연락 · ') + lab + (M.reason ? ' (' + M.reason + ')' : ''), res !== 'ok');
       } catch (e) {}
       return res;
     }
