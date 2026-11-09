@@ -304,7 +304,6 @@
 
     // [V5.10] 🔔 알림 상태 한 줄 (켜짐 · 매장과 연결 / 본인 확인 전 / 차단) + 알림은 켰는데 본인 확인 전이면 한 번 더 묻고 연결
     var pushLinkTried = false;
-    function pushStatEsc(s) { return String(s).replace(/[<>&"]/g, ''); }
     async function pushStatSync(OneSignal) {
       var el = document.getElementById('pushStat'); if (!el || window.KCRM_STAFF) return;
       var staff = false; try { staff = localStorage.getItem('kcrmStaffAlert') === 'on' || !!window.KCRM_STAFFDEV; } catch (e) {}
@@ -1718,7 +1717,7 @@
     }
 
     /* [V5.19] ✏️ 강CRM 견적(직원용)에서만: 출고가 · 공통지원금이 틀리면 이 견적만 직접 고치기 (저장 안 됨 · 기종 · 요금제 · 가입 유형을 바꾸면 원래대로) */
-    function pcOvRender(k, md, price, sup, xl, sc, OV) {
+    function pcOvRender(k, md, price, sup, sc, OV) {
       const el = pcEl('pcOv');
       if (!el) return;
       if (!window.KCRM_STAFF) { el.innerHTML = ''; return; }
@@ -1817,12 +1816,12 @@
       const fee = C.plans[S.p].fee;
       /* [V5.19] 공통지원금: 강CRM이 스마트초이스에서 가져온 값(phonecalc.scSup — 기종 · 요금제 구간별)만 씀 (지원금 엑셀 값은 안 씀 · 신규는 번호이동 값 · 없으면 0 → '상담 때 안내')
          · 강CRM 직원용(견적)에서는 출고가 · 공통지원금을 이 견적만 직접 고칠 수 있음 (PC.ov) */
-      const xlSup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
       const scC = (D.scSup && D.scSup.cars && D.scSup.cars[S.car]) || null, scM = scC && scC[md.name];
       const scK = t.key === 'new' ? 'mnp' : t.key, scRaw = scM && Array.isArray(scM[scK]) ? scM[scK][S.p] : null;
       const scUsed = typeof scRaw === 'number' && scRaw > 0;
-      const manA = !scUsed && D.supMan && D.supMan[S.car] && D.supMan[S.car][md.name] && D.supMan[S.car][md.name][scK];   // 스마트초이스에 없으면 강CRM 기종 관리에서 직접 넣은 값
-      const manV = Array.isArray(manA) ? Number(manA[S.p]) || 0 : 0;
+      const manR = !scUsed && D.supMan && D.supMan[S.car] && D.supMan[S.car][md.name];   // 스마트초이스에 없으면 강CRM 기종 관리에서 직접 넣은 값 ([V5.20] 요금제 이름으로 · 예전 배열도)
+      const manP = manR && C.plans[S.p] && manR[C.plans[S.p].name];
+      const manV = manP ? Number(manP[scK]) || 0 : (manR && Array.isArray(manR[scK]) ? Number(manR[scK][S.p]) || 0 : 0);
       let sup = scUsed ? scRaw : manV, price = md.price;
       const ovKey = [S.car, md.name, t.key, S.p].join('|');
       const OV = window.KCRM_STAFF && PC.ov && PC.ov.k === ovKey ? PC.ov : null;
@@ -1880,7 +1879,7 @@
           (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
         `</div>`;
       pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '공통지원금은 상담 때 안내해 드려요') + card('선택약정', s, '요금 25% 할인');
-      pcOvRender(ovKey, md, price, sup, xlSup, scUsed ? scRaw : (manV || null), OV);   // [V5.19] 직원용 금액 직접 고치기
+      pcOvRender(ovKey, md, price, sup, scUsed ? scRaw : (manV || null), OV);   // [V5.19] 직원용 금액 직접 고치기
       /* 고른 할인 방식의 계산 상세: 할부원금 → 월 할부금 + 요금 = 월 합계 → 요금제 변경 후 */
       {
         const o = S.d === '공통지원' ? g : s, isG = S.d === '공통지원';
