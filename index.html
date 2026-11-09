@@ -595,6 +595,16 @@
     body.kc-staff #qtBody { display: none !important; }
     body.kc-staff #pcHolder { display: block !important; }
     .pc-staff-send { display: none; }
+    /* [V5.19] 직원용 금액 직접 고치기 */
+    .pc-ov { display: none; }
+    body.kc-staff .pc-ov { display: block; margin-top: 10px; border: 1px dashed #a5b4fc; background: #eef2ff; border-radius: 14px; padding: 10px 12px; }
+    .pc-ov-h { font-size: 13px; font-weight: 800; color: #3730a3; }
+    .pc-ov-h span { font-size: 11.5px; font-weight: 600; color: #6366f1; margin-left: 4px; }
+    .pc-ov-g { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .pc-ov-g label { font-size: 12px; font-weight: 700; color: #475569; }
+    .pc-ov-g input { display: block; width: 100%; margin-top: 3px; height: 42px; padding: 0 10px; border: 1px solid #c7d2fe; border-radius: 10px; font: inherit; font-size: 15px; font-weight: 700; text-align: right; background: #fff; color: #0f172a; }
+    .pc-ov-s { font-size: 11.5px; color: #64748b; margin-top: 6px; line-height: 1.5; }
+    .pc-ov-s button { border: 0; background: none; color: #4338ca; font-weight: 800; text-decoration: underline; padding: 0; font: inherit; }
     body.kc-staff .pc-staff-send { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; max-width: 640px; margin: 0 auto; background: #fff; padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 16px rgba(15,23,42,.12); }
     body.kc-staff #pcCmp, body.kc-staff #pcMvno { margin-bottom: 150px; }   /* 아래 고정 버튼에 가리지 않게 · [V4.9] 맨 아래 칸(지금처럼 · 가족) 뒤로 */
     body.kc-staff .pc-staff-send .btn-vcard { margin: 0; }
@@ -1174,6 +1184,7 @@
 
               <div class="pc-lb"><b>8</b>할인 방식</div>
               <div class="pc-seg" id="pcRes"></div>
+              <div class="pc-ov" id="pcOv"></div>
               <div class="pc-detail" id="pcDetail"></div>
 
               <div class="pc-info">
@@ -1706,6 +1717,31 @@
       pcRender();
     }
 
+    /* [V5.19] ✏️ 강CRM 견적(직원용)에서만: 출고가 · 공통지원금이 틀리면 이 견적만 직접 고치기 (저장 안 됨 · 기종 · 요금제 · 가입 유형을 바꾸면 원래대로) */
+    function pcOvRender(k, md, price, sup, xl, sc, OV) {
+      const el = pcEl('pcOv');
+      if (!el) return;
+      if (!window.KCRM_STAFF) { el.innerHTML = ''; return; }
+      const w = (v) => Number(v || 0).toLocaleString('ko-KR');
+      const src = [sc !== null ? `스마트초이스 ${w(sc)}` : '', `지원금표 ${w(xl)}`].filter(Boolean).join(' · ');
+      el.innerHTML = `<div class="pc-ov-h">✏️ 금액 직접 고치기 <span>이 견적만 · 저장 안 돼요</span></div>
+        <div class="pc-ov-g"><label>출고가<input id="pcOvPrice" inputmode="numeric" value="${w(price)}"></label><label>공통지원금<input id="pcOvSup" inputmode="numeric" value="${w(sup)}"></label></div>
+        <div class="pc-ov-s">원래 값: 출고가 ${w(md.price)} · 공통지원금 ${src}${OV ? ' · <button type="button" id="pcOvReset">원래대로</button>' : ''}</div>`;
+      const num = (v) => Number(String(v).replace(/[^\d]/g, '')) || 0;
+      const apply = () => {
+        const p = num(pcEl('pcOvPrice').value), s = pcEl('pcOvSup').value.trim() === '' ? null : num(pcEl('pcOvSup').value);
+        PC.ov = { k, price: p && p !== md.price ? p : 0, sup: s };
+        PC.touched = true; pcRender();
+      };
+      ['pcOvPrice', 'pcOvSup'].forEach(id => {
+        const i = pcEl(id);
+        i.addEventListener('input', () => { const v = num(i.value); i.value = v ? w(v) : ''; });
+        i.addEventListener('change', apply);
+        i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); i.blur(); } });
+      });
+      const r = pcEl('pcOvReset');
+      if (r) r.onclick = () => { PC.ov = null; pcRender(); };
+    }
     function pcRender() {
       const S = PC.st, D = PC.data;
       if (!D) return;
@@ -1779,7 +1815,18 @@
       pcPlusInRender();   // [V4.9]
 
       const fee = C.plans[S.p].fee;
-      const sup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
+      /* [V5.19] 공통지원금: 강CRM이 스마트초이스에서 가져온 값(phonecalc.scSup — 기종 · 요금제 구간별)이 있으면 그걸로, 없으면 지원금 엑셀 값
+         · 강CRM 직원용(견적)에서는 출고가 · 공통지원금을 이 견적만 직접 고칠 수 있음 (PC.ov) */
+      const xlSup = ((md.sup[t.key] || md.sup.new || [])[S.p]) || 0;
+      const scC = (D.scSup && D.scSup.cars && D.scSup.cars[S.car]) || null, scM = scC && scC[md.name];
+      const scRaw = scM && Array.isArray(scM[t.key]) ? scM[t.key][S.p] : null;
+      const scUsed = typeof scRaw === 'number' && scRaw >= 0;
+      let sup = scUsed ? scRaw : xlSup, price = md.price;
+      const ovKey = [S.car, md.name, t.key, S.p].join('|');
+      const OV = window.KCRM_STAFF && PC.ov && PC.ov.k === ovKey ? PC.ov : null;
+      if (OV && typeof OV.sup === 'number') sup = OV.sup;
+      if (OV && OV.price > 0) price = OV.price;
+      const supSrc = OV && typeof OV.sup === 'number' ? '직접 고침' : (scUsed ? '스마트초이스' + (D.scSup.d ? ' ' + D.scSup.d : '') : '지원금표' + (C.date ? ' ' + C.date : ''));
       const n = S.ins;
 
       /* 유지 기간 (할인 방식마다 다름) → 2년 동안 '처음 요금제 몇 달 + 바꾼 요금제 나머지 달'로 평균 */
@@ -1808,7 +1855,7 @@
         const P1 = pcPlusFee(fee, rate), P2 = pcPlusFee(chgPlan.fee, rate);   // [V4.9] 결합 · 복지 할인 뒤
         const f1 = P1.net, f2 = P2.net;
         const avg = noChg ? f1 : (f1 * keep.months + f2 * (24 - keep.months)) / 24;
-        const dev = disc === '공통지원' ? md.price - sup : md.price;
+        const dev = disc === '공통지원' ? Math.max(0, price - sup) : price;
         const m = pcInst(dev, n);
         return { m, fee: avg, f1, f2, keep, dev, cash: n === 0, mon: n ? m + avg : avg, tot: n ? m * n + avg * 24 : dev + avg * 24, P1, P2, n };
       };
@@ -1831,6 +1878,7 @@
           (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
         `</div>`;
       pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '이 요금제는 공통지원금 없음') + card('선택약정', s, '요금 25% 할인');
+      pcOvRender(ovKey, md, price, sup, xlSup, scUsed ? scRaw : null, OV);   // [V5.19] 직원용 금액 직접 고치기
       /* 고른 할인 방식의 계산 상세: 할부원금 → 월 할부금 + 요금 = 월 합계 → 요금제 변경 후 */
       {
         const o = S.d === '공통지원' ? g : s, isG = S.d === '공통지원';
@@ -1840,8 +1888,8 @@
         const firstSum = (o.cash ? 0 : o.m) + o.f1;
         let h = `<div class="hd">${S.d} 계산 상세</div>`;
         h += `<div class="sec"><div class="st">① 기기값</div>` +
-          ln('출고가', won(md.price)) +
-          (isG ? ln('공통지원금', '-' + won(sup), 'minus') : '') +
+          ln('출고가' + (OV && OV.price > 0 ? ' <span class="pc-ask">직접 고침</span>' : ''), won(price)) +
+          (isG ? ln('공통지원금' + (window.KCRM_STAFF ? ` <span class="pc-ask">${pcEsc(supSrc)}</span>` : ''), '-' + won(sup), 'minus') : '') +
           (dist ? ln('유통망지원금', '<span class="pc-ask">담당자 문의</span>') : '') +
           (pcEl('pcTrade').checked ? ln('기존 폰 보상', '<span class="pc-ask">담당자 문의</span>') : '') +
           ln(o.cash ? '현금 납부' : '할부원금', won(o.dev), 'sum') +
@@ -1880,8 +1928,8 @@
         el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); S.d = el.dataset.k; pcRender(); } };
       });
 
-      pcEl('pcPrice').textContent = won(md.price) + ' · ' + md.gen;
-      pcEl('pcNote').textContent = `${S.car} 공통지원금 ${C.date || ''} 기준 · ` +
+      pcEl('pcPrice').textContent = won(price) + ' · ' + md.gen;
+      pcEl('pcNote').textContent = `${S.car} 공통지원금 ${scUsed ? '스마트초이스 ' + (D.scSup.d || '') : (C.date || '')} 기준 · ` +
         (n ? `할부 ${n}개월, 할부수수료 연 5.9% 포함` : '현금개통 (할부수수료 없음)') +
         (avgOn ? ' · 월 납부는 유지 기간 뒤 요금제 변경까지 반영한 2년 평균' : '') + ' · 추천은 2년 총 부담액 기준';
 
@@ -1912,9 +1960,9 @@
       // [V3.1] 견적 문자용 (강CRM에서 고객에게 보내기)
       PC.quote = {
         model: md.name, gen: md.gen, car: S.car, route: t.label, plan: C.plans[S.p].name, fee, chgName: chgPlan.name, chgFee: chgPlan.fee,
-        noChg, avgOn, disc: S.d, isG: S.d === '공통지원', sup, price: md.price, dev: cur.dev, m: cur.m, n, cash: cur.cash,
+        noChg, avgOn, disc: S.d, isG: S.d === '공통지원', sup, price, dev: cur.dev, m: cur.m, n, cash: cur.cash,
         f1: cur.f1, f2: cur.f2, mon: cur.mon, tot: cur.tot, keepMonths: Math.round(cur.keep.months), cdLabel: pcFd(cur.keep.cd),
-        date: C.date || '', dist, trade: !!(pcEl('pcTrade') && pcEl('pcTrade').checked), pen, LIM, why,
+        date: (scUsed ? '스마트초이스 ' + (D.scSup.d || '') : C.date) || '', dist, trade: !!(pcEl('pcTrade') && pcEl('pcTrade').checked), pen, LIM, why,
         // 비교 견적용: 두 할인 방식 모두
         cmp: {
           best,
@@ -2443,7 +2491,7 @@
       return { code: m[1], cap };
     }
     // [V5.11] 폰값계산 기종 고르기: 모델 코드면 '갤럭시 S26 S942' 처럼 이름 + 코드 (강CRM 재고처럼) · 이미 이름이면 그대로
-    function pcModelLabel(nm) { nm = String(nm || '').trim(); try { if (!qtIsCode(nm)) return nm; const n = qtCodeName(nm); return n ? n + ' (' + nm + ')' : nm; } catch (e) { return nm; } }
+    function pcModelLabel(nm) { nm = String(nm || '').trim(); try { if (!qtIsCode(nm)) return (qtNiceName(nm.replace(/^(S\d{2})-(?=\s|$)/i, '$1+')) || nm).replace(/\s(256|512)$/, ' $1G');   /* [V5.19] '갤럭시Z Flip 8' → '갤럭시 Z 플립8' · 'S26-' → '갤럭시 S26+' */ const n = qtCodeName(nm); return n ? n + ' (' + nm + ')' : nm; } catch (e) { return nm; } }
     function qtCodeName(nm) {
       const k = qtCodeOf(nm); if (!k) return '';
       const extra = (typeof PC !== 'undefined' && PC.data && PC.data.qtNames) || {};
