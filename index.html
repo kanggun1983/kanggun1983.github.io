@@ -2016,7 +2016,7 @@
       const b = Math.max(0, Math.round(Number(bill) || 0));
       if (kind === 'basic') return Math.min(b, 28600);
       if (kind === 'near') return Math.min(b, 12100) + Math.round(Math.max(0, Math.min(b, 45100) - 12100) * 0.35);
-      if (kind === 'pension') return Math.min(b, 12100);   // [V5.21] 기초연금: 요금에서 12,100원까지 그대로 (기기값에선 안 빠짐)
+      if (kind === 'pension') return Math.min(Math.round(b * 0.5), 12100);   // [V5.22] 기초연금: 요금의 50% · 최대 12,100원 (V5.21 되돌림)
       if (kind === 'disabled' || kind === 'merit') return Math.round(b * 0.35);
       return 0;
     }
