@@ -1723,7 +1723,7 @@
       if (!el) return;
       if (!window.KCRM_STAFF) { el.innerHTML = ''; return; }
       const w = (v) => Number(v || 0).toLocaleString('ko-KR');
-      const src = sc !== null ? `스마트초이스 ${w(sc)}` : '스마트초이스에 없음 (직접 넣어 주세요)';
+      const src = sc !== null ? w(sc) : '스마트초이스에 없음 (직접 넣어 주세요)';
       el.innerHTML = `<div class="pc-ov-h">✏️ 금액 직접 고치기 <span>이 견적만 · 저장 안 돼요</span></div>
         <div class="pc-ov-g"><label>출고가<input id="pcOvPrice" inputmode="numeric" value="${w(price)}"></label><label>공통지원금<input id="pcOvSup" inputmode="numeric" value="${w(sup)}"></label></div>
         <div class="pc-ov-s">원래 값: 출고가 ${w(md.price)} · 공통지원금 ${src}${OV ? ' · <button type="button" id="pcOvReset">원래대로</button>' : ''}</div>`;
@@ -1821,12 +1821,14 @@
       const scC = (D.scSup && D.scSup.cars && D.scSup.cars[S.car]) || null, scM = scC && scC[md.name];
       const scK = t.key === 'new' ? 'mnp' : t.key, scRaw = scM && Array.isArray(scM[scK]) ? scM[scK][S.p] : null;
       const scUsed = typeof scRaw === 'number' && scRaw > 0;
-      let sup = scUsed ? scRaw : 0, price = md.price;
+      const manA = !scUsed && D.supMan && D.supMan[S.car] && D.supMan[S.car][md.name] && D.supMan[S.car][md.name][scK];   // 스마트초이스에 없으면 강CRM 기종 관리에서 직접 넣은 값
+      const manV = Array.isArray(manA) ? Number(manA[S.p]) || 0 : 0;
+      let sup = scUsed ? scRaw : manV, price = md.price;
       const ovKey = [S.car, md.name, t.key, S.p].join('|');
       const OV = window.KCRM_STAFF && PC.ov && PC.ov.k === ovKey ? PC.ov : null;
       if (OV && typeof OV.sup === 'number') sup = OV.sup;
       if (OV && OV.price > 0) price = OV.price;
-      const supSrc = OV && typeof OV.sup === 'number' ? '직접 고침' : (scUsed ? '스마트초이스' + (D.scSup.d ? ' ' + D.scSup.d : '') : '스마트초이스에 없음');
+      const supSrc = OV && typeof OV.sup === 'number' ? '직접 고침' : (scUsed ? '스마트초이스' + (D.scSup.d ? ' ' + D.scSup.d : '') : (manV ? '직접 넣은 값' : '스마트초이스에 없음'));
       const n = S.ins;
 
       /* 유지 기간 (할인 방식마다 다름) → 2년 동안 '처음 요금제 몇 달 + 바꾼 요금제 나머지 달'로 평균 */
@@ -1878,7 +1880,7 @@
           (avgOn ? `<div class="flow">처음 ${Math.round(o.keep.months)}개월 ${won(o.f1)}<br>→ 이후 ${won(o.f2)}</div>` : '') +
         `</div>`;
       pcEl('pcRes').innerHTML = card('공통지원', g, sup ? '기기값 ' + won(sup) + ' 할인' : '공통지원금은 상담 때 안내해 드려요') + card('선택약정', s, '요금 25% 할인');
-      pcOvRender(ovKey, md, price, sup, xlSup, scUsed ? scRaw : null, OV);   // [V5.19] 직원용 금액 직접 고치기
+      pcOvRender(ovKey, md, price, sup, xlSup, scUsed ? scRaw : (manV || null), OV);   // [V5.19] 직원용 금액 직접 고치기
       /* 고른 할인 방식의 계산 상세: 할부원금 → 월 할부금 + 요금 = 월 합계 → 요금제 변경 후 */
       {
         const o = S.d === '공통지원' ? g : s, isG = S.d === '공통지원';
