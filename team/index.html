@@ -156,7 +156,7 @@
         // [V5.3] 🔗 짧은 링크: mr=1102 (보낸 날짜 4자리 · 이유는 문자 본문에) → 이유 없이 '안내드릴 게 있어서' · 날짜마다 따로 응답
         if (params.get('mr') !== null && cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && !window.KCRM_STAFF && !window.KCRM_STAFFDEV && !window.KCRM_LEAVING) {
           const mr0 = String(params.get('mr') || '').replace(/[<>"'&\n\r]/g, '').trim().slice(0, 30);
-          window.KCRM_MISS = /^\d{4}$/.test(mr0) ? { cid: cid, reason: '', tok: mr0 } : { cid: cid, reason: mr0 };
+          window.KCRM_MISS = mr0 === 'no' ? { cid: cid, reason: '홍보 문자 수신거부', tok: 'no', opt: true } : (/^\d{4}$/.test(mr0) ? { cid: cid, reason: '', tok: mr0 } : { cid: cid, reason: mr0 });   // [V5.15] 🙅 mr=no = 홍보 문자의 '바로 수신거부' 링크
         }
         if (cid && /^[A-Za-z0-9_-]{2,40}$/.test(cid) && window.KCRM_STAFFDEV && !window.KCRM_STAFF && !window.KCRM_LEAVING) {
           // [V5.3] 📇 직원 폰: 고객번호 저장 안 하고 주소창만 정리 (화면이 뜨면 안내 한 줄)
@@ -832,6 +832,11 @@
     .nt { width: 100%; max-width: 360px; background: #fff; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.25); animation: ntIn .25s ease-out; }
     @keyframes ntIn { from { transform: translateY(16px) scale(.97); opacity: 0; } to { transform: none; opacity: 1; } }
     .nt img { display: block; width: 100%; max-height: 220px; object-fit: cover; }
+    .nt .nt-imgw { position: relative; cursor: zoom-in; }
+    .nt .nt-zoom { position: absolute; right: 10px; bottom: 10px; background: rgba(17,24,39,.72); color: #fff; font-size: 12px; font-weight: 700; padding: 5px 9px; border-radius: 999px; pointer-events: none; }
+    .nt-full { position: fixed; inset: 0; z-index: 100000; background: rgba(0,0,0,.92); display: none; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+    .nt-full img { display: block; width: 100%; max-width: 720px; margin: 0 auto; height: auto; }
+    .nt-full .x { position: fixed; top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(255,255,255,.9); color: #111; font-size: 20px; z-index: 1; }
     .nt .bd { padding: 18px 18px 16px; }
     .nt .tag { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 800; color: #4f46e5; background: #eef2ff; border-radius: 9999px; padding: 4px 10px; }
     .nt h3 { font-size: 19px; font-weight: 800; color: var(--text-main); margin: 10px 0 6px; line-height: 1.35; word-break: keep-all; }
@@ -1726,7 +1731,8 @@
       }
 
       /* 제조사 토글 (삼성 · 애플 · 기타) → 그 회사 기종만 */
-      const brandOf = (nm) => /iphone|아이폰|apple/i.test(nm) ? '애플' : (/갤럭시|galaxy|삼성|samsung/i.test(nm) ? '삼성' : '기타');
+      // [V5.13] 모델 코드(S942 · SM-F776 · AIP17 · UIP16E)도 제조사로 — 예전엔 SKT · KT 엑셀처럼 코드로 된 기종이 전부 '기타'로 빠지고 삼성 칸이 안 보였음
+      const brandOf = (nm) => { const t = String(nm || '') + ' ' + pcModelLabel(nm); return /iphone|아이폰|apple/i.test(t) || /^((A|U)?IP\d|A\d{4}(?!\d))/i.test(String(nm || '').trim()) ? '애플' : (/갤럭시|galaxy|삼성|samsung|폴더|플립|폴드/i.test(t) || (/^(SM-?)?[SFAMZ]\d{3}(?!\d)/i.test(String(nm || '').trim()) || /^S\d{2}(?![\d])/i.test(String(nm || '').trim())) ? '삼성' : '기타'); };
       const brands = ['삼성', '애플', '기타'].filter(b => C.models.some(m => brandOf(m.name) === b));
       if (S.m >= C.models.length) S.m = 0;
       if (!brands.includes(S.brand)) S.brand = brandOf(C.models[S.m].name);
@@ -1745,7 +1751,7 @@
       if (!mIdx.includes(S.m)) S.m = mIdx[0];
       const md = C.models[S.m];
       const LIM = (md.gen === 'LTE' ? R.limLTE : R.lim5G) || 0;
-      pcFill('pcModel', mIdx.map(i => [C.models[i].name, i]), S.m);
+      pcFill('pcModel', mIdx.map(i => [pcModelLabel(C.models[i].name), i]), S.m);   // [V5.12] S942 → 갤럭시 S26 (S942)
 
       const showIdx = C.plans.map((p, i) => i).filter(i => (!C.show || C.show.includes(C.plans[i].name)) && C.plans[i].fee > 0);
       if (S.p === null || !showIdx.includes(S.p)) S.p = showIdx[0];
@@ -2431,6 +2437,8 @@
       const cap = c && (c[2] || /^(128|256|512)$/.test(c[1])) ? c[1] + (c[2] && c[2][0] === 'T' ? 'TB' : (c[1].length === 1 ? 'TB' : 'GB')) : '';
       return { code: m[1], cap };
     }
+    // [V5.11] 폰값계산 기종 고르기: 모델 코드면 '갤럭시 S26 S942' 처럼 이름 + 코드 (강CRM 재고처럼) · 이미 이름이면 그대로
+    function pcModelLabel(nm) { nm = String(nm || '').trim(); try { if (!qtIsCode(nm)) return nm; const n = qtCodeName(nm); return n ? n + ' (' + nm + ')' : nm; } catch (e) { return nm; } }
     function qtCodeName(nm) {
       const k = qtCodeOf(nm); if (!k) return '';
       const extra = (typeof PC !== 'undefined' && PC.data && PC.data.qtNames) || {};
@@ -2446,6 +2454,17 @@
     const qtIsCode = (nm) => /^(SM-|AIP|U?IP\d|[SFAM]\d{3}(\b|_|\s|$)|[SFAM]\d{3}[A-Z]{0,3}\d*$)/i.test(nm) || /워치|watch/i.test(nm);
     const QT_CAP_RE = /\s*(\d+(?:\.\d+)?)\s*(GB|TB)\b/i;   // 'iPhone 17 256GB (New)'처럼 용량이 가운데 있어도
     function qtCapBytes(c) { const m = /(\d+(?:\.\d+)?)\s*(GB|TB|G|T)/i.exec(c || ''); return m ? parseFloat(m[1]) * (/t/i.test(m[2]) ? 1024 : 1) : 0; }
+    // [V5.14] 보이는 이름 다듬기: 'S26' → '갤럭시 S26' · '갤럭시Z Flip 8' → '갤럭시 Z 플립8' · 'Z폴드8' → '갤럭시 Z 폴드8' (모델 코드 이름표가 있으면 그 이름이 먼저)
+    function qtNiceName(nm) {
+      let t = String(nm || '').trim().replace(/\s+/g, ' ');
+      if (/^(아이폰|iphone)\s?\d/i.test(t)) return t.replace(/^iphone\s?/i, '아이폰').replace(/\bpro\s?max\b/i, '프로맥스').replace(/\bpro\b/i, '프로').replace(/\bmax\b/i, '맥스').replace(/\bair\b/i, '에어').replace(/\bplus\b/i, '플러스');   // V323 '아이폰17 PRO' → '아이폰17 프로'
+      t = t.replace(/^(갤럭시|galaxy)\s*/i, '');
+      const gx = /^(S\d{2}|Z\s?(플립|폴드|flip|fold)|(플립|폴드|flip|fold)\s?\d|A\d{2}|M\d{2}|퀀텀|와이드|버디|점프)/i.test(t);
+      if (!gx) return String(nm || '').trim();
+      t = t.replace(/^Z\s?/i, 'Z ').replace(/flip\s?(\d+)/i, '플립$1').replace(/fold\s?(\d+)/i, '폴드$1').replace(/(플립|폴드)\s+(\d)/, '$1$2').replace(/\bultra\b/i, '울트라').replace(/\bedge\b/i, '엣지').replace(/\bplus\b/i, '+').replace(/\s+\+/, '+');
+      if (/^(플립|폴드)/.test(t)) t = 'Z ' + t;
+      return '갤럭시 ' + t;
+    }
     function qtBuildGroups() {
       const D = PC.data, map = new Map();
       const cs = (D && D.carriers) || {}, ord = ['LG U+', 'KT', 'SKT'];   // [V5.4] 우리 매장(LG U+) 이름부터 · 같은 기종은 먼저 나온 이름으로
@@ -2453,20 +2472,23 @@
         if (!C || !C.ready || C.hidden || !Array.isArray(C.models)) return;
         C.models.forEach(m => {
           let nm = String(m.name || '').trim(); if (!nm || /워치|watch/i.test(nm)) return;
-          if (qtIsCode(nm)) { nm = qtCodeName(nm); if (!nm) return; }   // [V5.4] 코드 → 이름 (모르는 코드는 빼고 강CRM에서 이름 붙이기)
+          let fromCode = false;
+          if (qtIsCode(nm)) { nm = qtCodeName(nm); if (!nm) return; fromCode = true; }   // [V5.4] 코드 → 이름 (모르는 코드는 빼고 강CRM에서 이름 붙이기)
           nm = nm.replace(/^(S\d{2})-$/i, '$1+');   // 'S26-' = S26+ (엑셀에서 + 가 - 로 들어옴 · 출고가로 확인)
           let cm = QT_CAP_RE.exec(nm), base = cm ? nm.replace(QT_CAP_RE, ' ').replace(/\s+/g, ' ').trim() : nm, cap = cm ? cm[1] + cm[2].toUpperCase() : '';   // 용량 표시가 없는 이름 = 기본 용량
           if (!cm) { const g2 = /[\s_-]+(\d{3}|1|2)\s*(G|T)(?=$|[\s_-])/i.exec(nm) || /\s(128|256|512)$/.exec(nm); if (g2) { base = nm.replace(g2[0], ' ').replace(/[\s_-]+$/, '').replace(/\s+/g, ' ').trim(); cap = g2[1] + (g2[2] ? g2[2].toUpperCase() : 'G') + 'B'; } }   // [V5.4] '256G' · '_512G' · 'Flip 8 512'
           base = base.replace(/\s*[-_]\s*(NP|NEW)$/i, '').replace(/[\s_-]+$/, '').trim() || nm;   // '아이폰17 256G-NP' · '아이폰17e_NEW' · 'S26-' 꼬리표 정리
           const key = qtKey(base);
-          if (!map.has(key)) map.set(key, { base: base.replace(/일반$/, '') || base, key, brand: qtBrandOf(nm), caps: new Map() });
+          if (!map.has(key)) map.set(key, { base: base.replace(/일반$/, '') || base, key, brand: qtBrandOf(fromCode ? nm : qtNiceName(nm)), caps: new Map(), named: fromCode });
           const g = map.get(key);
+          if (fromCode && !g.named) { g.base = base.replace(/일반$/, '') || base; g.named = true; }   // [V5.14] 같은 기종을 KT · SKT 엑셀은 코드(S942)로 → '갤럭시 S26' 이름표 이름으로 보여요 (LG 엑셀 'S26' 대신)
           if (!g.caps.has(cap)) g.caps.set(cap, Number(m.price) || 0);
         });
       });
       const cat = (D && D.qtCat) || {};   // [V5.5] 강CRM에서 바꾼 분류
       QT.groups = [...map.values()].map(g => {
         if (QT_CAT_LABEL[cat[g.key]]) g.brand = cat[g.key];
+        if (!g.named) g.base = qtNiceName(g.base);   // [V5.14] 코드 이름표가 없는 기종도 '갤럭시 S26' 모양으로
         let caps = [...g.caps.entries()].sort((a, b) => qtCapBytes(a[0]) - qtCapBytes(b[0]));   // '' (기본)이 맨 앞
         if (caps.length > 1 && caps[0][0] === '' && caps.some(c => c[0] && c[1] === caps[0][1])) caps = caps.slice(1);   // [V5.4] '기본 용량' = 256GB처럼 출고가가 같으면 하나로
         return { ...g, caps };
@@ -2764,6 +2786,11 @@
       try { done = localStorage.getItem(missKey(M)) || ''; } catch (e) {}
       box.style.display = 'block';
       if (done) { box.innerHTML = '<div class="mr-done">' + missEsc(done) + '</div>'; return; }
+      if (M.opt) {   // [V5.15] 🙅 수신거부 링크: 버튼 하나만 (누르면 강CRM 마케팅 수신 거부)
+        box.innerHTML = '<div class="mr-title">홍보 문자 수신거부</div><div class="mr-sub">아래 버튼을 누르시면 앞으로 홍보 · 안내 문자를 보내지 않을게요.</div>'
+          + '<button type="button" class="mr-no" data-mr="optout">수신 거부하기</button><div class="mr-err" id="missErr" role="alert"></div>';
+        return;
+      }
       const why = M.reason ? '<b>' + missEsc(M.reason) + '</b>' + (/려고$|어서$/.test(M.reason) ? '' : '드리려고') + ' 연락드렸어요.' : '안내드릴 게 있어서 연락드렸어요.';
       const h = missHour(), slots = MISS_SLOTS.filter(s => s === '오늘 오후' ? h < 17 : (s === '오늘 저녁' ? h < 20 : true));
       box.innerHTML = '<div class="mr-title">전화 못 받으셨죠?</div><div class="mr-sub">' + why + '<br>편하신 방법을 골라 주세요.</div>'
@@ -2782,7 +2809,7 @@
         if (!((PC.data && PC.data.alert) || (pcFsExtra && pcFsExtra.alert))) await pcFetchData();
         let who = ''; try { who = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
         const lab = v === 'call' ? '지금 통화 누름' : (v === 'optout' ? '연락 원치 않음' : v.replace(/^later:/, '') + ' 연락 원함');
-        cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', '📵 부재 재연락 · ' + lab + (M.reason ? ' (' + M.reason + ')' : ''), res !== 'ok');
+        cardAlertStaff(who ? (who + ' 고객').slice(0, 20) : '등록 고객', (M.opt ? '🙅 ' : '📵 부재 재연락 · ') + lab + (M.reason ? ' (' + M.reason + ')' : ''), res !== 'ok');
       } catch (e) {}
       return res;
     }
@@ -2829,7 +2856,7 @@
   <!-- 📢 매장 공지 창 -->
   <div class="nt-back" id="ntBack" role="dialog" aria-modal="true" aria-labelledby="ntTitle">
     <div class="nt">
-      <img id="ntImg" alt="" style="display:none">
+      <div class="nt-imgw" id="ntImgW" style="display:none" role="button" tabindex="0" aria-label="사진 크게 보기"><img id="ntImg" alt=""><span class="nt-zoom"><i class="fa-solid fa-magnifying-glass-plus"></i> 눌러서 크게</span></div>
       <div class="bd">
         <span class="tag" id="ntTag"><i class="fa-solid fa-bullhorn"></i> 진천점 소식</span>
         <h3 id="ntTitle"></h3>
@@ -2900,15 +2927,18 @@
         $('ntTitle').textContent = n.heading || '알려드려요';
         $('ntBody').textContent = n.body || '';
         $('ntBody').style.display = n.body ? '' : 'none';
-        const img = $('ntImg');
-        if (/^https:\/\//.test(n.image || '')) { img.src = n.image; img.style.display = 'block'; img.onerror = () => { img.style.display = 'none'; }; }
-        else { img.removeAttribute('src'); img.style.display = 'none'; }
+        const img = $('ntImg'), iw = $('ntImgW');   // [V5.16] 🔍 사진: 강CRM에서 고른 부분(p: 0 맨 위 ~ 100 맨 아래)이 보이고 · 누르면 전체를 크게
+        if (/^https:\/\//.test(n.image || '')) { img.src = n.image; img.style.objectPosition = '50% ' + (isFinite(n.pos) ? n.pos : 50) + '%'; iw.style.display = 'block'; img.onerror = () => { iw.style.display = 'none'; }; }
+        else { img.removeAttribute('src'); iw.style.display = 'none'; }
         if (!bound) {
           bound = true;
           $('ntOk').onclick = close;
+          const openFull = () => { const src = $('ntImg').getAttribute('src'); if (!src) return; let f = document.getElementById('ntFull'); if (!f) { f = document.createElement('div'); f.id = 'ntFull'; f.className = 'nt-full'; f.setAttribute('role', 'dialog'); f.setAttribute('aria-label', '사진 크게 보기'); f.innerHTML = '<button type="button" class="x" aria-label="닫기"><i class="fa-solid fa-xmark"></i></button><img alt="">'; f.addEventListener('click', () => { f.style.display = 'none'; }); document.body.appendChild(f); } f.querySelector('img').src = src; f.scrollTop = 0; f.style.display = 'block'; };
+          $('ntImgW').addEventListener('click', openFull);
+          $('ntImgW').addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openFull(); } });
           $('ntAsk').onclick = () => { close(); if (typeof openSms === 'function') openSms(); };
           $('ntBack').addEventListener('click', (e) => { if (e.target === $('ntBack')) close(); });
-          document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('ntBack').style.display === 'flex') close(); });
+          document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; const f = document.getElementById('ntFull'); if (f && f.style.display === 'block') { f.style.display = 'none'; return; } if ($('ntBack').style.display === 'flex') close(); });
         }
         $('ntBack').style.display = 'flex';
       }
@@ -2920,7 +2950,7 @@
         try {
           let b = m[1].replace(/-/g, '+').replace(/_/g, '/'); while (b.length % 4) b += '=';
           const j = JSON.parse(decodeURIComponent(escape(atob(b))));
-          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || ''), rv: j.rv === 1, ph: j.ph === 1 };
+          const n = { id: String(j.id || '').slice(0, 20), heading: String(j.h || '').slice(0, 60), body: String(j.b || '').slice(0, 400), image: String(j.i || ''), pos: (typeof j.p === 'number' && j.p >= 0 && j.p <= 100) ? j.p : NaN, rv: j.rv === 1, ph: j.ph === 1 };
           if (!n.body) return false;
           show(n, true);
           return true;
