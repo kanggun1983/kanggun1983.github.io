@@ -4704,6 +4704,70 @@ window.kQRCanvas=function(text,px,lv){var m=window.kQR(text,lv),quiet=4,size=m.n
         .catch(() => {});
     })();
   </script>
+  <!-- [V5.18] 🎨 강CRM '명함 꾸미기'(card_public/profile) → 이름 · 직함 · 소개 · 전화 · 매장 · 영업시간 · 사진 · 색깔 · SNS · 바로가기 버튼
+       · 대표 명함: 전부 · 공용(직원) 명함: 색깔 · SNS · 바로가기 버튼만 (이름 · 사진 · 번호는 '직원 공용 명함' 설정에서) · 못 불러오면 지금 화면 그대로 -->
+  <style>
+    .sns-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+    .sns-row a { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,.16); box-shadow: inset 0 0 0 1px rgba(255,255,255,.3); color: #fff; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .sns-row a i { font-size: 15px; }
+    .intro-box.pf { white-space: pre-line; }
+  </style>
+  <script>
+  (function () {
+    const SNS = { instagram: ['fa-brands fa-instagram', '인스타그램'], blog: ['fa-solid fa-blog', '블로그'], youtube: ['fa-brands fa-youtube', '유튜브'], kakao: ['fa-solid fa-comment', '카카오채널'], facebook: ['fa-brands fa-facebook', '페이스북'], tiktok: ['fa-brands fa-tiktok', '틱톡'], link: ['fa-solid fa-link', '홈페이지'] };
+    const okUrl = (u) => /^https:\/\/[^\s<>"']{4,300}$/.test(String(u || ''));
+    const dg = (p) => String(p || '').replace(/\D/g, '');
+    const fmt = (p) => { const d = dg(p); return /^02/.test(d) ? d.replace(/^(02)(\d{3,4})(\d{4})$/, '$1-$2-$3') : d.replace(/^(\d{3})(\d{3,4})(\d{4})$/, '$1-$2-$3'); };
+    function shade(hex, k) { const m = /^#([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return ''; const n = parseInt(m[1], 16); const c = [n >> 16, (n >> 8) & 255, n & 255].map(v => Math.max(0, Math.min(255, Math.round(v * k)))); return '#' + c.map(v => v.toString(16).padStart(2, '0')).join(''); }
+    function apply(d) {
+      if (!d || typeof d !== 'object') return;
+      const $ = (sel) => document.querySelector(sel);
+      if (/^#[0-9a-f]{6}$/i.test(d.color || '')) {
+        const r = document.documentElement.style; r.setProperty('--lgu-pink', d.color); r.setProperty('--lgu-dark', shade(d.color, 0.72));
+        const tm = document.querySelector('meta[name="theme-color"]'); if (tm) tm.setAttribute('content', d.color);
+      }
+      if (!window.KCRM_TEAM) {   // 대표 명함만
+        const name = String(d.name || '').trim().slice(0, 20), title = String(d.title || '').trim().slice(0, 12), phone = dg(d.phone), store = String(d.store || '').trim().slice(0, 30);
+        const who = name ? `${name}${title ? ' ' + title : ''}` : CARD_P.who;
+        if (name) { const el = $('.profile-name'); if (el) el.textContent = who; }
+        if (String(d.intro || '').trim()) { const ib = $('.intro-box'); if (ib) { ib.textContent = String(d.intro).trim().slice(0, 300); ib.classList.add('pf'); } }
+        if (store) { const bt = $('.brand-title'); if (bt) bt.textContent = store.replace(/^LGU\+\s?/, 'LG U+ '); }
+        const items = document.querySelectorAll('#tab-profile .info-box .info-item');
+        if (phone && items[0]) items[0].querySelector('.value').textContent = fmt(phone);
+        if (store && items[1]) items[1].querySelector('.value').textContent = store;
+        if (String(d.hours || '').trim() && items[2]) items[2].querySelector('.value').textContent = String(d.hours).trim().slice(0, 40);
+        if (/^data:image\/(jpeg|png|webp);base64,/.test(d.photo || '')) { const img = document.getElementById('profileImg'); if (img) img.src = d.photo; }
+        if (phone) { PHONE = phone; document.querySelectorAll('a[href^="tel:"]').forEach(a => { a.href = 'tel:' + phone; }); }
+        CARD_P = Object.assign({}, CARD_P, name ? { name, title, who, vcfName: (who + '_' + (store || CARD_P.store)).replace(/[^\w가-힣+]+/g, '_') } : {}, phone ? { phone } : {}, store ? { store } : {});
+        if (name) { const to = who + '에게'; [['qtAgree', `견적 안내를 위해 연락처와 고른 조건을 ${to} 보내는 데 동의해요`], ['pcAgree', `상담을 위해 이름·연락처와 계산한 조건을 ${to} 보내는 데 동의해요`]].forEach(([id, t]) => { const el = document.getElementById(id); if (el && el.parentNode) { const lb = el.parentNode; [...lb.childNodes].forEach(n => { if (n.nodeType === 3) lb.removeChild(n); }); lb.appendChild(document.createTextNode(t)); } }); }
+      }
+      // SNS (대표 · 공용 둘 다)
+      const list = (Array.isArray(d.sns) ? d.sns : []).filter(x => x && SNS[x.type] && okUrl(x.url)).slice(0, 6);
+      let row = document.getElementById('snsRow');
+      if (list.length) {
+        if (!row) { row = document.createElement('div'); row.id = 'snsRow'; row.className = 'sns-row'; const ib = $('.intro-box'); if (ib && ib.parentNode) ib.parentNode.insertBefore(row, ib.nextSibling); }
+        row.innerHTML = '';
+        list.forEach(x => { const a = document.createElement('a'); a.href = x.url; a.target = '_blank'; a.rel = 'noopener'; a.innerHTML = '<i class="' + SNS[x.type][0] + '"></i>'; a.appendChild(document.createTextNode(String(x.label || SNS[x.type][1]).slice(0, 12))); row.appendChild(a); });
+      } else if (row) row.remove();
+      // 바로가기 버튼 (순서 · 숨기기 · 예약 · 카카오 주소)
+      const qa = $('#tab-profile .quick-actions');
+      if (qa && Array.isArray(d.btns) && d.btns.length) {
+        const all = [...qa.querySelectorAll('a.action-btn')], pick = (k) => all.find(a => k === 'call' ? /^tel:/.test(a.getAttribute('href') || '') : k === 'sms' ? /openSms/.test(a.getAttribute('onclick') || '') : k === 'book' ? a.id === 'qaBook' : /kakao/.test(a.getAttribute('href') || '') || a.dataset.k === 'kakao');
+        const els = d.btns.map(b => ({ b, a: pick(b.k) })).filter(x => x.a);
+        els.forEach(({ b, a }) => { if (b.k === 'kakao') a.dataset.k = 'kakao'; if ((b.k === 'book' || b.k === 'kakao') && okUrl(b.url)) a.href = b.url; a.style.display = b.on === false ? 'none' : ''; qa.appendChild(a); });
+        const shown = els.filter(x => x.b.on !== false).length; qa.style.gridTemplateColumns = `repeat(${Math.max(1, Math.min(4, shown))}, 1fr)`;
+      }
+    }
+    try {
+      fetch(FS_BASE + 'card_public/profile?key=' + FS_KEY, { cache: 'no-store' }).then(r => r.ok ? r.json() : null).then(j => {
+        let d = null; try { d = j && j.fields && j.fields.json ? JSON.parse(j.fields.json.stringValue) : null; } catch (e) { d = null; }
+        const go = () => apply(d);
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', go); else go();
+      }).catch(() => {});
+    } catch (e) {}
+    window.__cardProfileApply = apply;   // 테스트용
+  })();
+  </script>
   <!-- [V4.8] 👵 어르신 큰 글씨 명함: 강CRM이 60세 이상 고객 명함번호에 bg=1을 넣어두면 큰 버튼 4개만 -->
   <style>
     #bigCard { position: fixed; inset: 0; z-index: 1100; background: #fff; overflow-y: auto; display: none; -webkit-overflow-scrolling: touch; }
