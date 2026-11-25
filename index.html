@@ -312,7 +312,10 @@
       var on = false, ext = '';
       try { on = !!(OneSignal && OneSignal.Notifications.permission && OneSignal.User.PushSubscription.optedIn); ext = (OneSignal && OneSignal.User && OneSignal.User.externalId) || ''; } catch (e) {}
       var cid = getCrmId(), pend = getPendingId(), html = '', bg = '#f0fdf4', bd = '#bbf7d0', fg = '#166534';
-      if (on && cid && ext === cid) html = '🔔 알림 켜짐 · 매장과 연결됐어요';
+      if (on && cid && ext === cid) {   // [V5.19] 누구로 연결됐는지 작게 (강CRM 고객 상세 '명함 링크' 끝 4자리와 비교)
+        var who0 = ''; try { who0 = localStorage.getItem('kcrm_who') || ''; } catch (e) {}
+        html = '🔔 알림 켜짐 · 매장과 연결됐어요<span style="display:block;font-size:11px;font-weight:600;opacity:.75;margin-top:2px">' + (who0 ? who0.replace(/[<>&"]/g, '') + '님 · ' : '') + '번호 끝 ' + String(cid).slice(-4).replace(/[<>&"]/g, '') + '</span>';
+      }
       else if (on && cid) {
         html = '🔔 알림 켜짐 · 매장과 연결하는 중…';
         if (!pushLinkTried) { pushLinkTried = true; try { await linkCrmUser(OneSignal); } catch (e) {} return pushStatSync(OneSignal); }
